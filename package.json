@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "private": true,
   "scripts": {
+    "dev": "echo 'Use client/ or server/ for dev commands'",
     "build": "npm run build:client && npm run build:server",
     "build:client": "npm --prefix client run build",
     "build:server": "npm --prefix server run build"
   },
-  "private": true,
   "keywords": [],
   "author": "",
   "license": "ISC",
