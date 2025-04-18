@@ -11,7 +11,6 @@ interface AuthState {
     error: string | null;
 }
 
-// Can be string, number, boolean, or OBJECT (has all options)
 const initialState: AuthState = {
     isAuth: false,
     user: null,

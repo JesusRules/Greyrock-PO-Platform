@@ -1,11 +1,11 @@
 import React, { useRef, useState } from 'react'
+import styles from './login.module.scss';
 import { Button, Loader, PasswordInput, TextInput, useMantineColorScheme } from '@mantine/core';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { AppDispatch } from "../../../redux/store";
 import { loginUser } from '../../../redux/features/auth-slice';
 import toast from 'react-hot-toast';
-import styles from './login.module.scss';
 
 function Login() {
     const { colorScheme } = useMantineColorScheme();
