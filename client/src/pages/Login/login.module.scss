@@ -7,11 +7,11 @@
     background-color: red;
     
     [data-theme="dark"] & {
-        background-image: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.8)), url('/images/native-scene.jpg');
+        background-image: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.8)), url('/images/casino-interior.jpg');
     }
     
     [data-theme="light"] & {
-      background-image: linear-gradient(rgba(45, 45, 45, 0.2), rgba(44, 44, 44, 0.5)), url('/images/native-scene.jpg');
+      background-image: linear-gradient(rgba(45, 45, 45, 0.2), rgba(44, 44, 44, 0.5)), url('/images/casino-interior.jpg');
     }
 }
   
@@ -37,7 +37,7 @@
     img {
       margin-top: 0.8rem;
       margin-bottom: 1.5rem;
-      width: 100px;
+      width: 150px;
     }
   }
   

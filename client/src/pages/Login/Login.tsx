@@ -42,8 +42,8 @@ function Login() {
     return (
       <section className={`${styles.section} ${colorScheme === 'dark' ? 'dark' : 'light'}`}>
         <div className={styles.container}>
-          <img src="/images/native-eagle.png" />
-          <h1>Band Council Resolution System</h1>
+          <img src="/images/GreyRockLogo.png" />
+          <h1>Greyrock Purchase Orders Platform</h1>
           
           <div className={styles.loginDiv}>
             <h2>Welcome!</h2>
