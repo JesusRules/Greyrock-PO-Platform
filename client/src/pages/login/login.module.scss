@@ -4,7 +4,7 @@
     background-size: cover;
     background-position: center center;
     width: 100vw;
-    background-color: red;
+    // background-color: red;
     
     [data-theme="dark"] & {
         background-image: linear-gradient(rgba(10, 10, 10, 0.7), rgba(10, 10, 10, 0.8)), url('/images/casino-interior.jpg');
