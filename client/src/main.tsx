@@ -12,8 +12,8 @@ import ColorSchemeToggle from './components/layout/ColorSchemeToggle';
 import { ReduxProvider } from '../redux/provider';
 // import StyledComponentsRegistry from "../../libs/styled-comp-registry";
 import '@mantine/core/styles.css';
-import Login from './pages/login/login';
-import ReviewOrders from './pages/review-orders/reviewOrders';
+import Login from './pages/login/Login';
+import ReviewOrders from './pages/review-orders/ReviewOrders';
 // import '@mantine/dates/styles.css';
 //Pages
 
