@@ -11,5 +11,5 @@
       "@types/*": ["../types/*"]
     }
   },
-  "include": ["src", "redux"]
+  "include": ["src", "redux", "../types"]
 }
