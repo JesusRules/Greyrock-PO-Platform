@@ -1,5 +1,6 @@
 import axios from "axios";
 import { store } from "./redux/store";
+import { logoutUser } from "./redux/features/auth-slice";
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.bcr-system.ca/",

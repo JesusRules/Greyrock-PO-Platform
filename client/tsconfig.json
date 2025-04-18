@@ -1,10 +1,12 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".", 
+    "paths": {
+      "@components/*": ["src/components/*"],
+      "@redux/*": ["redux/*"]
+    }
   },
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  "include": ["src", "redux"]
 }
