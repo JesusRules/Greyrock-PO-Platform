@@ -12,7 +12,8 @@
       "resolveJsonModule": true,
       "skipLibCheck": true,
       "outDir": "./dist",
-      "forceConsistentCasingInFileNames": true
+      "forceConsistentCasingInFileNames": true,
+      "jsx": "react-jsx"
     },
     "include": ["server", "client", "types"]
   }
