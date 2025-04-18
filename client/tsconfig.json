@@ -5,7 +5,8 @@
     "baseUrl": ".", 
     "paths": {
       "@components/*": ["src/components/*"],
-      "@redux/*": ["redux/*"]
+      "@redux/*": ["redux/*"],
+      "@context/*": ["context/*"]
     }
   },
   "include": ["src", "redux"]

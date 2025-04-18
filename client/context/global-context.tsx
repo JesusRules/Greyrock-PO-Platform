@@ -12,7 +12,6 @@ const GlobalContext = createContext<GlobalContextType | null>(null);
 function GlobalContextProvider({ children }: GlobalContextProps) {
     //States
     //Modals
-    
     return (
 		<GlobalContext.Provider value={{ 
 		}}  
