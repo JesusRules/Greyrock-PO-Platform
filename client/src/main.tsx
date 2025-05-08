@@ -29,12 +29,12 @@ createRoot(document.getElementById('root')!).render(
       <ColorSchemeToggle />
 
     <BrowserRouter>
-    <AuthChecker>
+    {/* <AuthChecker> */}
       <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/home" element={<Home />} />
       </Routes>
-    </AuthChecker>
+    {/* </AuthChecker> */}
     </BrowserRouter>
 
     </MantineProvider>
