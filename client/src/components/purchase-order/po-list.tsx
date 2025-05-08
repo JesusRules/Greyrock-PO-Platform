@@ -7,7 +7,6 @@ import { Input } from "../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { usePurchaseOrders } from "../../../context/po-context"
 import { formatCurrency } from "../../../utils/general"
-import { useGlobalContext } from "@context/global-context"
 import { PurchaseOrderViewModal } from "./po-view-modal"
 import { PurchaseOrderModal } from "./po-modal"
 

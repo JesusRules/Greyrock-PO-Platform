@@ -3,12 +3,12 @@
   "compilerOptions": {
     "module": "ESNext",
     "jsx": "react-jsx",
-    "baseUrl": ".", 
+    "baseUrl": "src", 
     "paths": {
-      "@components/*": ["src/components/*"],
+      "@components/*": ["components/*"],
       "@redux/*": ["redux/*"],
       "@context/*": ["context/*"],
-      "@types/*": ["../types/*"]
+      "@types/*": ["../types/*"],
     }
   },
   "include": ["src", "redux", "../types", "ui"]

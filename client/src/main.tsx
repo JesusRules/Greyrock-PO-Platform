@@ -14,7 +14,7 @@ import { ReduxProvider } from '../redux/provider';
 // import StyledComponentsRegistry from "../../libs/styled-comp-registry";
 import '@mantine/core/styles.css';
 import Login from './pages/login/Login';
-import ReviewOrders from './pages/home/Home';
+import Home from './pages/home/Home';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -32,7 +32,7 @@ createRoot(document.getElementById('root')!).render(
     <AuthChecker>
       <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/review-orders" element={<ReviewOrders />} />
+          <Route path="/home" element={<Home />} />
       </Routes>
     </AuthChecker>
     </BrowserRouter>

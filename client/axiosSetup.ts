@@ -10,22 +10,16 @@ const api = axios.create({
     }
 });
 
-
-// ✅ Intercept Unauthorized API Responses (401)
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            console.log("User is unauthorized, logging out...");
-            // store.dispatch(logoutUser());
-            window.location.href = "/";
-        }
-        return Promise.reject(error);
-    }
-);
-// api.interceptors.request.use((req) => {
-//     console.log('➡️ API Request to:', req.url);
-//     return req;
-// });
+// api.interceptors.response.use(
+//     (response) => response,
+//     (error) => {
+//         if (error.response?.status === 401) {
+//             console.log("User is unauthorized, logging out...");
+//             // store.dispatch(logoutUser());
+//             window.location.href = "/";
+//         }
+//         return Promise.reject(error);
+//     }
+// );
 
 export default api;

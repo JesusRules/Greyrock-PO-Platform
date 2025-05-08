@@ -1,4 +1,4 @@
-import { PurchaseOrderList } from "@components/purchase-order/po-list";
+import { PurchaseOrderList } from "../../components/purchase-order/po-list";
 
 export default function Home() {
   return (
