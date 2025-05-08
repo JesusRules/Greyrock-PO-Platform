@@ -1,7 +1,7 @@
 import express from 'express';
 import { createUser, deleteUser, getCurrentUser, loginUser, logoutUser, updateUser } from '../controllers/userController';
-import { protect } from 'server/middleware/auth';
-import { adminOnly } from 'server/middleware/adminOnly';
+import { protect } from '../middleware/auth';
+import { adminOnly } from '../middleware/adminOnly';
 
 const userRouter = express.Router();
 

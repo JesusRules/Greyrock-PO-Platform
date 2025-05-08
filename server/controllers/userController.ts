@@ -82,7 +82,9 @@ export const logoutUser = async (_req: Request, res: Response) => {
 export const getCurrentUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         // At this point, protect middleware has already set req.user
-        res.status(200).json({ user: req.user });
+        res
+        .set(createNoCacheHeaders())
+        .status(200).json({ user: req.user });
     } catch (error) {
         next(error);
     }
@@ -94,7 +96,9 @@ export const createUser = async (req: Request, res: Response) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(409).json({ message: "User with this email already exists." });
+      res
+      .set(createNoCacheHeaders())
+      .status(409).json({ message: "User with this email already exists." });
       return;
     }
 
@@ -108,10 +112,14 @@ export const createUser = async (req: Request, res: Response) => {
     });
 
     await user.save();
-    res.status(201).json({ message: "User created", user });
+    res
+    .set(createNoCacheHeaders())
+    .status(201).json({ message: "User created", user });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500)
+    .set(createNoCacheHeaders())
+    .json({ message: "Server error" });
   }
 };
 
@@ -137,14 +145,20 @@ export const updateUser = async (req: Request, res: Response) => {
     }).select("-password");
 
     if (!user) {
-      res.status(404).json({ message: "User not found." });
+      res
+      .set(createNoCacheHeaders())
+      .status(404).json({ message: "User not found." });
       return;
     }
 
-    res.status(200).json({ message: "User updated", user });
+    res
+    .set(createNoCacheHeaders())
+    .status(200).json({ message: "User updated", user });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res
+    .set(createNoCacheHeaders())
+    .status(500).json({ message: "Server error" });
   }
 };
 
@@ -155,13 +169,19 @@ export const deleteUser = async (req: Request, res: Response) => {
     const user = await User.findByIdAndDelete(id);
 
     if (!user) {
-      res.status(404).json({ message: "User not found." });
+      res
+      .set(createNoCacheHeaders())
+      .status(404).json({ message: "User not found." });
       return;
     }
 
-    res.status(200).json({ message: "User deleted." });
+    res
+    .set(createNoCacheHeaders())
+    .status(200).json({ message: "User deleted." });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res
+    .set(createNoCacheHeaders())
+    .status(500).json({ message: "Server error" });
   }
 };

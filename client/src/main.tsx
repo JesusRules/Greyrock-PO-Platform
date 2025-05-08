@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css'
 import { MantineProvider, ColorSchemeScript, mantineHtmlProps } from "@mantine/core";
 import { GlobalContextProvider } from "../context/global-context";
+import { PurchaseOrderProvider } from "../context/po-context";
 import { theme } from "../utils/theme";
 import { Toaster } from 'react-hot-toast';
 import AuthChecker from './components/layout/AuthChecker';
@@ -13,7 +14,7 @@ import { ReduxProvider } from '../redux/provider';
 // import StyledComponentsRegistry from "../../libs/styled-comp-registry";
 import '@mantine/core/styles.css';
 import Login from './pages/login/Login';
-import ReviewOrders from './pages/review-orders/ReviewOrders';
+import ReviewOrders from './pages/home/Home';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -22,6 +23,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ReduxProvider>
       <GlobalContextProvider>
+      <PurchaseOrderProvider>
       <MantineProvider theme={theme}>
       <Toaster position="bottom-right" toastOptions={{ duration: 5000, style: { border: "1px solid black" } }} />
       <ColorSchemeToggle />
@@ -36,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
 
     </MantineProvider>
+    </PurchaseOrderProvider>
     </GlobalContextProvider>
     </ReduxProvider>
   </StrictMode>,
