@@ -19,7 +19,7 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
             <span>Purchase Order #{purchaseOrder.poNumber}</span>
@@ -88,15 +88,14 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
                 </tr>
               </thead>
               <tbody>
-                {purchaseOrder.items &&
-                  purchaseOrder.items.map((item: any, index: number) => (
-                    <tr key={index} className="border-b">
-                      <td className="border-x p-2">{item.description}</td>
-                      <td className="border-x p-2 text-right">{item.quantity}</td>
-                      <td className="border-x p-2 text-right">{formatCurrency(Number.parseFloat(item.unitPrice))}</td>
-                      <td className="border-x p-2 text-right">{formatCurrency(Number.parseFloat(item.lineTotal))}</td>
-                    </tr>
-                  ))}
+              {(purchaseOrder.items || purchaseOrder.lineItems)?.map((item: any, index: number) => (
+                  <tr key={index} className="border-b">
+                    <td className="border-x p-2">{item.description}</td>
+                    <td className="border-x p-2 text-right">{item.quantity}</td>
+                    <td className="border-x p-2 text-right">{formatCurrency(Number(item.unitPrice))}</td>
+                    <td className="border-x p-2 text-right">{formatCurrency(Number(item.lineTotal))}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

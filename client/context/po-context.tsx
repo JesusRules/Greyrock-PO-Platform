@@ -87,21 +87,43 @@ const PurchaseOrderContext = createContext<PurchaseOrderContextType | undefined>
 export function PurchaseOrderProvider({ children }: { children: ReactNode }) {
   const [purchaseOrders, setPurchaseOrders] = useState<any[]>([])
 
+  // useEffect(() => {
+  //   // In a real app, you would fetch from an API or database
+  //   setPurchaseOrders(samplePurchaseOrders)
+  // }, [])
   useEffect(() => {
-    // In a real app, you would fetch from an API or database
-    setPurchaseOrders(samplePurchaseOrders)
+    const stored = localStorage.getItem("testPurchaseOrders")
+    if (stored) {
+      setPurchaseOrders(JSON.parse(stored))
+    } else {
+      setPurchaseOrders(samplePurchaseOrders)
+    }
   }, [])
 
+  // const addPurchaseOrder = (po: any) => {
+  //   const newPO = {
+  //     ...po,
+  //     id: (purchaseOrders.length + 1).toString(),
+  //   }
+  //   setPurchaseOrders([...purchaseOrders, newPO])
+  // }
   const addPurchaseOrder = (po: any) => {
     const newPO = {
       ...po,
       id: (purchaseOrders.length + 1).toString(),
     }
-    setPurchaseOrders([...purchaseOrders, newPO])
+    const updated = [...purchaseOrders, newPO]
+    setPurchaseOrders(updated)
+    localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
   }
 
+  // const updatePurchaseOrder = (po: any) => {
+  //   setPurchaseOrders(purchaseOrders.map((item) => (item.id === po.id ? po : item)))
+  // }
   const updatePurchaseOrder = (po: any) => {
-    setPurchaseOrders(purchaseOrders.map((item) => (item.id === po.id ? po : item)))
+    const updated = purchaseOrders.map((item) => (item.id === po.id ? po : item))
+    setPurchaseOrders(updated)
+    localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
   }
 
   const downloadPdf = (id: string) => {

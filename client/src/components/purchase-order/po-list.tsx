@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, FileDown, Eye, Pencil, CheckSquare } from "lucide-react"
+import { Search, Plus, FileDown, Eye, Pencil, CheckSquare, Trash2 } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
@@ -21,6 +21,8 @@ export function PurchaseOrderList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
+  //Delete purchase order
+  const [poToDelete, setPoToDelete] = useState<any>(null)
 
   const filteredPOs = purchaseOrders.filter((po) => {
     const matchesSearch =
@@ -42,6 +44,18 @@ export function PurchaseOrderList() {
   const handleEdit = (po: any) => {
     setCurrentPO(po)
     setIsEditModalOpen(true)
+  }
+
+  const handleDelete = (po: any) => {
+    if (!po?.id) {
+      alert("Invalid purchase order. Cannot delete.")
+      return
+    }
+    const confirmed = window.confirm(`Are you sure you want to delete PO #${po.poNumber}?`)
+    if (!confirmed) return
+    const updated = purchaseOrders.filter((p) => p.id !== po.id)
+    localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
+    window.location.reload()
   }
 
   return (
@@ -103,6 +117,7 @@ export function PurchaseOrderList() {
               <TableHead>Vendor</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Total</TableHead>
+              <TableHead>Items</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -122,16 +137,21 @@ export function PurchaseOrderList() {
                   <TableCell>{po.vendor}</TableCell>
                   <TableCell>{po.department}</TableCell>
                   <TableCell>{formatCurrency(po.total)}</TableCell>
+                  <TableCell className="text-center">
+                    {(po.items || po.lineItems || []).length}
+                  </TableCell>
                   <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        po.status === "Signed"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {po.status}
-                    </span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      po.status === "Signed"
+                        ? "bg-green-100 text-green-800"
+                        : po.status === "Approved"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {po.status}
+                  </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
@@ -144,10 +164,28 @@ export function PurchaseOrderList() {
                       <FileDown className="h-4 w-4" />
                     </Button>
                     {po.status !== "Signed" && (
-                      <Button variant="ghost" size="icon" onClick={() => {}}>
-                        <CheckSquare className="h-4 w-4" />
-                      </Button>
-                    )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const updatedStatus = po.status === "Pending" ? "Approved" : "Pending"
+                            const stored = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
+
+                            const updatedList = stored.map((item: any) =>
+                              item.id === po.id ? { ...item, status: updatedStatus } : item
+                            )
+
+                            localStorage.setItem("testPurchaseOrders", JSON.stringify(updatedList))
+                            window.location.reload()
+                          }}
+                          title={`Mark as ${po.status === "Pending" ? "Approved" : "Pending"}`}
+                        >
+                          <CheckSquare className="h-4 w-4 text-green-600" />
+                        </Button>
+                      )}
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

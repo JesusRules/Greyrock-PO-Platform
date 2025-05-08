@@ -72,6 +72,8 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
   }])
 
   useEffect(() => {
+    if (!isOpen) return;
+  
     if (isEditing && purchaseOrder) {
       setDepartment(purchaseOrder.department || "")
       setPoNumber(purchaseOrder.poNumber || "")
@@ -85,9 +87,41 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
       setShipping(purchaseOrder.shipping || 0)
       setTaxRate(purchaseOrder.taxRate || 13)
       setLineItems(purchaseOrder.lineItems || [])
-    } else if (mode === "create") {
-      setPoNumber(`${DEPARTMENT_CODES[department] || "PO"}-001`) // ideally you fetch next seq
     }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (isEditing && purchaseOrder) {
+      setDepartment(purchaseOrder.department || "")
+      setPoNumber(purchaseOrder.poNumber || "")
+      setDate(purchaseOrder.date || format(new Date(), "yyyy-MM-dd"))
+      setVendor(purchaseOrder.vendor || "")
+      setContactName(purchaseOrder.contactName || "")
+      setPhone(purchaseOrder.phone || "")
+      setEmail(purchaseOrder.email || "")
+      setPayableTo(purchaseOrder.payableTo || "")
+      setPaymentMethod(purchaseOrder.paymentMethod || "Cheque")
+      setShipping(purchaseOrder.shipping || 0)
+      setTaxRate(purchaseOrder.taxRate || 13)
+      setLineItems(purchaseOrder.lineItems || [])
+    } else if (mode === "create" && department) {
+        const deptCode = DEPARTMENT_CODES[department] || "PO"
+        const existing = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
+      
+        // Filter by department
+        const deptOrders = existing.filter((po: any) => po.department === department)
+      
+        // Extract the highest number used
+        const lastNumber = deptOrders
+          .map((po: any) => {
+            const match = po.poNumber?.match(/-(\d+)$/)
+            return match ? parseInt(match[1], 10) : 0
+          })
+          .reduce((max: number, num: number) => Math.max(max, num), 0)
+      
+        const nextNumber = String(lastNumber + 1).padStart(3, "0")
+        setPoNumber(`${deptCode}-${nextNumber}`)
+      }
   }, [purchaseOrder, isEditing, department])
 
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
@@ -107,8 +141,15 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
   }
 
   const addLineItem = () => {
-    const newId = (lineItems.length + 1).toString()
-    setLineItems([...lineItems, { id: newId, quantity: 1, itemId: "", description: "", unitPrice: 0, lineTotal: 0 }])
+    const newId = crypto.randomUUID() // ensures uniqueness
+    setLineItems([...lineItems, {
+      id: newId,
+      quantity: 1,
+      itemId: "",
+      description: "",
+      unitPrice: 0,
+      lineTotal: 0,
+    }])
   }
 
   const removeLineItem = (id: string) => {
@@ -120,7 +161,24 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
   const total = subtotal + tax + shipping
 
   const handleSubmit = () => {
+    // Check required fields
+    if (
+      !department ||
+      !poNumber ||
+      !date ||
+      !vendor ||
+      !contactName ||
+      !phone ||
+      !email ||
+      !payableTo ||
+      !paymentMethod
+    ) {
+      alert("Please fill in all required fields before submitting.")
+      return
+    }
+  
     const poData = {
+      id: isEditing ? purchaseOrder.id : crypto.randomUUID(),
       department,
       poNumber,
       date,
@@ -136,12 +194,19 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
       subtotal,
       tax,
       total,
+      status: isEditing ? purchaseOrder.status : "Pending",
     }
-
-    if (isEditing) updatePurchaseOrder(poData)
-    else addPurchaseOrder(poData)
-
+  
+    if (!isEditing) {
+      const existing = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
+      const updated = [...existing, poData]
+      localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
+    } else {
+      updatePurchaseOrder(poData)
+    }
+  
     onClose()
+    window.location.reload()
   }
 
   return (
@@ -329,7 +394,7 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
         </div>
 
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-10">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit}>{isEditing ? "Update" : "Create"}</Button>
         </DialogFooter>
