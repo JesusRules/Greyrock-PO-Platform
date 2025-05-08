@@ -155,12 +155,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-zinc-900">
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Create New Purchase Order" : "Edit Purchase Order"}</DialogTitle>
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-6 py-4">

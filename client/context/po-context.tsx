@@ -19,7 +19,7 @@ const samplePurchaseOrders = [
     payableTo: "Grey Rock Entertainment Center Inc.",
     submitter: "Emily-Rose Robinson",
     manager: "Cindy Bernard",
-    department: "ADMINISTRATION",
+    department: "Administration",
     shipping: "25",
     taxRate: "13",
     items: [
@@ -49,7 +49,7 @@ const samplePurchaseOrders = [
     payableTo: "Casino Equipment Suppliers Inc.",
     submitter: "Emily-Rose Robinson",
     manager: "Cindy Bernard",
-    department: "OPERATIONS",
+    department: "Marketing",
     shipping: "150",
     taxRate: "13",
     items: [

@@ -5,10 +5,12 @@ import { Search, Plus, FileDown, Eye, Pencil, CheckSquare } from "lucide-react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { usePurchaseOrders } from "../../../context/po-context"
-import { formatCurrency } from "../../../utils/general"
+import { departments, formatCurrency } from "../../../utils/general"
 import { PurchaseOrderViewModal } from "./po-view-modal"
 import { PurchaseOrderModal } from "./po-modal"
+import { PurchaseOrderModal2 } from "./po-modal-2"
 
 export function PurchaseOrderList() {
   const { purchaseOrders, downloadPdf } = usePurchaseOrders()
@@ -17,13 +19,20 @@ export function PurchaseOrderList() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [currentPO, setCurrentPO] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [departmentFilter, setDepartmentFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
 
-  const filteredPOs = purchaseOrders.filter(
-    (po) =>
-      po.vendor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      po.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredPOs = purchaseOrders.filter((po) => {
+    const matchesSearch =
+      (po.vendor?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (po.poNumber?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      (po.description?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+
+    const matchesDepartment = departmentFilter === "all" || po.department === departmentFilter
+    const matchesStatus = statusFilter === "all" || po.status === statusFilter
+
+    return matchesSearch && matchesDepartment && matchesStatus
+  })
 
   const handleView = (po: any) => {
     setCurrentPO(po)
@@ -37,8 +46,14 @@ export function PurchaseOrderList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="relative w-72">
+      <div className="flex justify-end items-center flex-wrap gap-4">
+        <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> New Purchase Order
+        </Button>
+      </div>
+
+      <div className="flex justify-between gap-5 items-end">
+        <div className="relative w-full max-w-[330px]">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search purchase orders..."
@@ -47,9 +62,36 @@ export function PurchaseOrderList() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> New Purchase Order
-        </Button>
+      <div className="flex gap-4 justify-end">
+        <div className="w-48">
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept === "All Departments" ? "all" : dept}>
+                  {dept}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-40">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Approved">Approved</SelectItem>
+              <SelectItem value="Rejected">Rejected</SelectItem>
+              <SelectItem value="Signed">Signed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       </div>
 
       <div className="rounded-md border">
@@ -83,7 +125,9 @@ export function PurchaseOrderList() {
                   <TableCell>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        po.status === "Signed" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                        po.status === "Signed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-amber-100 text-amber-800"
                       }`}
                     >
                       {po.status}
@@ -112,11 +156,11 @@ export function PurchaseOrderList() {
         </Table>
       </div>
 
-      <PurchaseOrderModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
+      <PurchaseOrderModal2 isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
 
       {currentPO && (
         <>
-          <PurchaseOrderModal
+          <PurchaseOrderModal2
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
             mode="edit"
