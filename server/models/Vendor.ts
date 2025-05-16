@@ -1,0 +1,20 @@
+import mongoose, { Schema, Document } from "mongoose";
+
+export const vendorSchema = new mongoose.Schema({ 
+    companyName: { type: String, required: true },
+    email: { 
+        type: String, 
+        required: true,
+        match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/,
+        'Please enter a valid email address'
+        ]
+    },
+    phoneNumber: { type: String, required: true },
+    address: { type: String, required: true },
+ }, {
+    timestamps: true,
+ })
+
+const Vendor = mongoose.models.Vendor || mongoose.model('Vendor', vendorSchema);
+ export default Vendor;

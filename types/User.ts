@@ -1,5 +1,5 @@
 // Define the User Type
-export interface IUser {
+export type User = {
     _id: string; 
     firstName: string;
     lastName: string;

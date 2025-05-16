@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import api from '../../axiosSetup';
-import { IUser } from '../../../types/IUser';
+import { User } from '../../../types/User';
 
 interface AuthState {
     isAuth: boolean;
     // isAdmin: boolean,
-    user: IUser | null;
+    user: User | null;
     loading: boolean;
     error: string | null;
 }
@@ -23,7 +23,7 @@ export const authSlice = createSlice({
     initialState,
     reducers: {
         // Set each page
-        setUser: (state, action: PayloadAction<IUser>) => {
+        setUser: (state, action: PayloadAction<User>) => {
             state.isAuth = true;
             state.user = action.payload;
         },
@@ -56,7 +56,7 @@ export const authSlice = createSlice({
 
 // Set logging in
 export const loginUser = createAsyncThunk<
-    { user: IUser; token: string }, // Return type
+    { user: User; token: string }, // Return type
     { email: string; password: string }, // Argument type
     { rejectValue: string }
 >(
