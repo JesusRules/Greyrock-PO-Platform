@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import PO from "server/models/PO";
 import POCounter from "server/models/POCounter";
-import { createNoCacheHeaders } from "server/utils/noCacheResponse";
+import { createNoCacheHeaders } from "../utils/noCacheResponse";
 
 const createPurchaseOrder = async (req: Request, res: Response) => {
   const { department, ...otherFields } = req.body;

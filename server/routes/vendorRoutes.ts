@@ -5,16 +5,20 @@ import {
   createVendor,
   updateVendor,
   deleteVendor,
+  getVendorById,
 } from '../controllers/vendorController';
 import { protect } from '../middleware/auth';
 import { adminOnly } from '../middleware/adminOnly';
 
 const vendorRouter = express.Router();
 
-// Protected admin-only routes
 vendorRouter.get('/', protect, getVendors);
+vendorRouter.get('/:id', protect, getVendorById);
+
+// Protected admin-only routes
 vendorRouter.post('/', protect, createVendor);
 vendorRouter.put('/:id', protect, updateVendor);
 vendorRouter.delete('/:id', protect, deleteVendor);
+
 
 export default vendorRouter;

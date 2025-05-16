@@ -9,7 +9,10 @@ import { Input } from "../../components/ui/input"
 import { Textarea } from "../../components/ui/textarea"
 import { useToast } from "../../../hooks/use-toast"
 import { useLocation, useNavigate } from "react-router-dom"
-import { createVendor, updateVendor } from "./actions"
+import { useGlobalContext } from "../../../context/global-context"
+import { useDispatch } from "react-redux"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
+import { addVendor, fetchVendorById, updateVendor } from "../../../redux/features/vendor-slice"
 
 const vendorSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -23,10 +26,11 @@ type VendorFormValues = z.infer<typeof vendorSchema>
 
 interface VendorFormProps {
   vendorId?: string
-  onSuccess?: () => void
 }
 
-export function VendorForm({ vendorId, onSuccess }: VendorFormProps) {
+export function VendorForm({ vendorId }: VendorFormProps) {
+  const { setOpenCreateVendor, setOpenEditVendor } = useGlobalContext();
+
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(!!vendorId)
   const { toast } = useToast()
@@ -34,6 +38,9 @@ export function VendorForm({ vendorId, onSuccess }: VendorFormProps) {
   //Navigation
   const navigate = useNavigate();
   const location = useLocation();
+  //Redux
+  const dispatch = useDispatch<AppDispatch>();
+  const selectedVendor = useAppSelector((state) => state.vendorReducer.selectedVendor);
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorSchema),
@@ -48,70 +55,63 @@ export function VendorForm({ vendorId, onSuccess }: VendorFormProps) {
 
   useEffect(() => {
     if (vendorId) {
-      const fetchVendor = async () => {
-        try {
-          const response = await fetch(`/api/vendors/${vendorId}`)
-          if (!response.ok) throw new Error("Failed to fetch vendor")
-          const vendor = await response.json()
-
-          form.reset({
-            companyName: vendor.companyName,
-            email: vendor.email,
-            phoneNumber: vendor.phoneNumber,
-            address: vendor.address,
-            comment: vendor.comment || "",
-          })
-        } catch (error) {
-          console.error("Error fetching vendor:", error)
-          toast({
-            title: "Error",
-            description: "Failed to load vendor details. Please try again.",
-            variant: "destructive",
-          })
-        } finally {
-          setInitialLoading(false)
-        }
-      }
-
-      fetchVendor()
+      dispatch(fetchVendorById(vendorId)).catch(() => {
+        toast({
+          title: "Error",
+          description: "Failed to load vendor details.",
+          variant: "destructive",
+        });
+        setInitialLoading(false);
+      });
     }
-  }, [vendorId, form, toast])
+  }, [vendorId, dispatch]);
 
-  async function onSubmit(data: VendorFormValues) {
-    setLoading(true)
+  useEffect(() => {
+  if (vendorId && selectedVendor) {
+      form.reset({
+        companyName: selectedVendor.companyName,
+        email: selectedVendor.email,
+        phoneNumber: selectedVendor.phoneNumber,
+        address: selectedVendor.address,
+        comment: selectedVendor.comment || "",
+      });
+      setInitialLoading(false); // move this here
+    }
+  }, [vendorId, selectedVendor, form]);
+
+  const onSubmit = async (data: VendorFormValues) => {
+    setLoading(true);
     try {
-      if (isEditMode) {
-        await updateVendor(vendorId, data)
+      if (isEditMode && vendorId) {
+        await dispatch(updateVendor({ id: vendorId, updatedData: data })).unwrap();
         toast({
-          title: "Success",
-          description: "Vendor updated successfully",
-        })
+          title: 'Success',
+          description: 'Vendor updated successfully',
+          variant: 'success',
+        });
       } else {
-        await createVendor(data)
+        await dispatch(addVendor(data)).unwrap();
         toast({
-          title: "Success",
-          description: "Vendor created successfully",
-        })
+          title: 'Success',
+          description: 'Vendor created successfully',
+          variant: 'success',
+        });
       }
 
-      // Call the onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess()
-      }
-
-      // Refresh the page to update the vendor list
       navigate(location.pathname, { replace: true });
+      setOpenCreateVendor(false);
+      setOpenEditVendor(false);
     } catch (error) {
-      console.error("Error saving vendor:", error)
+      console.error('Error saving vendor:', error);
       toast({
-        title: "Error",
-        description: `Failed to ${isEditMode ? "update" : "create"} vendor. Please try again.`,
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: `Failed to ${isEditMode ? 'update' : 'create'} vendor. Please try again.`,
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (initialLoading) {
     return <div className="text-center py-6">Loading vendor details...</div>
@@ -181,7 +181,7 @@ export function VendorForm({ vendorId, onSuccess }: VendorFormProps) {
           name="comment"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Comment</FormLabel>
+              <FormLabel>Comment (optional)</FormLabel>
               <FormControl>
                 <Textarea placeholder="Additional notes about this vendor" className="resize-none" {...field} />
               </FormControl>
@@ -191,7 +191,10 @@ export function VendorForm({ vendorId, onSuccess }: VendorFormProps) {
         />
 
         <div className="flex gap-4 justify-end">
-          <Button type="button" variant="outline" onClick={onSuccess}>
+          <Button type="button" variant="outline" onClick={() => {
+              setOpenCreateVendor(false);
+              setOpenEditVendor(false);
+            }}>
             Cancel
           </Button>
           <Button type="submit" disabled={loading}>

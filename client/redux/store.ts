@@ -1,10 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import authReducer from './features/auth-slice';
+import vendorReducer from './features/vendor-slice';
 
 export const store = configureStore({
     reducer: {
-        authReducer
+        authReducer,
+        vendorReducer,
     }
 });
 

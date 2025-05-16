@@ -1,7 +1,31 @@
 // controllers/vendorController.ts
 import { Request, Response } from 'express';
 import Vendor from '../models/Vendor';
-import { createNoCacheHeaders } from 'server/utils/noCacheResponse';
+import { createNoCacheHeaders } from '../utils/noCacheResponse';
+
+export const getVendorById = async (_req: Request, res: Response) => {
+  try {
+    const { id } = _req.params;
+    const vendor = await Vendor.findById(id);
+
+    if (!vendor) {
+      res
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: 'Vendor not found' });
+        return;
+    }
+
+    res
+    .set(createNoCacheHeaders())
+    .status(200).json({ vendor });
+  } catch (error) {
+    console.error('Error fetching vendor:', error);
+    res
+    .set(createNoCacheHeaders())
+    .status(500).json({ message: 'Failed to fetch vendor' });
+  }
+};
 
 export const getVendors = async (_req: Request, res: Response) => {
   try {

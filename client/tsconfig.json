@@ -11,5 +11,5 @@
       "@types/*": ["../types/*"],
     }
   },
-  "include": ["src", "redux", "../types", "ui"]
+  "include": ["src", "redux", "../types", "ui", "hooks/use-toast.ts"]
 }

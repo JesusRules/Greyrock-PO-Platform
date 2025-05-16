@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectMongo from "./libs/connectMongo";
-import userRoutes from "./routes/userRoutes";
+import authRoutes from "./routes/authRoutes";
 import PORoutes from "./routes/PORoutes";
 import vendorRoutes from "./routes/vendorRoutes";
 
@@ -18,7 +18,7 @@ async function main() {
 
   app.use(
     cors({
-      origin: process.env.NEXT_PUBLIC_DOMAIN,
+      origin: process.env.DOMAIN,
       credentials: true,
     })
   );
@@ -26,7 +26,7 @@ async function main() {
   app.use(cookieParser());
   app.use(express.json());
 
-  app.use("/api/users", userRoutes);
+  app.use("/api/auth", authRoutes);
   app.use("/api/po", PORoutes);
   app.use("/api/vendors", vendorRoutes);
 

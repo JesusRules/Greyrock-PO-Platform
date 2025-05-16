@@ -63,14 +63,14 @@ export const loginUser = createAsyncThunk<
   "auth/loginUser",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-        const response = await api.post("/api/users/login", { email, password }, { withCredentials: true });
+        const response = await api.post("/api/auth/login", { email, password }, { withCredentials: true });
         const { user, token } = response.data;
 
          // ✅ Step 2: Store token in cookies (if using cookies for auth)
         //  document.cookie = `token=${token}; path=/; Secure`; // Bad? Let your server's res.cookie() handle everything
 
          try {
-             await api.post("/api/users/log-record", {}, { withCredentials: true });
+             await api.post("/api/auth/log-record", {}, { withCredentials: true });
              console.log("Login event recorded successfully!");
          } catch (logError) {
              console.error("Failed to log login event:", logError);
@@ -84,7 +84,7 @@ export const loginUser = createAsyncThunk<
 )
 
 export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
-    await api.post("/api/users/logout");
+    await api.post("/api/auth/logout");
 })
 
 export const { setUser } = authSlice.actions;

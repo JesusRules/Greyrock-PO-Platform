@@ -20,7 +20,7 @@ export function CommentViewModal({ children, comment, companyName }: CommentView
         {children}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] bg-white dark:bg-darkModal">
           <DialogHeader>
             <DialogTitle>{companyName} - Comment</DialogTitle>
           </DialogHeader>

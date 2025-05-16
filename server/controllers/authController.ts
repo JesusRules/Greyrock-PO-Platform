@@ -39,13 +39,14 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     // 4. Set HTTP-only cookie
     res
     .set(createNoCacheHeaders())
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // send over HTTPS only in prod
-      sameSite: "lax",
-      maxAge: 60 * 60 * 1000, // 1 hour
-      // domain: process.env.COOKIE_DOMAIN // if you need to scope the cookie
-    });
+    .cookie('token', token, {
+        httpOnly: true,
+        maxAge: 3600 * 1000, // 1 hour
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
+        path: '/',
+    })
 
     // 5. Return user (password is already stripped by your toJSON transform)
     res

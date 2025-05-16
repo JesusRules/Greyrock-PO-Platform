@@ -16,7 +16,10 @@ import {
 import { useToast } from "../../../hooks/use-toast"
 import { EditVendorModal } from "./edit-vendor-modal"
 import { CommentViewModal } from "./comment-view-modal"
-import { deleteVendor } from "./actions"
+import { useGlobalContext } from "../../../context/global-context"
+import { deleteVendor, fetchVendors } from "../../../redux/features/vendor-slice"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
+import { useDispatch } from "react-redux"
 
 interface Vendor {
   id: string
@@ -28,82 +31,63 @@ interface Vendor {
 }
 
 export function VendorList() {
-  const [vendors, setVendors] = useState<Vendor[]>([])
-  const [loading, setLoading] = useState(true)
+  const { setOpenCreateVendor, setOpenEditVendor } = useGlobalContext();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [vendorToDelete, setVendorToDelete] = useState<string | null>(null)
   const { toast } = useToast()
+  //Redux
+  const dispatch = useDispatch<AppDispatch>();
+  const vendors = useAppSelector(state => state.vendorReducer.vendors);
+  const vendorsInitLoad = useAppSelector(state => state.vendorReducer.initLoad);
 
-  useEffect(() => {
-    async function fetchVendors() {
-      try {
-        const response = await fetch("/api/vendors")
-        if (!response.ok) throw new Error("Failed to fetch vendors")
-        const data = await response.json()
-        setVendors(data)
-      } catch (error) {
-        console.error("Error fetching vendors:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load vendors. Please try again.",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchVendors()
-  }, [toast])
-
-  const handleDeleteClick = (id: string) => {
-    setVendorToDelete(id)
-    setDeleteDialogOpen(true)
-  }
+   const handleDeleteClick = (id: string) => {
+    setVendorToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
   const confirmDelete = async () => {
-    if (!vendorToDelete) return
+    if (!vendorToDelete) return;
 
     try {
-      await deleteVendor(vendorToDelete)
-      setVendors(vendors.filter((vendor) => vendor.id !== vendorToDelete))
+      await dispatch(deleteVendor(vendorToDelete)).unwrap();
       toast({
-        title: "Success",
-        description: "Vendor deleted successfully",
-      })
+        title: 'Success',
+        description: 'Vendor deleted successfully',
+        variant: 'success',
+      });
     } catch (error) {
-      console.error("Error deleting vendor:", error)
+      console.error('Error deleting vendor:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete vendor. Please try again.",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to delete vendor. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
-      setDeleteDialogOpen(false)
-      setVendorToDelete(null)
+      setDeleteDialogOpen(false);
+      setVendorToDelete(null);
     }
-  }
+  };
 
   const refreshVendors = async () => {
-    setLoading(true)
     try {
-      const response = await fetch("/api/vendors")
-      if (!response.ok) throw new Error("Failed to fetch vendors")
-      const data = await response.json()
-      setVendors(data)
-    } catch (error) {
-      console.error("Error refreshing vendors:", error)
+      await dispatch(fetchVendors()).unwrap();
       toast({
-        title: "Error",
-        description: "Failed to refresh vendors. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+        title: 'Refreshed',
+        description: 'Vendor list updated.',
+        variant: 'success',
+      });
+    } catch (error) {
+      console.error('Error refreshing vendors:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to refresh vendors. Please try again.',
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
-  if (loading) {
+  if (vendorsInitLoad) {
     return <div className="text-center py-10">Loading vendors...</div>
   }
 
@@ -111,7 +95,7 @@ export function VendorList() {
     return (
       <div className="text-center py-10">
         <p className="text-muted-foreground mb-4">No vendors found</p>
-        <Button onClick={() => document.getElementById("add-vendor-button")?.click()}>Add your first vendor</Button>
+        <Button onClick={() => setOpenCreateVendor(true)}>Add your first vendor</Button>
       </div>
     )
   }
@@ -132,7 +116,7 @@ export function VendorList() {
           </TableHeader>
           <TableBody>
             {vendors.map((vendor) => (
-              <TableRow key={vendor.id}>
+              <TableRow key={vendor._id}>
                 <TableCell className="font-medium">{vendor.companyName}</TableCell>
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>{vendor.phoneNumber}</TableCell>
@@ -148,17 +132,16 @@ export function VendorList() {
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    <EditVendorModal vendorId={vendor.id}>
-                      <Button variant="outline" size="icon">
+                      <EditVendorModal vendorId={vendor._id!} />
+                      <Button onClick={() => setOpenEditVendor(true)} variant="outline" size="icon">
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
-                    </EditVendorModal>
-                    <Button
+                     <Button
                       variant="outline"
                       size="icon"
                       className="text-destructive"
-                      onClick={() => handleDeleteClick(vendor.id)}
+                      onClick={() => handleDeleteClick(vendor._id!)}
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
@@ -172,7 +155,7 @@ export function VendorList() {
       </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-darkModal">
           <DialogHeader>
             <DialogTitle>Are you sure you want to delete this vendor?</DialogTitle>
             <DialogDescription>

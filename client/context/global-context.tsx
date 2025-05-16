@@ -5,15 +5,24 @@ interface GlobalContextProps {
 }
 
 interface GlobalContextType {
+	openCreateVendor: boolean;
+	setOpenCreateVendor: React.Dispatch<React.SetStateAction<boolean>>;
+	
+	openEditVendor: boolean;
+	setOpenEditVendor: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GlobalContext = createContext<GlobalContextType | null>(null);
 
 function GlobalContextProvider({ children }: GlobalContextProps) {
     //States
+	const [openCreateVendor, setOpenCreateVendor] = useState(false);
+	const [openEditVendor, setOpenEditVendor] = useState(false);
     //Modals
     return (
 		<GlobalContext.Provider value={{ 
+			openCreateVendor, setOpenCreateVendor,
+			openEditVendor, setOpenEditVendor
 		}}  
 		> 
 			{children}
