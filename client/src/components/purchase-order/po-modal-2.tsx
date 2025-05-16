@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "../..//components/ui/separator"
 import { usePurchaseOrders } from "../../../context/po-context"
 import { departments } from "../../../utils/general"
+import { useAppSelector } from "../../../redux/store"
 
 interface LineItem {
   id: string
@@ -44,13 +45,15 @@ const DEPARTMENT_CODES: Record<string, string> = {
   Marketing: "GRECMKT",
 }
 
-const PAYMENT_METHODS = ["Cheque", "Credit Card"]
+const PAYMENT_METHODS = ["Cheque", "Credit Card", "Electronic Funds Transfer"]
 // const PAYMENT_METHODS = ["Cheque", "Credit Card", "Wire Transfer", "Cash"]
 
-export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: PurchaseOrderModalProps) {
+export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: PurchaseOrderModalProps) {
   const { addPurchaseOrder, updatePurchaseOrder } = usePurchaseOrders()
   const isEditing = mode === "edit"
-
+  //Redux
+  const vendors = useAppSelector(state => state.vendorReducer.vendors);
+  //States
   const [department, setDepartment] = useState("")
   const [poNumber, setPoNumber] = useState("")
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
@@ -87,6 +90,9 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
       setShipping(purchaseOrder.shipping || 0)
       setTaxRate(purchaseOrder.taxRate || 13)
       setLineItems(purchaseOrder.lineItems || [])
+    } else {
+      // ✅ Also make sure to reset date to today when creating
+        setDate(format(new Date(), "yyyy-MM-dd"))
     }
   }, [isOpen])
 
@@ -200,6 +206,7 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
     if (!isEditing) {
       const existing = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
       const updated = [...existing, poData]
+      //Change from localstorage to MongoDB
       localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
     } else {
       updatePurchaseOrder(poData)
@@ -244,7 +251,7 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
 
         <div className="space-y-2">
             <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled />
         </div>
 
         <div className="space-y-2">
@@ -263,9 +270,24 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
             </Select>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
             <Label>Vendor</Label>
             <Input value={vendor} onChange={(e) => setVendor(e.target.value)} />
+        </div> */}
+        <div className="space-y-2">
+          <Label>Vendor</Label>
+          <Select value={vendor} onValueChange={setVendor}>
+              <SelectTrigger>
+              <SelectValue placeholder="Select vendor" />
+              </SelectTrigger>
+              <SelectContent>
+              {vendors.map((vendor) => (
+                  <SelectItem key={vendor._id} value={vendor.companyName === "All Vendors" ? "all" : vendor.companyName}>
+                  {vendor.companyName}
+                  </SelectItem>
+              ))}
+              </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -392,7 +414,6 @@ export function PurchaseOrderModal2({ isOpen, onClose, mode, purchaseOrder }: Pu
         </div>
 
         </div>
-
 
         <DialogFooter className="mt-10">
           <Button variant="outline" onClick={onClose}>Cancel</Button>

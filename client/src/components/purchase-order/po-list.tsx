@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { usePurchaseOrders } from "../../../context/po-context"
 import { departments, formatCurrency } from "../../../utils/general"
 import { PurchaseOrderViewModal } from "./po-view-modal"
-import { PurchaseOrderModal } from "./po-modal"
-import { PurchaseOrderModal2 } from "./po-modal-2"
+// import { PurchaseOrderModal } from "./po-modal"
+import { PurchaseOrderModal } from "./po-modal-2"
 
 export function PurchaseOrderList() {
   const { purchaseOrders, downloadPdf } = usePurchaseOrders()
@@ -194,11 +194,11 @@ export function PurchaseOrderList() {
         </Table>
       </div>
 
-      <PurchaseOrderModal2 isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
+      <PurchaseOrderModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
 
       {currentPO && (
         <>
-          <PurchaseOrderModal2
+          <PurchaseOrderModal
             isOpen={isEditModalOpen}
             onClose={() => setIsEditModalOpen(false)}
             mode="edit"

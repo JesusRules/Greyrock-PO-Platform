@@ -14,7 +14,6 @@ export default function VendorsPage() {
   const { setOpenCreateVendor } = useGlobalContext();
   const dispatch = useDispatch<AppDispatch>();
 
-   // Fetch on mount
   useEffect(() => {
     dispatch(fetchVendors()).unwrap().catch((err) => {
       console.error('Error fetching vendors:', err);
