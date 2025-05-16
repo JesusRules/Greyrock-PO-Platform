@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { IUser } from "../../types/User";
+import { User as UserType } from "../../types/User";
 import User from "../models/User";
 
 interface JwtPayload {
@@ -11,7 +11,7 @@ interface JwtPayload {
 }
 
 export interface AuthRequest extends Request {
-    user?: Omit<IUser, "password">;
+    user?: Omit<UserType, "password">;
 }
 
 export const protect = async (
@@ -33,7 +33,7 @@ export const protect = async (
 
     const user = await User.findById(decoded.id).select(
       "-password"
-    ).lean<IUser>();
+    ).lean<UserType>();
 
     if (!user) {
       res.status(401).json({ message: "User not found" });

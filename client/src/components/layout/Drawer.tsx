@@ -35,7 +35,7 @@ export function Drawer() {
 
         <SheetContent
         side="left"
-        className="w-[250px] flex flex-col justify-between bg-background text-foreground dark:bg-zinc-900 dark:text-white"
+        className="w-[250px] flex flex-col justify-between bg-background bg-white text-foreground dark:bg-zinc-900 dark:text-white"
         >
         {/* Top Section */}
         <div>
