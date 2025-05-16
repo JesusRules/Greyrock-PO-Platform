@@ -15,6 +15,7 @@ import { ReduxProvider } from '../redux/provider';
 import '@mantine/core/styles.css';
 import Login from './pages/login/Login';
 import Home from './pages/home/Home';
+import VendorsPage from './pages/vendors/VendorsPage';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -33,6 +34,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/vendors" element={<VendorsPage />} />
       </Routes>
     {/* </AuthChecker> */}
     </BrowserRouter>

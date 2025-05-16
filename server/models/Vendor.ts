@@ -12,6 +12,7 @@ export const vendorSchema = new mongoose.Schema({
     },
     phoneNumber: { type: String, required: true },
     address: { type: String, required: true },
+    comment: { type: String, required: false },
  }, {
     timestamps: true,
  })

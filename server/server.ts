@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import connectMongo from "./libs/connectMongo";
 import userRoutes from "./routes/userRoutes";
 import PORoutes from "./routes/PORoutes";
+import vendorRoutes from "./routes/vendorRoutes";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ async function main() {
 
   app.use("/api/users", userRoutes);
   app.use("/api/po", PORoutes);
+  app.use("/api/vendors", vendorRoutes);
 
   app.get("/test", (_, res) => {
     res.send("✅ Test route is working!");
