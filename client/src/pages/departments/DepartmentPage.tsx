@@ -54,9 +54,9 @@ export default function DepartmentsPage() {
     setIsModalOpen(true)
   }
 
-  const handleCreateDepartment = async (departmentName: string) => {
+  const handleCreateDepartment = async (name: string, code: string) => {
     try {
-      await dispatch(createDepartment(departmentName))
+      await dispatch(createDepartment({ name, departmentCode: code }));
       setIsModalOpen(false)
       toast({
           title: 'Success',
@@ -73,11 +73,12 @@ export default function DepartmentsPage() {
     }
   }
 
-  const handleEditDepartment = async (departmentName: string) => {
+  const handleEditDepartment = async (name: string, code: string) => {
     try {
+      console.log('departmentCode', code)
       if (selectedIndex !== null) {
         const department = departments[selectedIndex]
-        await dispatch(updateDepartment({ id: department._id, name: departmentName }))
+         await dispatch(updateDepartment({ id: department._id, name, departmentCode: code }));
         setIsModalOpen(false)
         toast({
           title: 'Success',
@@ -148,72 +149,75 @@ export default function DepartmentsPage() {
                   No departments found. Create one to get started.
                 </p>
               ) : (
-              departments
-              // .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-              .map((department, index) => {
-              const isLocked = department.locked;
+              departments.map((department, index) => {
+                const isLocked = false; // Or: const isLocked = department.locked;
 
-              return (
-                <div
-                  key={index}
-                  className={`
-                    flex items-center justify-between p-4 border rounded-lg shadow-sm 
-                    ${isLocked ? "bg-gray-100 dark:bg-gray-700" : "bg-slate-50 dark:bg-slate-800"} 
-                    border-slate-200 dark:border-slate-700 
-                    transition-all duration-200
-                  `}
-                >
-                  <span
+                return (
+                  <div
+                    key={index}
                     className={`
-                      font-medium 
-                      ${isLocked ? "italic text-gray-500 dark:text-gray-400" : "text-slate-800 dark:text-slate-200"}
+                      flex items-center justify-between p-4 border rounded-lg shadow-sm 
+                      ${isLocked ? "bg-gray-100 dark:bg-gray-700" : "bg-slate-50 dark:bg-slate-800"} 
+                      border-slate-200 dark:border-slate-700 
+                      transition-all duration-200
                     `}
                   >
-                    {department.name}
-                  </span>
+                    <div className="flex flex-col">
+                      <span
+                        className={`
+                          font-medium
+                          ${isLocked ? "italic text-gray-500 dark:text-gray-400" : "text-slate-800 dark:text-slate-200"}
+                        `}
+                      >
+                        {department.name}
+                      </span>
+                      {department.departmentCode && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Code: {department.departmentCode}</p>
+                      )}
+                    </div>
 
-                  <div className="flex gap-0">
-                    <Button
-                      className={`
-                        ${isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-200 dark:hover:bg-slate-600"}
-                        text-black dark:text-slate-400
-                      `}
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (isLocked) {
-                          setShowLockedModal(true);
-                        } else {
-                          handleOpenModal("edit", department.name, index);
-                        }
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
+                    <div className="flex gap-0">
+                      <Button
+                        className={`
+                          ${isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-200 dark:hover:bg-slate-600"}
+                          text-black dark:text-slate-400
+                        `}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (isLocked) {
+                            setShowLockedModal(true);
+                          } else {
+                            handleOpenModal("edit", department.name, index);
+                          }
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
 
-                    <Button
-                      className={`
-                        ${isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 dark:hover:bg-red-900/20"}
-                        text-red-600
-                      `}
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (isLocked) {
-                          setShowLockedModal(true);
-                        } else {
-                          handleOpenModal("delete", department.name, index);
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
+                      <Button
+                        className={`
+                          ${isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 dark:hover:bg-red-900/20"}
+                          text-red-600
+                        `}
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (isLocked) {
+                            setShowLockedModal(true);
+                          } else {
+                            handleOpenModal("delete", department.name, index);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })
             )}
           </div>
 

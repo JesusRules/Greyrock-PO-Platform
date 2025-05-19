@@ -65,20 +65,23 @@ export const fetchDepartments = createAsyncThunk("departments/fetchAll", async (
 })
 
 export const createDepartment = createAsyncThunk(
-  "departments/create",
-  async (newName: string) => {
-    const response = await api.post("/api/departments", { name: newName })
-    return response.data as Department
+  "departments/createDepartment",
+  async (data: { name: string; departmentCode: string }) => {
+    const res = await api.post("/api/departments", data);
+    return res.data;
   }
-)
+);
 
 export const updateDepartment = createAsyncThunk(
-  "departments/update",
-  async ({ id, name }: { id: string; name: string }) => {
-    const response = await api.patch(`/api/departments/${id}`, { name })
-    return response.data as Department
+  "departments/updateDepartment",
+  async (data: { id: string; name: string; departmentCode: string }) => {
+    const res = await api.put(`/api/departments/${data.id}`, {
+      name: data.name,
+      departmentCode: data.departmentCode,
+    });
+    return res.data;
   }
-)
+);
 
 export const deleteDepartment = createAsyncThunk(
   "departments/delete",

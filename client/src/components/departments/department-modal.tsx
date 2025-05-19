@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { AlertTriangle } from "lucide-react"
 
@@ -22,8 +20,8 @@ interface DepartmentModalProps {
   onClose: () => void
   mode: "create" | "edit" | "delete"
   department: string | null
-  onCreateDepartment: (departmentName: string) => void
-  onEditDepartment: (departmentName: string) => void
+  onCreateDepartment: (departmentName: string, departmentCode: string) => void
+  onEditDepartment: (departmentName: string, departmentCode: string) => void
   onDeleteDepartment: () => void
 }
 
@@ -37,17 +35,22 @@ export function DepartmentModal({
   onDeleteDepartment,
 }: DepartmentModalProps) {
   const [departmentName, setDepartmentName] = useState("")
+  const [departmentCode, setDepartmentCode] = useState("")
   const [error, setError] = useState<string | null>(null)
   const departments = useAppSelector(state => state.departmentsReducer.departments);
 
   useEffect(() => {
     if (mode === "edit" && department) {
-      setDepartmentName(department)
+      const found = departments.find((d) => d.name === department);
+      setDepartmentName(found?.name || "");
+      setDepartmentCode(found?.departmentCode || "");
     } else {
-      setDepartmentName("")
+      setDepartmentName("");
+      setDepartmentCode("");
     }
-    setError(null)
-  }, [mode, department, isOpen])
+    setError(null);
+  }, [mode, department, isOpen]);
+
 
   const validateDepartment = (name: string): boolean => {
     if (!name.trim()) {
@@ -78,12 +81,11 @@ export function DepartmentModal({
       onDeleteDepartment()
       return
     }
-
     if (validateDepartment(departmentName)) {
       if (mode === "create") {
-        onCreateDepartment(departmentName)
+        onCreateDepartment(departmentName, departmentCode);
       } else if (mode === "edit") {
-        onEditDepartment(departmentName)
+        onEditDepartment(departmentName, departmentCode);
       }
     }
   }
@@ -126,9 +128,9 @@ export function DepartmentModal({
         )}
 
         {mode !== "delete" ? (
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+          <div className="grid gap-4 py-4 mx-7">
+            <div className="">
+              <Label htmlFor="name" className="text-right col-span-1 self-center">
                 Name
               </Label>
               <Input
@@ -137,6 +139,17 @@ export function DepartmentModal({
                 onChange={(e) => setDepartmentName(e.target.value)}
                 className="col-span-3"
                 autoFocus
+              />
+            </div>
+            <div className="">
+              <Label htmlFor="code" className="text-right col-span-1 self-center">
+                Code
+              </Label>
+              <Input
+                id="code"
+                value={departmentCode}
+                onChange={(e) => setDepartmentCode(e.target.value)}
+                className="col-span-3"
               />
             </div>
           </div>

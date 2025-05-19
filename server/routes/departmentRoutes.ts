@@ -1,7 +1,7 @@
 import express from "express"
 import { protect } from "../middleware/auth"
 import { adminOnly } from "../middleware/adminOnly"
-import { createDepartment, deleteDepartment, getDepartments, updateDepartment } from "../controllers/departmentController"
+import { createDepartment, deleteDepartment, getDepartments, getPONumber, updateDepartment } from "../controllers/departmentController"
 
 const departmentRouter = express.Router()
 
@@ -12,10 +12,10 @@ departmentRouter.get("/", protect, getDepartments)
 departmentRouter.post("/", protect, createDepartment)
 
 // Get next department number route
-departmentRouter.post("/po-number", protect, createDepartment)
+departmentRouter.post("/po-number", protect, getPONumber)
 
 // PATCH department by ID
-departmentRouter.patch("/:id", protect, updateDepartment)
+departmentRouter.put("/:id", protect, updateDepartment)
 
 // DELETE department by ID
 departmentRouter.delete("/:id", protect, deleteDepartment)

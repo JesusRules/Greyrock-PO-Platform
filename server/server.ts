@@ -29,7 +29,7 @@ async function main() {
   app.use(express.json());
 
   app.use("/api/auth", authRoutes);
-  app.use("/api/po", PORoutes);
+  app.use("/api/purchase-orders", PORoutes);
   app.use("/api/vendors", vendorRoutes);
   app.use("/api/departments", departmentRoutes);
   app.use("/api/users", userRoutes);

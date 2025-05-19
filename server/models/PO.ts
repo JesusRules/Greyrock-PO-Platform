@@ -13,15 +13,17 @@ const PurchaseOrderSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   paymentMethod: { type: String, required: true }, // e.g. "Cheque"
 
-  department: { type: String, required: true }, // ADMINISTRATION, OPERATIONS, etc.
+  department: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department",
+    required: true,
+  },
 
   // Vendor section (left side of form)
   vendor: {
-    name: { type: String, required: true },
-    contactName: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: { type: String, required: true },
-    payableTo: { type: String, required: true },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Vendor",
+    required: true,
   },
 
   // Company details (right side static block in PDF)
@@ -48,7 +50,7 @@ const PurchaseOrderSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['Pending', 'Signed', 'Rejected'],
+    enum: ['Pending', 'Signed', 'Rejected', 'Approved'],
     default: 'Pending',
   },
 
@@ -58,5 +60,5 @@ const PurchaseOrderSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-export default mongoose.models.PurchaseOrder ||
-  mongoose.model('PurchaseOrder', PurchaseOrderSchema);
+const PurchaseOrder = mongoose.models.PurchaseOrder || mongoose.model('PurchaseOrder', PurchaseOrderSchema);
+  export default PurchaseOrder;
