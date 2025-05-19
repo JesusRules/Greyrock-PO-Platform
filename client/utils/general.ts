@@ -1,6 +1,5 @@
 // Gonna need ability to create departments
 export const departments = [
-  "All Departments",
   "Administration",
   "Boutique",
   "Events",

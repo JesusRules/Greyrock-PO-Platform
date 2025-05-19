@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { AppDispatch } from "../../../redux/store";
 import { loginUser } from '../../../redux/features/auth-slice';
-import toast from 'react-hot-toast';
+import { toast } from "../../../hooks/use-toast"
 
 function Login() {
     const { colorScheme } = useMantineColorScheme();
@@ -19,24 +19,31 @@ function Login() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = async (e: React.MouseEvent<HTMLButtonElement> ) => {
-      e.preventDefault();
+    const handleLogin = async () => {
       try {
         setLoading(true);
         const resultAction = await dispatch(loginUser({ email, password }));
         // if (isFulfilled(resultAction)) {
         if (loginUser.fulfilled.match(resultAction)) {
-            navigate('/home');
+            navigate('/purchase-orders');
             setEmail('');
             setPassword('');
           } else {
-            toast.error(resultAction.payload || 'Login failed');
+            toast({
+              title: 'Error',
+              description: 'Login failed.',
+              variant: 'destructive',
+            });
             setLoading(false);
           }
         } catch (error) {
           setLoading(false);
           console.log('Error logging in', error);
-          toast.error("Something went wrong");        
+          toast({
+              title: 'Error',
+              description: 'Something went wrong.',
+              variant: 'destructive',
+          });    
         }
     }
     
@@ -58,7 +65,7 @@ function Login() {
               {/* PASSWORD */}
               <PasswordInput className='rounded-md w-full max-w-[290px] border-[1.37px] border-black' placeholder="Enter password..." onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleLogin(e);
+                  handleLogin();
                 }
               }} value={password} onChange={(e) => setPassword(e.target.value)} type='password' required ref={passwordRef} />
   
@@ -66,7 +73,7 @@ function Login() {
             <Button disabled={loading} size='lg' mt={16} h={50} py={10} px={30} loading={false} 
               color={colorScheme === 'dark' ? 'dark.5' : '#6a6a6a'} // Darker gray dynamically
               onClick={(e) => {
-                handleLogin(e);
+                handleLogin();
               }} >
               {!loading && (
                   <span>Login</span>

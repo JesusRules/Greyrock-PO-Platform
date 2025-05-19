@@ -227,7 +227,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         {/* Form Layout */}
         <div className="space-y-8">
         {/* Top Grid with Form Inputs */}
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
         <div className="space-y-2">
         <Label>Department</Label>
         <Select value={department} onValueChange={setDepartment}>
@@ -251,7 +251,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
         <div className="space-y-2">
             <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled />
+            <Input type="text" value={format(date, "MMMM d, yyyy")} onChange={(e) => setDate(e.target.value)} dis  />
+            {/* <Input type="date" value={format(date, "yyyy-MM-dd")} onChange={(e) => setDate(e.target.value)}  /> */}
         </div>
 
         <div className="space-y-2">
@@ -305,7 +306,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
 
-        <div className="col-span-2 space-y-2">
+        <div className="space-y-2 sm:col-span-2">
             <Label>Payable To</Label>
             <Input value={payableTo} onChange={(e) => setPayableTo(e.target.value)} />
         </div>
@@ -323,59 +324,80 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         </div>
 
         {/* Column Headers */}
-        <div className="flex gap-2 text-sm font-medium text-muted-foreground">
-        <div className="w-[2.5rem]"></div> {/* Empty space for trash icon */}
+        {/* <div className="flex gap-2 text-sm font-medium text-muted-foreground">
+        <div className="w-[2.5rem]"></div>
         <div className="w-[10rem]">Item ID</div>
         <div className="flex-1">Description</div>
         <div className="w-[4.75rem]">Qty</div>
         <div className="w-[7rem]">Unit Price</div>
         <div className="w-[6rem] text-right">Total</div>
+        </div> */}
+        {/* Column Headers */}
+        <div className="hidden sm:grid sm:grid-cols-[4rem,9rem,1fr,4.25rem,6.33rem,6rem] gap-2 text-sm font-medium text-muted-foreground">
+          <div></div>
+          <div>Item ID</div>
+          <div>Description</div>
+          <div>Qty</div>
+          <div>Unit Price</div>
+          <div className="text-right">Total</div>
         </div>
 
         {/* Line Items */}
         {lineItems.map((item) => (
-        <div key={item.id} className="flex gap-2 items-end">
-            {/* Trash icon on the left */}
-            <div className="w-[2.5rem] flex justify-center items-center">
+        <div
+          key={item.id}
+          className="grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-start border p-2 rounded-md"
+        >
+          {/* Trash */}
+          <div className="flex sm:block justify-center">
             <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => removeLineItem(item.id)}
-                disabled={lineItems.length <= 1}
+              variant="ghost"
+              size="icon"
+              onClick={() => removeLineItem(item.id)}
+              disabled={lineItems.length <= 1}
             >
-                <Trash2 className="h-4 w-4 text-red-500" />
+              <Trash2 className="h-4 w-4 text-red-500" />
             </Button>
-            </div>
+          </div>
 
-            <Input
+          {/* Item ID */}
+          <Input
             placeholder="Item ID"
             value={item.itemId}
             onChange={(e) => updateLineItem(item.id, "itemId", e.target.value)}
-            className="w-[10rem]"
-            />
-            <Input
+          />
+
+          {/* Description */}
+          <textarea
             placeholder="Description"
             value={item.description}
             onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
-            className="flex-1"
-            />
-            <Input
+            rows={1}
+            className="w-full min-h-[2.25rem] px-3 py-2 text-sm border border-input rounded-md bg-background shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+          />
+
+          {/* Qty */}
+          <Input
             type="number"
             placeholder="Qty"
             value={item.quantity}
             onChange={(e) => updateLineItem(item.id, "quantity", Number(e.target.value))}
-            className="w-[4.75rem]"
-            />
-            <Input
+          />
+
+          {/* Unit Price */}
+          <Input
             type="number"
             placeholder="Price"
             value={item.unitPrice}
             onChange={(e) => updateLineItem(item.id, "unitPrice", Number(e.target.value))}
-            className="w-[7rem]"
-            />
-            <div className="w-[6rem] text-right">${item.lineTotal.toFixed(2)}</div>
+          />
+
+          {/* Total */}
+          <div className="text-right font-medium">
+            ${item.lineTotal.toFixed(2)}
+          </div>
         </div>
-        ))}
+      ))}
 
         <Separator />
 
