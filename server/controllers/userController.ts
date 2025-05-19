@@ -19,7 +19,7 @@ export const getUsers = async (req: Request, res: Response) => {
 // POST /api/users
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, login, role, password, phoneNumber } = req.body
+    const { firstName, lastName, email, role, password, phoneNumber } = req.body
 
     if (!email || !password) {
       res.status(400)
@@ -39,6 +39,7 @@ export const createUser = async (req: Request, res: Response) => {
     const newUser = new User({
       firstName,
       lastName,
+      // login,
       email,
       role,
       password,
@@ -50,6 +51,7 @@ export const createUser = async (req: Request, res: Response) => {
     .set(createNoCacheHeaders())
     .status(201).json({ newUser: savedUser })
   } catch (err) {
+    console.error(err);
     res
     .set(createNoCacheHeaders())
     .status(500).json({ message: "Failed to create user" })
@@ -105,10 +107,11 @@ export const deleteUser = async (req: Request, res: Response) => {
       return;
     }
 
+    const userToReturn = user.toObject(); // ✅ Clone user before deletion
     await user.deleteOne()
     res
     .set(createNoCacheHeaders())
-    .json({ message: "User deleted successfully" })
+    .json({ message: "User deleted successfully", deletedUser: userToReturn })
   } catch (err) {
     res
     .set(createNoCacheHeaders())

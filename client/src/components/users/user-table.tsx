@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog"
 import { MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react"
-import toast from "react-hot-toast"
+import { useToast } from "../../../hooks/use-toast"
 import { useGlobalContext } from "../../../context/global-context"
 import { User } from "../../../../types/User"
 import { deleteUser } from "../../../redux/features/users-slice"
@@ -34,6 +34,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
   const [openDeleteUser, setOpenDeleteUser] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const { toast } = useToast();
 
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user)
@@ -46,12 +47,20 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
     try {
       setIsDeleting(true)
       await deleteUser(userToDelete._id)
-      toast.success('The user has been deleted successfully.');
+      toast({
+        title: 'Success',
+        description: 'The user has been deleted successfully.',
+        variant: 'success',
+      });
       setOpenDeleteUser(false)
       onDelete(userToDelete._id)
     } catch (error) {
       console.error(error)
-      toast.error('Something went wrong. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsDeleting(false)
     }
@@ -127,7 +136,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled onClick={() => handleDeleteClick(user)} className="cursor-pointer text-red-600">
+                      <DropdownMenuItem  onClick={() => handleDeleteClick(user)} className="cursor-pointer text-red-600">
                       {/* <DropdownMenuItem onClick={() => handleDeleteClick(user)} className="text-red-600"> */}
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -142,7 +151,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
       </div>
     
       <Dialog open={openDeleteUser} onOpenChange={setOpenDeleteUser}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="bg-white dark:bg-darkModal">
           <DialogHeader>
             <DialogTitle>Are you sure you want to delete this user?</DialogTitle>
             <DialogDescription>

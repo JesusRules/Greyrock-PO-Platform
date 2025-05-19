@@ -47,7 +47,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
             lastName: "",
             email: "",
             // login: "",
-            role: "User",
+            role: "user",
             phoneNumber: "",
             password: "",
           },
@@ -68,7 +68,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
           lastName: "",
           email: '',
           // login: "",
-          role: "User",
+          role: "user",
           phoneNumber: "",
           password: "",
         })
@@ -118,6 +118,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
           });
         }
       } else {
+        console.log('userPayload', userPayload)
         const resultAction = await dispatch(createUser(userPayload));
         if (createUser.rejected.match(resultAction)) {
           toast({
@@ -163,7 +164,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <FormLabel>First Name *</FormLabel>
                     <FormControl>
                       <Input placeholder="John" {...field} />
                     </FormControl>
@@ -176,7 +177,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel>Last Name *</FormLabel>
                     <FormControl>
                       <Input placeholder="Doe" {...field} />
                     </FormControl>
@@ -192,7 +193,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email *</FormLabel>
                   <FormControl>
                     <Input placeholder="Jake Paul" {...field} />
                   </FormControl>
@@ -223,7 +224,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel>Role *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full cursor-pointer">
@@ -260,7 +261,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Password *</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input
