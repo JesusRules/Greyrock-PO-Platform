@@ -28,7 +28,7 @@ export default function VendorsPage() {
   return (
     <>
     <Drawer />
-      <div className="mx-auto py-10 mt-5 max-w-[1100px]">
+      <div className="mx-auto py-10 mt-5 max-w-[1100px] px-3">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Vendor Management</h1>
           <Button onClick={() => {

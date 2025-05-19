@@ -61,6 +61,12 @@ export function Drawer() {
             >
             Manage Users
             </Button>
+             <Button onClick={() => navigate("/departments")}
+            variant="ghost"
+            className="cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+            >
+            Manage Departments
+            </Button>
             <Button onClick={() => navigate("/vendors")}
             variant="ghost"
             className="cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"

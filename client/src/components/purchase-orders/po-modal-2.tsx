@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { format } from "date-fns"
-import { Button } from "../..//components/ui/button"
-import { Input } from "../..//components/ui/input"
-import { Label } from "../..//components/ui/label"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { Label } from "../ui/label"
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../..//components/ui/select"
-import { Separator } from "../..//components/ui/separator"
+} from "../ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Separator } from "../ui/separator"
 import { usePurchaseOrders } from "../../../context/po-context"
 import { departments } from "../../../utils/general"
 import { useAppSelector } from "../../../redux/store"
@@ -218,7 +218,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-zinc-900">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Purchase Order" : "Create Purchase Order"}</DialogTitle>
           <DialogDescription>Fill in the details for the purchase order</DialogDescription>
@@ -251,7 +251,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
         <div className="space-y-2">
             <Label>Date</Label>
-            <Input type="text" value={format(date, "MMMM d, yyyy")} onChange={(e) => setDate(e.target.value)} dis  />
+            <Input type="text" value={format(date, "MMMM d, yyyy")} onChange={(e) => setDate(e.target.value)}  />
             {/* <Input type="date" value={format(date, "yyyy-MM-dd")} onChange={(e) => setDate(e.target.value)}  /> */}
         </div>
 

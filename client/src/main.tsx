@@ -13,9 +13,10 @@ import { ReduxProvider } from '../redux/provider';
 // import StyledComponentsRegistry from "../../libs/styled-comp-registry";
 import '@mantine/core/styles.css';
 import Login from './pages/login/Login';
-import Home from './pages/purchase-orders/Home';
 import VendorsPage from './pages/vendors/VendorsPage';
 import { Toaster } from '@components/ui/toaster';
+import POPage from './pages/purchase-orders/POPage';
+import DepartmentsPage from './pages/departments/DepartmentPage';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -34,7 +35,8 @@ createRoot(document.getElementById('root')!).render(
     <AuthChecker>
       <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/purchase-orders" element={<Home />} />
+          <Route path="/purchase-orders" element={<POPage />} />
+          <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/vendors" element={<VendorsPage />} />
       </Routes>
     </AuthChecker>
