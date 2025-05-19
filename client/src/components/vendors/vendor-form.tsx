@@ -12,7 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { useGlobalContext } from "../../../context/global-context"
 import { useDispatch } from "react-redux"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
-import { addVendor, fetchVendorById, updateVendor } from "../../../redux/features/vendor-slice"
+import { addVendor, fetchVendorById, updateVendor } from "../../../redux/features/vendors-slice"
 
 const vendorSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),

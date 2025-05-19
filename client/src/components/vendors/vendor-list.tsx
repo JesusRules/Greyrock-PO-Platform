@@ -17,7 +17,7 @@ import { useToast } from "../../../hooks/use-toast"
 import { EditVendorModal } from "./edit-vendor-modal"
 import { CommentViewModal } from "./comment-view-modal"
 import { useGlobalContext } from "../../../context/global-context"
-import { deleteVendor, fetchVendors } from "../../../redux/features/vendor-slice"
+import { deleteVendor, fetchVendors } from "../../../redux/features/vendors-slice"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
 

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import { useGlobalContext } from "../../../context/global-context"
 import { useDispatch } from "react-redux"
 import { AppDispatch } from "../../../redux/store"
-import { fetchVendors } from "../../../redux/features/vendor-slice"
+import { fetchVendors } from "../../../redux/features/vendors-slice"
 import { toast } from "../../../hooks/use-toast"
 
 export default function VendorsPage() {

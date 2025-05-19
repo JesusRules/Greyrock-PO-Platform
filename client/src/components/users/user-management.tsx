@@ -1,0 +1,69 @@
+import { useState } from "react"
+import { Button } from "../../components/ui/button"
+import { PlusCircle } from "lucide-react"
+import { User } from "../../../types/User"
+import { UserFormModal } from "./user-form-modal"
+import { UserTable } from "./user-table"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
+import { useDispatch } from "react-redux"
+import { createUser, deleteUser, updateUser } from "../../../redux/features/users-slice"
+import { ClipLoader } from "react-spinners"
+
+export function UserManagement() {
+  // const [users, setUsers] = useState<User[]>(initialUsers)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  //Redux
+  const dispatch = useDispatch<AppDispatch>();
+  const users = useAppSelector(state => state.usersReducer.users);
+  const initLoad = useAppSelector(state => state.usersReducer.initLoad);
+
+  const handleUserDeleted = async (userId: string) => {
+    await dispatch(deleteUser(userId));
+  };
+
+  if (initLoad) {
+    return (
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center dark:bg-transparent bg-white/60">
+        <ClipLoader color="blue" />
+      </div>
+    )
+  }
+
+  return (
+    <>
+    {/* Modal for creating a new user */}
+      <UserFormModal open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} />
+
+      {/* Modal for editing an existing user */}
+      {editingUser && (
+        <UserFormModal
+          open={!!editingUser}
+          onOpenChange={(open) => !open && setEditingUser(null)}
+          initialData={editingUser}
+        />
+      )}
+
+      <div className="flex justify-end items-center mb-8">
+        {/* <h1 className="text-3xl font-bold">Users</h1> */}
+        <Button className="cursor-pointer" onClick={() => setIsCreateModalOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add User
+        </Button>
+      </div>
+
+      {users.length > 0 ? (
+        <UserTable users={users} onEdit={setEditingUser} onDelete={handleUserDeleted} />
+      ) : (
+        <div className="bg-muted/50 p-12 rounded-lg flex flex-col items-center justify-center text-center">
+          <h3 className="text-xl font-medium mb-2">No users yet</h3>
+          <p className="text-muted-foreground mb-6">Get started by creating your first user.</p>
+          <Button className="cursor-pointer" onClick={() => setIsCreateModalOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </div>
+      )}
+    </>
+  )
+}

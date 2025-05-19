@@ -157,7 +157,7 @@ export function PurchaseOrderList() {
                     <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(po)}>
+                    <Button className="text-yellow-700 dark:text-yellow-500" variant="ghost" size="icon" onClick={() => handleEdit(po)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => downloadPdf(po.id)}>

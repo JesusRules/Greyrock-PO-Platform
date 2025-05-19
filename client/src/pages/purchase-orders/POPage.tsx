@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Drawer } from "../../components/layout/Drawer";
 import { PurchaseOrderList } from "../../components/purchase-orders/po-list";
 import { Button } from "../../components/ui/button"
-import { fetchVendors } from "../../../redux/features/vendor-slice";
+import { fetchVendors } from "../../../redux/features/vendors-slice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { toast } from "../../../hooks/use-toast"
