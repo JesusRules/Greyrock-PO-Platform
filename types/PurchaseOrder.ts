@@ -9,16 +9,17 @@ export interface OrderItem {
 export interface PurchaseOrder {
   _id: string;
   poNumber: string;
-  date: string;
-  department: string;
+  date: Date;
   paymentMethod: string;
-  vendor: {
-    name: string;
-    contactName: string;
-    phone: string;
-    email: string;
-    payableTo: string;
-  };
+  department: string;
+  // vendor: {
+  //   name: string;
+  //   contactName: string;
+  //   phone: string;
+  //   email: string;
+  //   payableTo: string;
+  // };
+  vendor: string
   companyInfo: {
     name: string;
     address: string;
@@ -34,7 +35,7 @@ export interface PurchaseOrder {
   total: number;
   submitter: string;
   manager: string;
-  status: "Pending" | "Signed" | "Rejected" | "Approved";
+  status: string;
   pdfUrl?: string;
   createdAt: string;
   updatedAt: string;

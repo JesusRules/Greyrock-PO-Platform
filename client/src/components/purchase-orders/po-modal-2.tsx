@@ -52,10 +52,12 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   //Redux
   const dispatch = useDispatch<AppDispatch>();
   const vendors = useAppSelector(state => state.vendorsReducer.vendors);
+  const user = useAppSelector(state => state.authReducer.user);
   const departments = useAppSelector(state => state.departmentsReducer.departments);
+  const [isLoading, setIsLoading] = useState(false);
   //States
   const [poNumber, setPoNumber] = useState("")
-  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
+  const [date, setDate] = useState(new Date());
   const [vendor, setVendor] = useState("")
   const [contactName, setContactName] = useState("")
   const [phone, setPhone] = useState("")
@@ -79,7 +81,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     defaultValues: {
       department: "",
       poNumber: "",
-      date: "",
+      date,
       vendor: "",
       contactName: "",
       phone: "",
@@ -117,7 +119,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       form.reset({
         department: purchaseOrder.department || "",
         poNumber: purchaseOrder.poNumber || "",
-        date: purchaseOrder.date || format(new Date(), "yyyy-MM-dd"),
+        date: purchaseOrder.date || new Date(),
         vendor: purchaseOrder.vendor || "",
         contactName: purchaseOrder.contactName || "",
         phone: purchaseOrder.phone || "",
@@ -133,7 +135,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       form.reset({
         department: "",
         poNumber: "",
-        date: format(new Date(), "yyyy-MM-dd"),
+        date: new Date(),
         vendor: "",
         contactName: "",
         phone: "",
@@ -202,9 +204,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         console.log(form.formState.errors); // 👈 shows which fields failed
       }
 
-      console.log("323")
-
-      let finalPoNumber = poNumber;
+      setIsLoading(true);
+      let finalPoNumber;
 
       // 🔁 On create: fetch and increment a fresh PO number
       if (!isEditing) {
@@ -217,27 +218,30 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         setPoNumber(finalPoNumber); // update state for consistency
       }
 
+      const departmentName = form.getValues("department"); // or use `watch("department")`
+      const selectedDepartment = departments.find(dept => dept.name === departmentName);
+      const departmentId = selectedDepartment?._id;
+
+      const vendorName = form.getValues("vendor");
+      const selectedVendor = vendors.find(v => v.companyName === vendorName);
+      const vendorId = selectedVendor?._id;
+
       const poData = {
-        department,
+        department: departmentId,
         poNumber: finalPoNumber,
         date,
-        vendor: {
-          name: vendor,
-          contactName,
-          phone,
-          email,
-          payableTo,
-        },
+        vendor: vendorId,
         paymentMethod,
         lineItems,
         shipping,
         taxRate,
         subtotal,
-        tax,
+        taxAmount: taxRate,
         total,
-        status: isEditing ? purchaseOrder.status : "Pending",
+        status: "Pending",
+        submitter: `${user?.firstName} ${user?.lastName}`,
+        manager: `${user?.firstName} ${user?.lastName}`,
       };
-
       if (!isEditing) {
         const result = await dispatch(createPurchaseOrder(poData)).unwrap();
         toast({
@@ -258,7 +262,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       }
 
       onClose();
+      setIsLoading(false);
     } catch (error) {
+      setIsLoading(false);
       console.error("Error submitting PO:", error);
       toast({
           title: 'Error',
@@ -315,8 +321,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
               <Input
                 disabled
                 type="text"
-                value={format(new Date(`${date}T00:00:00`), "MMMM d, yyyy")}
-                onChange={(e) => setDate(e.target.value)}
+                value={format(date, "MMMM d, yyyy h:mm a")} // e.g. "May 19, 2025 5:22 PM"
+                onChange={(e) => setDate(new Date(e.target.value))}
               />
             </div>
 
@@ -543,270 +549,20 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         </div>
 
           <DialogFooter className="mt-10">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
-            <Button onClick={() => handleSubmit()} type="submit">{isEditing ? "Update" : "Create"}</Button>
+            <Button
+              type="submit"
+              onClick={() => handleSubmit()}
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : isEditing ? "Update" : "Create"}
+            </Button>
           </DialogFooter>
         </form>
       </Form>
     </DialogContent>
   </Dialog>
 );
-
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Purchase Order" : "Create Purchase Order"}</DialogTitle>
-          <DialogDescription>Fill in the details for the purchase order</DialogDescription>
-        </DialogHeader>
-
-        {/* Form Layout */}
-        <div className="space-y-8">
-        {/* Top Grid with Form Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-        {/* <div className="space-y-2">
-        <Label>Department</Label>
-        <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger>
-            <SelectValue placeholder="Select department" />
-            </SelectTrigger>
-            <SelectContent>
-            {departments
-              // .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-              .map((dept) => (
-                <SelectItem key={dept._id} value={dept.name === "All Departments" ? "all" : dept.name}>
-                  {dept.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-        </Select>
-        </div> */}
-        <FormField
-            control={form.control}
-            name="department"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Department</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept._id} value={dept.name}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-        <div className="space-y-2">
-            <Label>PO Number</Label>
-            <Input value={poNumber} disabled />
-        </div>
-
-        <div className="space-y-2">
-            <Label>Date</Label>
-            <Input type="text" value={format(date, "MMMM d, yyyy")} onChange={(e) => setDate(e.target.value)}  />
-            {/* <Input type="date" value={format(date, "yyyy-MM-dd")} onChange={(e) => setDate(e.target.value)}  /> */}
-        </div>
-
-        <div className="space-y-2">
-            <Label>Payment Method</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-            <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
-            </SelectTrigger>
-            <SelectContent>
-                {PAYMENT_METHODS.map((method) => (
-                <SelectItem key={method} value={method}>
-                    {method}
-                </SelectItem>
-                ))}
-            </SelectContent>
-            </Select>
-        </div>
-
-        {/* <div className="space-y-2">
-            <Label>Vendor</Label>
-            <Input value={vendor} onChange={(e) => setVendor(e.target.value)} />
-        </div> */}
-        <div className="space-y-2">
-          <Label>Vendor</Label>
-          <Select value={vendor} onValueChange={setVendor}>
-              <SelectTrigger>
-              <SelectValue placeholder="Select vendor" />
-              </SelectTrigger>
-              <SelectContent>
-              {vendors.map((vendor) => (
-                  <SelectItem key={vendor._id} value={vendor.companyName === "All Vendors" ? "all" : vendor.companyName}>
-                  {vendor.companyName}
-                  </SelectItem>
-              ))}
-              </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-            <Label>Contact Name</Label>
-            <Input value={contactName} onChange={(e) => setContactName(e.target.value)} />
-        </div>
-
-        <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-
-        <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-
-        <div className="space-y-2 sm:col-span-2">
-            <Label>Payable To</Label>
-            <Input value={payableTo} onChange={(e) => setPayableTo(e.target.value)} />
-        </div>
-
-        <Separator />
-
-        {/* Bottom Section: Line Items */}
-        <div className="space-y-4">
-        <div className="flex justify-between items-center">
-            <Label className="text-base font-medium">Line Items</Label>
-            <Button variant="outline" size="sm" onClick={addLineItem}>
-            <Plus className="w-4 h-4 mr-1" /> Add Item
-            </Button>
-        </div>
-
-        {/* Column Headers */}
-        {/* <div className="flex gap-2 text-sm font-medium text-muted-foreground">
-        <div className="w-[2.5rem]"></div>
-        <div className="w-[10rem]">Item ID</div>
-        <div className="flex-1">Description</div>
-        <div className="w-[4.75rem]">Qty</div>
-        <div className="w-[7rem]">Unit Price</div>
-        <div className="w-[6rem] text-right">Total</div>
-        </div> */}
-        {/* Column Headers */}
-        <div className="hidden sm:grid sm:grid-cols-[4rem,9rem,1fr,4.25rem,6.33rem,6rem] gap-2 text-sm font-medium text-muted-foreground">
-          <div></div>
-          <div>Item ID</div>
-          <div>Description</div>
-          <div>Qty</div>
-          <div>Unit Price</div>
-          <div className="text-right">Total</div>
-        </div>
-
-        {/* Line Items */}
-        {lineItems.map((item) => (
-        <div
-          key={item.id}
-          className="grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-start border p-2 rounded-md"
-        >
-          {/* Trash */}
-          <div className="flex sm:block justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => removeLineItem(item.id)}
-              disabled={lineItems.length <= 1}
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </Button>
-          </div>
-
-          {/* Item ID */}
-          <Input
-            placeholder="Item ID"
-            value={item.itemId}
-            onChange={(e) => updateLineItem(item.id, "itemId", e.target.value)}
-          />
-
-          {/* Description */}
-          <textarea
-            placeholder="Description"
-            value={item.description}
-            onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
-            rows={1}
-            className="w-full min-h-[2.25rem] px-3 py-2 text-sm border border-input rounded-md bg-background shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-          />
-
-          {/* Qty */}
-          <Input
-            type="number"
-            placeholder="Qty"
-            value={item.quantity}
-            onChange={(e) => updateLineItem(item.id, "quantity", Number(e.target.value))}
-          />
-
-          {/* Unit Price */}
-          <Input
-            type="number"
-            placeholder="Price"
-            value={item.unitPrice}
-            onChange={(e) => updateLineItem(item.id, "unitPrice", Number(e.target.value))}
-          />
-
-          {/* Total */}
-          <div className="text-right font-medium">
-            ${item.lineTotal.toFixed(2)}
-          </div>
-        </div>
-      ))}
-
-        <Separator />
-
-        <div className="space-y-2">
-            <div className="flex justify-between">
-            <span>Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center gap-4">
-            <Label className="text-sm">Tax Rate</Label>
-            <div className="w-[5rem]">
-                <Select value={taxRate.toString()} onValueChange={(val) => setTaxRate(parseFloat(val))}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Tax %" />
-                </SelectTrigger>
-                <SelectContent>
-                    {[0, 5, 13, 15].map((rate) => (
-                    <SelectItem key={rate} value={rate.toString()}>
-                        {rate}%
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-            </div>
-            </div>
-            <div className="flex justify-between">
-            <span>Shipping:</span>
-            <span>${shipping.toFixed(2)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-semibold pt-3">
-            <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
-            </div>
-        </div>
-        </div>
-
-        <DialogFooter className="mt-10">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>{isEditing ? "Update" : "Create"}</Button>
-        </DialogFooter>
-
-      </div>
-      </div>
-      </DialogContent>
-    </Dialog>
-  )
 }

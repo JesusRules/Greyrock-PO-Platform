@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { toast } from "../../../hooks/use-toast"
 import { fetchDepartments } from "../../../redux/features/departments-slice";
+import { fetchPurchaseOrders } from "../../../redux/features/po-slice";
 
 export default function POPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -25,6 +26,14 @@ export default function POPage() {
       toast({
         title: 'Error',
         description: 'Failed to load departments. Please try again.',
+        variant: 'destructive',
+      });
+    });
+    dispatch(fetchPurchaseOrders()).unwrap().catch((err) => {
+      console.error('Error fetching purchase orders:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch purchase orders. Please try again.',
         variant: 'destructive',
       });
     });
