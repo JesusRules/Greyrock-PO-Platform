@@ -17,8 +17,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Separator } from "../ui/separator"
 import { usePurchaseOrders } from "../../../context/po-context"
-import { departments } from "../../../utils/general"
 import { useAppSelector } from "../../../redux/store"
+import api from "../../../axiosSetup"
 
 interface LineItem {
   id: string
@@ -53,6 +53,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const isEditing = mode === "edit"
   //Redux
   const vendors = useAppSelector(state => state.vendorsReducer.vendors);
+  const departments = useAppSelector(state => state.departmentsReducer.departments);
   //States
   const [department, setDepartment] = useState("")
   const [poNumber, setPoNumber] = useState("")
@@ -75,8 +76,25 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   }])
 
   useEffect(() => {
+    const fetchPoNumber = async () => {
+      if (mode === "create" && department) {
+        try {
+          const res = await api.post("/api/po-number", {
+            departmentName: department,
+          });
+          setPoNumber(res.data.poNumber);
+        } catch (err) {
+          console.error("Failed to fetch PO number", err);
+        }
+      }
+    };
+
+    fetchPoNumber();
+  }, [department]);
+
+  useEffect(() => {
     if (!isOpen) return;
-  
+
     if (isEditing && purchaseOrder) {
       setDepartment(purchaseOrder.department || "")
       setPoNumber(purchaseOrder.poNumber || "")
@@ -91,44 +109,28 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       setTaxRate(purchaseOrder.taxRate || 13)
       setLineItems(purchaseOrder.lineItems || [])
     } else {
-      // ✅ Also make sure to reset date to today when creating
-        setDate(format(new Date(), "yyyy-MM-dd"))
+      setDate(format(new Date(), "yyyy-MM-dd")) // only reset date on new form
+      setDepartment("")
+      setPoNumber("")
+      setVendor("")
+      setContactName("")
+      setPhone("")
+      setEmail("")
+      setPayableTo("")
+      setPaymentMethod("Cheque")
+      setShipping(0)
+      setTaxRate(13)
+      setLineItems([{
+        id: "1",
+        quantity: 1,
+        itemId: "",
+        description: "",
+        unitPrice: 0,
+        lineTotal: 0,
+      }])
     }
   }, [isOpen])
 
-  useEffect(() => {
-    if (isEditing && purchaseOrder) {
-      setDepartment(purchaseOrder.department || "")
-      setPoNumber(purchaseOrder.poNumber || "")
-      setDate(purchaseOrder.date || format(new Date(), "yyyy-MM-dd"))
-      setVendor(purchaseOrder.vendor || "")
-      setContactName(purchaseOrder.contactName || "")
-      setPhone(purchaseOrder.phone || "")
-      setEmail(purchaseOrder.email || "")
-      setPayableTo(purchaseOrder.payableTo || "")
-      setPaymentMethod(purchaseOrder.paymentMethod || "Cheque")
-      setShipping(purchaseOrder.shipping || 0)
-      setTaxRate(purchaseOrder.taxRate || 13)
-      setLineItems(purchaseOrder.lineItems || [])
-    } else if (mode === "create" && department) {
-        const deptCode = DEPARTMENT_CODES[department] || "PO"
-        const existing = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
-      
-        // Filter by department
-        const deptOrders = existing.filter((po: any) => po.department === department)
-      
-        // Extract the highest number used
-        const lastNumber = deptOrders
-          .map((po: any) => {
-            const match = po.poNumber?.match(/-(\d+)$/)
-            return match ? parseInt(match[1], 10) : 0
-          })
-          .reduce((max: number, num: number) => Math.max(max, num), 0)
-      
-        const nextNumber = String(lastNumber + 1).padStart(3, "0")
-        setPoNumber(`${deptCode}-${nextNumber}`)
-      }
-  }, [purchaseOrder, isEditing, department])
 
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
     setLineItems((prev) =>
@@ -235,11 +237,13 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
-            {departments.map((dept) => (
-                <SelectItem key={dept} value={dept === "All Departments" ? "all" : dept}>
-                {dept}
+            {departments
+              // .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+              .map((dept) => (
+                <SelectItem key={dept._id} value={dept.name === "All Departments" ? "all" : dept.name}>
+                  {dept.name}
                 </SelectItem>
-            ))}
+              ))}
             </SelectContent>
         </Select>
         </div>

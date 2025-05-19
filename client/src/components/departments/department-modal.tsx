@@ -15,13 +15,13 @@ import {
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Alert, AlertDescription } from "../../components/ui/alert"
+import { useAppSelector } from "../../../redux/store"
 
 interface DepartmentModalProps {
   isOpen: boolean
   onClose: () => void
   mode: "create" | "edit" | "delete"
   department: string | null
-  departments: string[]
   onCreateDepartment: (departmentName: string) => void
   onEditDepartment: (departmentName: string) => void
   onDeleteDepartment: () => void
@@ -32,13 +32,13 @@ export function DepartmentModal({
   onClose,
   mode,
   department,
-  departments,
   onCreateDepartment,
   onEditDepartment,
   onDeleteDepartment,
 }: DepartmentModalProps) {
   const [departmentName, setDepartmentName] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const departments = useAppSelector(state => state.departmentsReducer.departments);
 
   useEffect(() => {
     if (mode === "edit" && department) {
@@ -55,10 +55,15 @@ export function DepartmentModal({
       return false
     }
 
-    const isDuplicate = departments.some(
-      (dept) =>
-        dept.toLowerCase() === name.toLowerCase() && (mode === "create" || (mode === "edit" && dept !== department)),
-    )
+    const isDuplicate = departments.some((dept) => {
+      const inputName = name.trim().toLowerCase()
+      const existingName = dept.name.trim().toLowerCase()
+
+      const isSame = inputName === existingName
+      const isEditingDifferent = mode === "edit" && existingName !== department?.trim().toLowerCase()
+
+      return isSame && (mode === "create" || isEditingDifferent)
+    })
 
     if (isDuplicate) {
       setError("Department name already exists")

@@ -8,10 +8,17 @@ const departmentSchema = new mongoose.Schema(
       unique: true, // Prevents duplicates
       trim: true,
     },
+    departmentCode: {
+      type: String,
+      required: false,
+      unique: true,
+      trim: true,
+    },
     locked: {
       type: Boolean,
       default: false,
     },
+    poCounter: { type: Number, default: 0 },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt

@@ -4,6 +4,7 @@ import authReducer from './features/auth-slice';
 import vendorsReducer from './features/vendors-slice';
 import departmentsReducer from './features/departments-slice';
 import usersReducer from './features/users-slice';
+import purchaseOrdersRouter from './features/po-slice';
 
 export const store = configureStore({
     reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
         vendorsReducer,
         departmentsReducer,
         usersReducer,
+        purchaseOrdersRouter
     }
 });
 

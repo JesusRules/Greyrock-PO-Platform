@@ -6,6 +6,7 @@ import { fetchVendors } from "../../../redux/features/vendors-slice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { toast } from "../../../hooks/use-toast"
+import { fetchDepartments } from "../../../redux/features/departments-slice";
 
 export default function POPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,6 +20,14 @@ export default function POPage() {
         variant: 'destructive',
       });
     });
+    dispatch(fetchDepartments()).unwrap().catch((err) => {
+      console.error('Error fetching departments:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to load departments. Please try again.',
+        variant: 'destructive',
+      });
+    });
   }, [dispatch, toast]);
 
   return (
@@ -27,9 +36,6 @@ export default function POPage() {
     <div className="mx-auto py-10 mt-5 max-w-[1100px] px-3">
       <h1 className="text-3xl font-bold mb-6">Purchase Order Management</h1>
         <PurchaseOrderList />
-        {/* <Button className="ml-auto flex mt-2" variant='outline'  onClick={() => console.log("Logout")}>
-          Logout
-          </Button> */}
     </div>
     </>
   )

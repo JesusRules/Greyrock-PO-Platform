@@ -7,13 +7,14 @@ import { Input } from "../ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { usePurchaseOrders } from "../../../context/po-context"
-import { departments, formatCurrency } from "../../../utils/general"
+import { formatCurrency } from "../../../utils/general"
 import { PurchaseOrderViewModal } from "./po-view-modal"
 // import { PurchaseOrderModal } from "./po-modal"
 import { PurchaseOrderModal } from "./po-modal-2"
+import { useAppSelector } from "../../../redux/store"
 
 export function PurchaseOrderList() {
-  const { purchaseOrders, downloadPdf } = usePurchaseOrders()
+  const { downloadPdf } = usePurchaseOrders()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -23,18 +24,26 @@ export function PurchaseOrderList() {
   const [statusFilter, setStatusFilter] = useState("all")
   //Delete purchase order
   const [poToDelete, setPoToDelete] = useState<any>(null)
+  //Redux
+  const purchaseOrders = useAppSelector(state => state.purchaseOrdersRouter.purchaseOrders);
+  const departments = useAppSelector(state => state.departmentsReducer.departments);
 
   const filteredPOs = purchaseOrders.filter((po) => {
-    const matchesSearch =
-      (po.vendor?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-      (po.poNumber?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-      (po.description?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+  const query = searchQuery.toLowerCase();
 
-    const matchesDepartment = departmentFilter === "all" || po.department === departmentFilter
-    const matchesStatus = statusFilter === "all" || po.status === statusFilter
+  const matchesSearch =
+      (po.vendor?.name?.toLowerCase() || "").includes(query) ||
+      (po.vendor?.contactName?.toLowerCase() || "").includes(query) ||
+      (po.poNumber?.toLowerCase() || "").includes(query) ||
+      po.orderItems?.some(item =>
+        item.description.toLowerCase().includes(query)
+      );
 
-    return matchesSearch && matchesDepartment && matchesStatus
-  })
+    const matchesDepartment = departmentFilter === "all" || po.department === departmentFilter;
+    const matchesStatus = statusFilter === "all" || po.status === statusFilter;
+
+    return matchesSearch && matchesDepartment && matchesStatus;
+  });
 
   const handleView = (po: any) => {
     setCurrentPO(po)
@@ -53,7 +62,7 @@ export function PurchaseOrderList() {
     }
     const confirmed = window.confirm(`Are you sure you want to delete PO #${po.poNumber}?`)
     if (!confirmed) return
-    const updated = purchaseOrders.filter((p) => p.id !== po.id)
+    const updated = purchaseOrders.filter((p) => p._id !== po.id)
     localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
     window.location.reload()
   }
@@ -83,9 +92,11 @@ export function PurchaseOrderList() {
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent>
-              {departments.map((dept) => (
-                <SelectItem key={dept} value={dept === "All Departments" ? "all" : dept}>
-                  {dept}
+              {departments
+              // .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+              .map((dept) => (
+                <SelectItem key={dept._id} value={dept.name === "All Departments" ? "all" : dept.name}>
+                  {dept.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -131,14 +142,14 @@ export function PurchaseOrderList() {
               </TableRow>
             ) : (
               filteredPOs.map((po) => (
-                <TableRow key={po.id}>
+                <TableRow key={po._id}>
                   <TableCell>{po.poNumber}</TableCell>
                   <TableCell>{po.date}</TableCell>
-                  <TableCell>{po.vendor}</TableCell>
+                  <TableCell>{po.vendor.name}</TableCell>
                   <TableCell>{po.department}</TableCell>
                   <TableCell>{formatCurrency(po.total)}</TableCell>
                   <TableCell className="text-center">
-                    {(po.items || po.lineItems || []).length}
+                    {(po.orderItems || []).length}
                   </TableCell>
                   <TableCell>
                   <span
@@ -160,7 +171,7 @@ export function PurchaseOrderList() {
                     <Button className="text-yellow-700 dark:text-yellow-500" variant="ghost" size="icon" onClick={() => handleEdit(po)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => downloadPdf(po.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => downloadPdf(po._id)}>
                       <FileDown className="h-4 w-4" />
                     </Button>
                     {po.status !== "Signed" && (
@@ -172,7 +183,7 @@ export function PurchaseOrderList() {
                             const stored = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
 
                             const updatedList = stored.map((item: any) =>
-                              item.id === po.id ? { ...item, status: updatedStatus } : item
+                              item.id === po._id ? { ...item, status: updatedStatus } : item
                             )
 
                             localStorage.setItem("testPurchaseOrders", JSON.stringify(updatedList))

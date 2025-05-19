@@ -11,6 +11,9 @@ departmentRouter.get("/", protect, getDepartments)
 // POST new department
 departmentRouter.post("/", protect, createDepartment)
 
+// Get next department number route
+departmentRouter.post("/po-number", protect, createDepartment)
+
 // PATCH department by ID
 departmentRouter.patch("/:id", protect, updateDepartment)
 

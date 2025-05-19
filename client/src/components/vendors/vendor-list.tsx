@@ -38,8 +38,8 @@ export function VendorList() {
   const { toast } = useToast()
   //Redux
   const dispatch = useDispatch<AppDispatch>();
-  const vendors = useAppSelector(state => state.vendorReducer.vendors);
-  const vendorsInitLoad = useAppSelector(state => state.vendorReducer.initLoad);
+  const vendors = useAppSelector(state => state.vendorsReducer.vendors);
+  const vendorsInitLoad = useAppSelector(state => state.vendorsReducer.initLoad);
 
    const handleDeleteClick = (id: string) => {
     setVendorToDelete(id);

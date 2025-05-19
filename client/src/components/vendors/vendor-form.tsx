@@ -39,7 +39,7 @@ export function VendorForm({ vendorId }: VendorFormProps) {
   const location = useLocation();
   //Redux
   const dispatch = useDispatch<AppDispatch>();
-  const selectedVendor = useAppSelector((state) => state.vendorReducer.selectedVendor);
+  const selectedVendor = useAppSelector((state) => state.vendorsReducer.selectedVendor);
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorSchema),

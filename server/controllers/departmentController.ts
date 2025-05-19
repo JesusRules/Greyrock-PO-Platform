@@ -5,7 +5,7 @@ import { createNoCacheHeaders } from "../utils/noCacheResponse"
 // GET /api/departments
 export const getDepartments = async (req: Request, res: Response) => {
   try {
-    const departments = await Department.find().sort({ name: 1 })
+    const departments = await Department.find().sort({ createdAt: 1 });
     res
     .set(createNoCacheHeaders())
     .json(departments)
@@ -48,6 +48,39 @@ export const createDepartment = async (req: Request, res: Response) => {
     .json({ message: "Failed to create department" })
   }
 }
+
+export const getPONumber = async (req: Request, res: Response) => {
+  try {
+    const { departmentName } = req.body;
+
+    const department = await Department.findOneAndUpdate(
+      { name: departmentName },
+      { $inc: { poCounter: 1 } },
+      { new: true }
+    );
+
+    if (!department) {
+      res
+      .set(createNoCacheHeaders())
+      .status(404).json({ message: "Department not found" });
+      return;
+    };
+
+    const paddedNumber = String(department.poCounter).padStart(3, "0");
+    const poNumber = `${department.departmentCode}-${paddedNumber}`;
+
+    res
+    .set(createNoCacheHeaders())
+    .status(200)
+    .json({ poNumber });
+  } catch (error) {
+    console.error("Failed to generate PO number:", error);
+    res
+    .set(createNoCacheHeaders())
+    .status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 // PATCH /api/departments/:id
 export const updateDepartment = async (req: Request, res: Response) => {
