@@ -76,7 +76,7 @@ export default function DepartmentsPage() {
     <>
       <Drawer />
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="mx-auto py-10 mt-5 max-w-[900px] px-6">
+        <div className="mx-auto py-10 max-w-[900px] px-6">
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
               Departments

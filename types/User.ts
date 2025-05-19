@@ -3,8 +3,9 @@ export type User = {
     _id: string; 
     firstName: string;
     lastName: string;
+    // login: string;
     email: string;
     phoneNumber?: string;
-    password: string;
+    password?: string;
     role: string;
 };

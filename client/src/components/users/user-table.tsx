@@ -20,6 +20,8 @@ import {
 import { MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react"
 import toast from "react-hot-toast"
 import { useGlobalContext } from "../../../context/global-context"
+import { User } from "../../../../types/User"
+import { deleteUser } from "../../../redux/features/users-slice"
 
 interface UserTableProps {
   users: User[]
@@ -62,8 +64,9 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              {/* <TableHead>Role</TableHead> */}
-              {/* <TableHead>Phone Number</TableHead> */}
+              <TableHead>Role</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone Number</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -73,10 +76,9 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="relative h-8 w-8 rounded-full overflow-hidden bg-gray-100">
-                      <Image
+                      <img
                           src={"/images/placeholder-avatar.jpg"}
                           alt={`generic-avatar`}
-                          fill
                           className="object-cover"
                         />
                       {/* {user.avatar ? (
@@ -95,16 +97,17 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                     </div>
                     <div>
                       <div className="font-medium">
-                        {user?.nickname}
+                        {user?.firstName} {user?.lastName}
                       </div>
-                      <div className="text-sm text-muted-foreground">@{user?.login}</div>
+                      {/* <div className="text-sm text-muted-foreground">@{user?.login}</div> */}
                     </div>
                   </div>
                 </TableCell>
-                {/* <TableCell>
+                <TableCell>
                   <div className="capitalize">{user.role}</div>
-                </TableCell> */}
-                {/* <TableCell>{user.phoneNumber}</TableCell> */}
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phoneNumber}</TableCell>
                 <TableCell>
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
@@ -144,7 +147,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             <DialogTitle>Are you sure you want to delete this user?</DialogTitle>
             <DialogDescription>
               This action cannot be undone. This will permanently delete the user
-              {userToDelete && ` ${userToDelete.nickname}`} and remove their data from the
+              {userToDelete && ` ${userToDelete.firstName} ${userToDelete.lastName}`} and remove their data from the
               system.
             </DialogDescription>
           </DialogHeader>

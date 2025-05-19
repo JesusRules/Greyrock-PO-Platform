@@ -139,7 +139,7 @@ export const updateUser = createAsyncThunk<
   async ({ _id, updatedData }, { rejectWithValue }) => {
     try {
       const response = await api.put(`/api/users/${_id}`, updatedData);
-      return response.data.user;
+      return response.data.updatedUser;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to update user");
     }

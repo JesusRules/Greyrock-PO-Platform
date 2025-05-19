@@ -5,14 +5,21 @@ import { NextFunction, Request, Response } from 'express';
 import { createNoCacheHeaders } from "../utils/noCacheResponse";
 import bcrypt from "bcryptjs";
 import { AuthRequest } from "server/middleware/auth";
+import LoginRecord from "../models/LoginRecords";
 dotenv.config(); // loads .env
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, login, password } = req.body;
 
-    // 1. Find user by email
-    const user = await User.findOne({ email });
+    const identifier = (email || login)?.toLowerCase();
+
+    // const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [{ email: identifier }, 
+            // { login: identifier }
+      ],
+    });
     if (!user) {
       res
       .set(createNoCacheHeaders())
@@ -36,6 +43,12 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         { expiresIn: "1h" }
     );
 
+    const loginRecord = new LoginRecord({
+        user: user._id,
+        loggedDate: new Date(),
+    });
+    await loginRecord.save();
+
     // 4. Set HTTP-only cookie
     res
     .set(createNoCacheHeaders())
@@ -58,6 +71,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        // login: user.login,
         role: user.role,
         phoneNumber: user.phoneNumber,
       },

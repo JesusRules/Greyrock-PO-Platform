@@ -1,13 +1,13 @@
 import { useState } from "react"
 import { Button } from "../../components/ui/button"
 import { PlusCircle } from "lucide-react"
-import { User } from "../../../types/User"
-import { UserFormModal } from "./user-form-modal"
-import { UserTable } from "./user-table"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
-import { createUser, deleteUser, updateUser } from "../../../redux/features/users-slice"
 import { ClipLoader } from "react-spinners"
+import { UserFormModal } from "./user-form-modal"
+import { UserTable } from "./user-table"
+import { deleteUser } from "../../../redux/features/users-slice"
+import { User } from "../../../../types/User"
 
 export function UserManagement() {
   // const [users, setUsers] = useState<User[]>(initialUsers)
@@ -52,7 +52,7 @@ export function UserManagement() {
         </Button>
       </div>
 
-      {users.length > 0 ? (
+      {users && users.length > 0 ? (
         <UserTable users={users} onEdit={setEditingUser} onDelete={handleUserDeleted} />
       ) : (
         <div className="bg-muted/50 p-12 rounded-lg flex flex-col items-center justify-center text-center">

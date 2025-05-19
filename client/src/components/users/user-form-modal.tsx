@@ -3,30 +3,28 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../components/ui/dialog"
-import { Button } from "../../components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
-import { Input } from "../../components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { User } from "../../../types/User"
-import toast from "react-hot-toast"
-import userFormSchema from "../../../types/userFormSchema"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog"
+import { Button } from "../ui/button"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import { Input } from "../ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Eye, EyeOff } from "lucide-react"
 import { useDispatch } from "react-redux"
 import { AppDispatch } from "../../../redux/store"
 import { createUser, updateUser } from "../../../redux/features/users-slice"
+import { User } from "../../../../types/User"
+import { createUserSchema, updateUserSchema } from '../../../types/userFormSchema'
+import { toast } from "../../../hooks/use-toast"
 
-type UserFormValues = z.infer<typeof userFormSchema>
+type UserFormValues = z.infer<typeof createUserSchema> | z.infer<typeof updateUserSchema>
 
 interface UserFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialData?: User
-  // onSuccess: (user: User) => void
 }
 
 export function UserFormModal({ open, onOpenChange, initialData }: UserFormModalProps) {
@@ -40,23 +38,20 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
   //Redux
   const dispatch = useDispatch<AppDispatch>()
 
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
+  const form = useForm<z.infer<typeof createUserSchema | typeof updateUserSchema>>({
+    resolver: zodResolver(isEditMode ? updateUserSchema : createUserSchema),
     defaultValues: initialData
-      ? {
-          ...initialData,
-          password: "", // Don't show the password in the form
-        }
-      : {
-          // firstName: "",
-          // lastName: "",
-          nickname: "",
-          login: "",
-          // role: "user",
-          // phoneNumber: "",
-          password: "",
-        },
-  })
+        ? { ...initialData, password: "" }
+        : {
+            firstName: "",
+            lastName: "",
+            email: "",
+            // login: "",
+            role: "User",
+            phoneNumber: "",
+            password: "",
+          },
+    })
 
   // Reset form when modal opens/closes or initialData changes
   useEffect(() => {
@@ -69,12 +64,12 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
         // setAvatarPreview(initialData.avatar || '')
       } else {
         form.reset({
-          // firstName: "",
-          // lastName: "",
-          nickname: "",
-          login: "",
-          // role: "user",
-          // phoneNumber: "",
+          firstName: "",
+          lastName: "",
+          email: '',
+          // login: "",
+          role: "User",
+          phoneNumber: "",
           password: "",
         })
         setAvatarPreview(null)
@@ -83,13 +78,13 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
     }
   }, [open, initialData, form])
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      setAvatar(file)
-      setAvatarPreview(URL.createObjectURL(file))
-    }
-  }
+  // const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0]
+  //     setAvatar(file)
+  //     setAvatarPreview(URL.createObjectURL(file))
+  //   }
+  // }
 
   async function onSubmit(data: UserFormValues) {
     try {
@@ -97,37 +92,58 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
 
       const userPayload = {
         ...data,
-        avatar: avatarPreview, // If applicable
+        // avatar: avatarPreview, // If applicable
       };
+
+      console.log('initialData', initialData)
 
       if (isEditMode && initialData) {
         const updatedPayload = { ...userPayload };
         if (!data.password) {
           delete updatedPayload.password; // Don't send blank password
         }
-
+        console.log('initialData', initialData._id)
         const resultAction = await dispatch(updateUser({ _id: initialData._id, updatedData: updatedPayload }));
         if (updateUser.rejected.match(resultAction)) {
-          toast.error(resultAction.payload || "Failed to update user.");
+          toast({
+              title: 'Error',
+              description: 'Failed to update user.',
+              variant: 'destructive',
+          });
         } else {
-          toast.success("The user has been updated successfully.");
+          toast({
+              title: 'Success',
+              description: 'The user has been updated successfully.',
+              variant: 'success',
+          });
         }
       } else {
         const resultAction = await dispatch(createUser(userPayload));
         if (createUser.rejected.match(resultAction)) {
-          toast.error(resultAction.payload || "Failed to create user.");
+          toast({
+              title: 'Error',
+              description: resultAction.payload || "Failed to create user.",
+              variant: 'destructive',
+          });
         } else {
-          toast.success("The user has been created successfully.");
+          toast({
+              title: 'Success',
+              description: 'The user has been created successfully.',
+              variant: 'success',
+          });
         }
       }
-
       form.reset();
       setAvatar(null);
       setAvatarPreview(null);
       onOpenChange(false);
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong. Please try again.");
+      toast({
+          title: 'Error',
+          description: "Something went wrong. Please try again.",
+          variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -135,13 +151,13 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
         <DialogHeader className="mb-4">
           <DialogTitle>{isEditMode ? "Edit User" : "Create New User"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
               <FormField
                 control={form.control}
                 name="firstName"
@@ -168,14 +184,15 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                   </FormItem>
                 )}
               />
-            </div> */}
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             <FormField
               control={form.control}
-              name="nickname"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nickname</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input placeholder="Jake Paul" {...field} />
                   </FormControl>
@@ -184,8 +201,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 </FormItem>
               )}
             />
-
-            <FormField
+            {/* <FormField
               control={form.control}
               name="login"
               render={({ field }) => (
@@ -198,9 +214,10 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
+            </div>
 
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
               <FormField
                 control={form.control}
                 name="role"
@@ -223,7 +240,6 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="phoneNumber"
@@ -237,7 +253,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                   </FormItem>
                 )}
               />
-            </div> */}
+            </div>
 
             <FormField
               control={form.control}

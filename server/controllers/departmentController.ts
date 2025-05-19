@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
-import Department from "server/models/Department"
-import { createNoCacheHeaders } from "server/utils/noCacheResponse"
+import Department from "../models/Department"
+import { createNoCacheHeaders } from "../utils/noCacheResponse"
 
 // GET /api/departments
 export const getDepartments = async (req: Request, res: Response) => {

@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes";
 import PORoutes from "./routes/PORoutes";
 import vendorRoutes from "./routes/vendorRoutes";
 import departmentRoutes from "./routes/departmentRoutes";
+import userRoutes from "./routes/userRoutes";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ async function main() {
   app.use("/api/po", PORoutes);
   app.use("/api/vendors", vendorRoutes);
   app.use("/api/departments", departmentRoutes);
+  app.use("/api/users", userRoutes);
 
   app.get("/test", (_, res) => {
     res.send("✅ Test route is working!");

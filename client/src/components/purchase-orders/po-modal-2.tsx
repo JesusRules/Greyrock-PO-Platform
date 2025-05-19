@@ -52,7 +52,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const { addPurchaseOrder, updatePurchaseOrder } = usePurchaseOrders()
   const isEditing = mode === "edit"
   //Redux
-  const vendors = useAppSelector(state => state.vendorReducer.vendors);
+  const vendors = useAppSelector(state => state.vendorsReducer.vendors);
   //States
   const [department, setDepartment] = useState("")
   const [poNumber, setPoNumber] = useState("")

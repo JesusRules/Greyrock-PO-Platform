@@ -28,7 +28,7 @@ export function Drawer() {
     return (
     <Sheet>
         <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="cursor-pointer absolute top-2 left-2 z-50">
+        <Button variant="ghost" size="icon" className="cursor-pointer fixed  top-2 left-2 z-50">
             <Menu className="w-6 h-6" />
         </Button>
         </SheetTrigger>

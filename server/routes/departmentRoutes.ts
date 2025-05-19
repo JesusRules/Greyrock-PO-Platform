@@ -1,7 +1,7 @@
 import express from "express"
 import { protect } from "../middleware/auth"
 import { adminOnly } from "../middleware/adminOnly"
-import { createDepartment, deleteDepartment, getDepartments, updateDepartment } from "server/controllers/departmentController"
+import { createDepartment, deleteDepartment, getDepartments, updateDepartment } from "../controllers/departmentController"
 
 const departmentRouter = express.Router()
 

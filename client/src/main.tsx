@@ -17,6 +17,7 @@ import VendorsPage from './pages/vendors/VendorsPage';
 import { Toaster } from '@components/ui/toaster';
 import POPage from './pages/purchase-orders/POPage';
 import DepartmentsPage from './pages/departments/DepartmentPage';
+import UsersPage from './pages/users/UsersPage';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -38,6 +39,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/purchase-orders" element={<POPage />} />
           <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/vendors" element={<VendorsPage />} />
+          <Route path="/users" element={<UsersPage />} />
       </Routes>
     </AuthChecker>
     </BrowserRouter>
