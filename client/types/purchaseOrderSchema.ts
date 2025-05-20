@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const purchaseOrderSchema = z.object({
   department: z.string().min(1, "Department is required"),
-  poNumber: z.string().min(1, "PO Number is required"),
+  // poNumber: z.string().min(1, "PO Number is required"),
   date: z.date(),
   vendor: z.string().min(1, "Vendor is required"),
   contactName: z.string().min(1, "Contact Name is required"),

@@ -111,12 +111,13 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
 
     const nextStatus =
       order.status === "Pending" ? "Signed" :
-      order.status === "Signed" ? "Rejected" : "Pending";
+      order.status === "Signed" ? "Pending" : "Rejected";
+      // order.status === "Signed" ? "Rejected" : "Pending";
 
     order.status = nextStatus;
     await order.save();
 
-    const populatedOrder = await order
+    const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate({ path: 'department', model: Department })
       .populate({ path: 'vendor', model: Vendor })
       .populate({ path: 'submitter', model: User });
@@ -125,6 +126,7 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
     .set(createNoCacheHeaders())
     .json({ purchaseOrder: populatedOrder });
   } catch (err) {
+    console.error(err);
     res.status(500)
     .set(createNoCacheHeaders())
     .json({ message: "Failed to toggle status", error: err });

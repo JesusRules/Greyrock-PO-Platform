@@ -13,7 +13,7 @@ import { PurchaseOrderViewModal } from "./po-view-modal"
 import { PurchaseOrderModal } from "./po-modal-2"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
-import { deletePurchaseOrder } from "../../../redux/features/po-slice"
+import { deletePurchaseOrder, togglePurchaseOrderStatus } from "../../../redux/features/po-slice"
 import { useToast } from "../../../hooks/use-toast"
 
 export function PurchaseOrderList() {
@@ -65,7 +65,6 @@ export function PurchaseOrderList() {
       alert("Invalid purchase order. Cannot delete.");
       return;
     }
-
     const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
     if (!confirmed) return;
 
@@ -81,6 +80,29 @@ export function PurchaseOrderList() {
       toast({
         title: "Error",
         description: "Failed to delete the purchase order.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleStatus = async (po: any) => {
+    try {
+      const updatedPO = await dispatch(togglePurchaseOrderStatus(po._id)).unwrap();
+      setCurrentPO(updatedPO); // Optional: useful if modal is open
+
+      toast({
+        title: "Status Updated",
+        description: `PO #${updatedPO.poNumber} is now ${updatedPO.status}.`,
+        variant: "success",
+      });
+
+      // Optional: re-fetch or manually update list if needed
+      // await dispatch(fetchPurchaseOrders());
+    } catch (err: any) {
+      console.error("Failed to toggle status:", err);
+      toast({
+        title: "Error",
+        description: err || "Failed to update status.",
         variant: "destructive",
       });
     }
@@ -193,26 +215,18 @@ export function PurchaseOrderList() {
                     <Button variant="ghost" size="icon" onClick={() => downloadPdf(po._id)}>
                       <FileDown className="h-4 w-4" />
                     </Button>
-                    {po.status !== "Signed" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const updatedStatus = po.status === "Pending" ? "Approved" : "Pending"
-                            const stored = JSON.parse(localStorage.getItem("testPurchaseOrders") || "[]")
-
-                            const updatedList = stored.map((item: any) =>
-                              item.id === po._id ? { ...item, status: updatedStatus } : item
-                            )
-
-                            localStorage.setItem("testPurchaseOrders", JSON.stringify(updatedList))
-                            window.location.reload()
-                          }}
-                          title={`Mark as ${po.status === "Pending" ? "Approved" : "Pending"}`}
-                        >
-                          <CheckSquare className="h-4 w-4 text-green-600" />
-                        </Button>
-                      )}
+                    {/* {po.status !== "Signed" && ( */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleToggleStatus(po)}
+                        title="Toggle Status"
+                      >
+                        <CheckSquare 
+                            className={`h-4 w-4 ${po.status === 'Pending' ? 'text-green-600' 
+                                                : po.status === 'Signed' ? 'text-yellow-600' : 'text-black'}`} />
+                      </Button>
+                      {/* )} */}
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>

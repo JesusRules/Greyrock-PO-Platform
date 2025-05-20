@@ -81,7 +81,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     resolver: zodResolver(purchaseOrderSchema),
     defaultValues: {
       department: "",
-      poNumber: "",
+      // poNumber: "",
       date,
       vendor: "",
       contactName: "",
@@ -123,7 +123,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     if (isEditing && purchaseOrder) {
       form.reset({
         department: purchaseOrder.department.name || "",
-        poNumber: purchaseOrder.poNumber || "",
+        // poNumber: purchaseOrder.poNumber || "",
         date: purchaseOrder.date || new Date(),
         vendor: purchaseOrder.vendor?.companyName || "",
         contactName: purchaseOrder.vendor.contactName || "",
@@ -132,9 +132,10 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         payableTo: purchaseOrder.vendor.payableTo || "",
         paymentMethod: purchaseOrder.paymentMethod || "Cheque",
         submitter: typeof purchaseOrder.submitter === "string"
-          ? purchaseOrder.submitter
-          : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`,
+        ? purchaseOrder.submitter
+        : purchaseOrder.submitter?._id || "",
       });
+      setPoNumber(purchaseOrder.poNumber || "");
 
       setLineItems(purchaseOrder.lineItems || []);
       setShipping(purchaseOrder.shipping || 0);
@@ -142,7 +143,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     } else {
       form.reset({
         department: "",
-        poNumber: "",
+        // poNumber: "",
         date: new Date(),
         vendor: "",
         contactName: "",
@@ -300,7 +301,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             onClick={() => {
               form.reset({
                 department: "",
-                poNumber: "",
+                // poNumber: "",
                 date: new Date(),
                 vendor: "",
                 contactName: "",
