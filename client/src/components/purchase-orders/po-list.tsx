@@ -40,11 +40,11 @@ export function PurchaseOrderList() {
       (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
       (po.vendor?.email?.toLowerCase() || "").includes(query) ||
       (po.poNumber?.toLowerCase() || "").includes(query) ||
-      po.orderItems?.some(item =>
+      po.lineItems?.some(item =>
         item.description.toLowerCase().includes(query)
       );
 
-    const matchesDepartment = departmentFilter === "all" || po.department === departmentFilter;
+    const matchesDepartment = departmentFilter === "all" || po.department.name === departmentFilter;
     const matchesStatus = statusFilter === "all" || po.status === statusFilter;
 
     return matchesSearch && matchesDepartment && matchesStatus;
@@ -168,7 +168,7 @@ export function PurchaseOrderList() {
                   <TableCell>{po.department.name}</TableCell>
                   <TableCell>{formatCurrency(po.total)}</TableCell>
                   <TableCell className="text-center">
-                    {(po.orderItems || []).length}
+                    {(po.lineItems || []).length}
                   </TableCell>
                   <TableCell>
                   <span

@@ -31,13 +31,13 @@ export interface PurchaseOrder {
     phone: string;
     invoiceEmail: string;
   };
-  orderItems: OrderItem[];
+  lineItems: OrderItem[];
   shipping: number;
   taxRate: number;
   subtotal: number;
   taxAmount: number;
   total: number;
-  submitter: User;
+  submitter: User | string;
   // manager: string;
   status: string;
   pdfUrl?: string;

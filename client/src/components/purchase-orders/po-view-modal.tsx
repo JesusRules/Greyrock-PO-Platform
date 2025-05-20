@@ -70,7 +70,12 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               <p>Payable To:&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.payableTo}</span></p>
               <div className="mt-4">
                 <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Approval</h3>
-                <p>Submitter: {purchaseOrder.submitter.firstName}</p>
+                <p>
+                  Submitter:{" "}
+                  {typeof purchaseOrder.submitter === "string"
+                    ? purchaseOrder.submitter // fallback if not populated
+                    : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`}
+                </p>
                 {/* <p>Manager: {purchaseOrder.manager}</p> */}
               </div>
             </div>
@@ -88,7 +93,7 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
                 </tr>
               </thead>
               <tbody>
-              {(purchaseOrder.items || purchaseOrder.lineItems)?.map((item: any, index: number) => (
+              {(purchaseOrder.lineItems)?.map((item: any, index: number) => (
                   <tr key={index} className="border-b">
                     <td className="border-x p-2">{item.description}</td>
                     <td className="border-x p-2 text-right">{item.quantity}</td>
@@ -108,12 +113,12 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               </div>
               <div className="flex justify-between py-1">
                 <span>Tax ({purchaseOrder.taxRate}%):</span>
-                <span>{formatCurrency(purchaseOrder.taxAmpunt)}</span>
+                <span>{formatCurrency((purchaseOrder.subtotal * purchaseOrder.taxRate) / 100)}</span>
               </div>
-              <div className="flex justify-between py-1">
+              {/* <div className="flex justify-between py-1">
                 <span>Shipping:</span>
                 <span>{formatCurrency(Number.parseFloat(purchaseOrder.shipping))}</span>
-              </div>
+              </div> */}
               <div className="flex justify-between py-2 font-bold border-t mt-1">
                 <span>Total:</span>
                 <span>{formatCurrency(purchaseOrder.total)}</span>

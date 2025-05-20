@@ -53,6 +53,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const dispatch = useDispatch<AppDispatch>();
   const vendors = useAppSelector(state => state.vendorsReducer.vendors);
   const user = useAppSelector(state => state.authReducer.user);
+  const users = useAppSelector(state => state.usersReducer.users);
   const departments = useAppSelector(state => state.departmentsReducer.departments);
   const [isLoading, setIsLoading] = useState(false);
   //States
@@ -88,6 +89,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       email: "",
       payableTo: "",
       paymentMethod: "Cheque",
+      submitter: "",
     },
   });
 
@@ -126,6 +128,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         email: purchaseOrder.email || "",
         payableTo: purchaseOrder.payableTo || "",
         paymentMethod: purchaseOrder.paymentMethod || "Cheque",
+        submitter: purchaseOrder.submitter || "",
       });
 
       setLineItems(purchaseOrder.lineItems || []);
@@ -142,6 +145,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         email: "",
         payableTo: "",
         paymentMethod: "Cheque",
+        submitter: ""
       });
 
       setPoNumber("");
@@ -239,7 +243,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         taxAmount: taxRate,
         total,
         status: "Pending",
-        submitter: user!,
+        submitter: form.getValues("submitter"),
       };
       if (!isEditing) {
         const result = await dispatch(createPurchaseOrder(poData)).unwrap();
@@ -323,6 +327,31 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
           {/* Top Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            <FormField
+                control={form.control}
+                name="submitter"
+                render={({ field }) => (
+                  <FormItem className="col-span-2 w-1/2 pr-3">
+                    <FormLabel>Submitter</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select submitter" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {users.map((u) => (
+                          <SelectItem key={u._id} value={u._id}>
+                            {u.firstName} {u.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            
             <FormField
               control={form.control}
               name="department"
