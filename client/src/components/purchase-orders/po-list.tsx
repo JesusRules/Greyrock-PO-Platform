@@ -218,7 +218,10 @@ export function PurchaseOrderList() {
                         ? "bg-green-100 text-green-800"
                         : po.status === "Approved"
                         ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
+                        : po.status === "Pending" 
+                        ? "bg-amber-100 text-amber-800"
+                        : po.status === "Rejected" 
+                        ? "bg-red-200" : "bg-white"
                     }`}
                   >
                     {po.status}
@@ -239,11 +242,13 @@ export function PurchaseOrderList() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleToggleStatus(po)}
-                        title="Toggle Status"
+                        title="Reject purchase order"
                       >
                         <CheckSquare 
-                            className={`h-4 w-4 ${po.status === 'Pending' ? 'text-green-600' 
-                                                : po.status === 'Signed' ? 'text-yellow-600' : 'text-black'}`} />
+                            className={`h-4 w-4 text-red-600`} />
+                            {/* className={`h-4 w-4 ${po.status === 'Pending' ? 'text-green-600' 
+                                                : po.status === 'Signed' ? 'text-yellow-600' 
+                                                : po.status === 'Rejected' ? 'text-red-600' : 'text-black-600'}`} /> */}
                       </Button>
                       {/* )} */}
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>

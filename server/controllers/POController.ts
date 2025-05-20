@@ -114,33 +114,40 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
     const order = await PurchaseOrder.findById(req.params.id);
     if (!order) {
       res
-      .set(createNoCacheHeaders())
-      .status(404).json({ message: "Purchase order not found" });
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: "Purchase order not found" });
       return;
     }
 
-    const nextStatus =
-      order.status === "Pending" ? "Signed" :
-      order.status === "Signed" ? "Pending" : "Rejected";
-      // order.status === "Signed" ? "Rejected" : "Pending";
+    let nextStatus: "Pending" | "Signed" | "Rejected";
+
+    if (order.status === "Pending" || order.status === "Signed") {
+      nextStatus = "Rejected";
+    } else if (order.status === "Rejected") {
+      nextStatus = order.signedImg ? "Signed" : "Pending";
+    } else {
+      nextStatus = "Pending"; // fallback safety
+    }
 
     order.status = nextStatus;
     await order.save();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
-      .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User })
-      .populate({ path: 'signedBy', model: User });
+      .populate({ path: "department", model: Department })
+      .populate({ path: "vendor", model: Vendor })
+      .populate({ path: "submitter", model: User })
+      .populate({ path: "signedBy", model: User });
 
     res
-    .set(createNoCacheHeaders())
-    .json({ purchaseOrder: populatedOrder });
+      .set(createNoCacheHeaders())
+      .json({ purchaseOrder: populatedOrder });
   } catch (err) {
     console.error(err);
-    res.status(500)
-    .set(createNoCacheHeaders())
-    .json({ message: "Failed to toggle status", error: err });
+    res
+      .status(500)
+      .set(createNoCacheHeaders())
+      .json({ message: "Failed to toggle status", error: err });
   }
 };
 
