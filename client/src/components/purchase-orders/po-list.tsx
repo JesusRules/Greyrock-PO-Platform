@@ -15,9 +15,13 @@ import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
 import { deletePurchaseOrder, togglePurchaseOrderStatus } from "../../../redux/features/po-slice"
 import { useToast } from "../../../hooks/use-toast"
+import SignatureModal from "@components/signature/SignatureModal"
+import { useGlobalContext } from "../../../context/global-context"
 
 export function PurchaseOrderList() {
+  const { setOpenSignModal } = useGlobalContext();
   const { downloadPdf } = usePurchaseOrders()
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -194,7 +198,11 @@ export function PurchaseOrderList() {
                   </TableCell>
                   <TableCell>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    onClick={() => { 
+                      po.status === 'Pending' && setOpenSignModal(true)
+                      setCurrentPO(po)}
+                    }
+                    className={`cursor-pointer px-2 py-1 rounded-full text-xs font-medium ${
                       po.status === "Signed"
                         ? "bg-green-100 text-green-800"
                         : po.status === "Approved"
@@ -255,6 +263,11 @@ export function PurchaseOrderList() {
           />
         </>
       )}
+    
+      {currentPO && (
+        <SignatureModal selectedPurchaseOrder={currentPO}   />
+      )}
+
     </div>
   )
 }

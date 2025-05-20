@@ -4,6 +4,13 @@ import User from "../models/User";
 import Vendor from "../models/Vendor";
 import Department from "../models/Department";
 import { createNoCacheHeaders } from "../utils/noCacheResponse";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
 // GET all
 export const getAllPurchaseOrders = async (req: Request, res: Response) => {
@@ -130,5 +137,52 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
     res.status(500)
     .set(createNoCacheHeaders())
     .json({ message: "Failed to toggle status", error: err });
+  }
+};
+
+export const purchaseOrderSign = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { signature } = req.body;
+    const id = req.params.id;
+
+    const purchaseOrder = await PurchaseOrder.findById(id);
+    if (!purchaseOrder) {
+      res
+      .set(createNoCacheHeaders())
+      .status(404).json({ message: "Purchase order not found" });
+      return;
+    }
+
+    // Delete old signature if exists
+    if (purchaseOrder.signedImg) {
+      const urlParts = purchaseOrder.signedImg.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+      const publicId = `po_signed/${fileName.split(".")[0]}`;
+
+      try {
+        await cloudinary.uploader.destroy(publicId);
+        console.log(`🗑️ Deleted previous signature: ${publicId}`);
+      } catch (deleteErr) {
+        console.warn("⚠️ Failed to delete old signature:", deleteErr);
+      }
+    }
+
+    // Upload new signature to Cloudinary
+    const cloudinaryRes = await cloudinary.uploader.upload(signature, {
+      folder: "po_signed",
+    });
+
+    purchaseOrder.signedImg = cloudinaryRes.secure_url;
+    purchaseOrder.status = 'Signed';
+
+    await purchaseOrder.save();
+
+    res.status(201).set(createNoCacheHeaders()).json({
+      message: "Signature saved",
+      purchaseOrder,
+    });
+  } catch (error) {
+    console.error("Signature error:", error);
+    res.status(500).set(createNoCacheHeaders()).json({ error: "Server error" });
   }
 };

@@ -39,6 +39,7 @@ export interface PurchaseOrder {
   total: number;
   submitter: User | string;
   // manager: string;
+  signedImg: string | null;
   status: string;
   pdfUrl?: string;
   createdAt: string;
