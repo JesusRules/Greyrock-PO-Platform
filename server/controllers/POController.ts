@@ -19,7 +19,8 @@ export const getAllPurchaseOrders = async (req: Request, res: Response) => {
       .sort({ createdAt: -1 })
       .populate({ path: 'department', model: Department })
       .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User });
+      .populate({ path: 'submitter', model: User })
+      .populate({ path: 'signedBy', model: User });
 
     res
     .status(200)
@@ -42,7 +43,8 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
     const populatedOrder = await PurchaseOrder.findById(savedOrder._id)
       .populate({ path: 'department', model: Department })
       .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User });
+      .populate({ path: 'submitter', model: User })
+      .populate({ path: 'signedBy', model: User });
 
     res
     .status(201)
@@ -67,7 +69,8 @@ export const updatePurchaseOrder = async (req: Request, res: Response) => {
     )
     .populate({ path: 'department', model: Department })
     .populate({ path: 'vendor', model: Vendor })
-    .populate({ path: 'submitter', model: User });
+    .populate({ path: 'submitter', model: User })
+    .populate({ path: 'signedBy', model: User });
 
     if (!updated) {
       res
@@ -127,7 +130,8 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
     const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate({ path: 'department', model: Department })
       .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User });
+      .populate({ path: 'submitter', model: User })
+      .populate({ path: 'signedBy', model: User });
 
     res
     .set(createNoCacheHeaders())
@@ -142,7 +146,7 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
 
 export const purchaseOrderSign = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { signature } = req.body;
+    const { signature, signedBy } = req.body;
     const id = req.params.id;
 
     const purchaseOrder = await PurchaseOrder.findById(id);
@@ -174,12 +178,18 @@ export const purchaseOrderSign = async (req: Request, res: Response): Promise<vo
 
     purchaseOrder.signedImg = cloudinaryRes.secure_url;
     purchaseOrder.status = 'Signed';
-
+    purchaseOrder.signedBy = signedBy;
     await purchaseOrder.save();
+
+    const populatedOrder = await PurchaseOrder.findById(purchaseOrder._id)
+      .populate({ path: 'department', model: Department })
+      .populate({ path: 'vendor', model: Vendor })
+      .populate({ path: 'submitter', model: User })
+      .populate({ path: 'signedBy', model: User });
 
     res.status(201).set(createNoCacheHeaders()).json({
       message: "Signature saved",
-      purchaseOrder,
+      purchaseOrder: populatedOrder,
     });
   } catch (error) {
     console.error("Signature error:", error);

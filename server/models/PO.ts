@@ -18,14 +18,11 @@ const PurchaseOrderSchema = new mongoose.Schema({
     ref: "Department",
     required: true,
   },
-
-  // Vendor section (left side of form)
   vendor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Vendor",
     required: true,
   },
-
   // Company details (right side static block in PDF)
   companyInfo: {
     name: { type: String, default: 'Grey Rock Entertainment Center Inc.' },
@@ -34,18 +31,14 @@ const PurchaseOrderSchema = new mongoose.Schema({
     phone: { type: String, default: '506-735-2838' },
     invoiceEmail: { type: String, default: 'Finance@GreyRock-Casino.com' },
   },
-
   lineItems: [LineItemSchema],
-
   // Financial fields
   shipping: { type: Number, required: true },
   taxRate: { type: Number, required: true }, // e.g. 15
   subtotal: { type: Number, required: true },
   taxAmount: { type: Number, required: true },
   total: { type: Number, required: true },
-
   // Signatures
-  // submitter: { type: String, required: true },
   submitter: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -59,6 +52,11 @@ const PurchaseOrderSchema = new mongoose.Schema({
     default: 'Pending',
   },
   signedImg: { type: String, default: null, required: false }, // Stores Base64
+  signedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   pdfUrl: { type: String }, // Optional if generated and uploaded
 
 }, {

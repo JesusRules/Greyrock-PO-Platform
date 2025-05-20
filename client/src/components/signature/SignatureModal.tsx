@@ -8,6 +8,7 @@ import { useGlobalContext } from "../../../context/global-context";
 import { useToast } from "../../../hooks/use-toast"
 import api from "../../../axiosSetup";
 import { X } from 'lucide-react';
+import { signPurchaseOrder } from "../../../redux/features/po-slice";
 
 export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurchaseOrder: PurchaseOrder }) {
   const { openSignModal, setOpenSignModal } = useGlobalContext();
@@ -47,54 +48,54 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
 
   const handleSubmit = async () => {
     if (sigCanvas.current?.isEmpty()) {
-      toast({
-        title: 'Error',
-        description: 'Please sign before submitting.',
-        variant: 'destructive',
-      });
-      return;
-    }
-  
-    setLoading(true);
-  
-    if (selectedPurchaseOrder === null || user === null) return;
-  
-    try {
-      const dataUrl = sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png");
-  
-      if (!dataUrl) {
         toast({
-            title: 'Error',
-            description: 'Signature pad not ready.',
-            variant: 'destructive',
+        title: "Error",
+        description: "Please sign before submitting.",
+        variant: "destructive",
         });
         return;
-      }
-  
-      // ✅ Send base64 directly to backend
-      const response = await api.put(`/api/purchase-orders/${selectedPurchaseOrder._id}/sign`, {
-        // userId: user._id,
-        signature: dataUrl,
-      });
-
-      setOpenSignModal(false);
-      toast({
-        title: 'Success',
-        description: 'Signature saved successfully.',
-        variant: 'success',
-      });
-      setLoading(false);
-    } catch (error) {
-      console.error("Error signing:", error);
-      toast({
-        title: 'Error',
-        description: 'Error submitting signature.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
     }
-  };
+    setLoading(true);
+
+    if (!selectedPurchaseOrder || !user) return;
+    
+    try {
+        const dataUrl = sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png");
+
+        if (!dataUrl) {
+        toast({
+            title: "Error",
+            description: "Signature pad not ready.",
+            variant: "destructive",
+        });
+        return;
+        }
+
+        // ✅ Dispatch Redux thunk to update purchase order
+        await dispatch(
+            signPurchaseOrder({ id: selectedPurchaseOrder._id, signature: dataUrl })
+        ).unwrap();
+
+        toast({
+        title: "Success",
+        description: "Signature saved and PO marked as Signed.",
+        variant: "success",
+        });
+
+        setOpenSignModal(false);
+        setLoading(false);
+    } catch (error) {
+        setLoading(false);
+        console.error("Error signing:", error);
+        toast({
+        title: "Error",
+        description: "Error submitting signature.",
+        variant: "destructive",
+        });
+    } finally {
+        setLoading(false);
+    }
+};
 
   return (
     <>

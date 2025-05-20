@@ -53,7 +53,15 @@ const purchaseOrdersSlice = createSlice({
         if (index !== -1) {
           state.purchaseOrders[index] = action.payload;
         }
-      });
+      })
+      // signPurchaseOrder
+      .addCase(signPurchaseOrder.fulfilled, (state, action) => {
+      const updatedPO = action.payload;
+      const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
+      if (index !== -1) {
+        state.purchaseOrders[index] = updatedPO;
+      }
+    })
   },
 });
 
@@ -118,5 +126,18 @@ export const togglePurchaseOrderStatus = createAsyncThunk(
     }
   }
 );
+
+export const signPurchaseOrder = createAsyncThunk<
+  PurchaseOrder,
+  { id: string; signature: string },
+  { rejectValue: string }
+>("purchaseOrders/sign", async ({ id, signature }, thunkAPI) => {
+  try {
+    const res = await api.put(`/api/purchase-orders/${id}/sign`, { signature });
+    return res.data.purchaseOrder;
+  } catch (err: any) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to sign purchase order");
+  }
+});
 
 export default purchaseOrdersSlice.reducer;
