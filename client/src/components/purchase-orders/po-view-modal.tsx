@@ -4,21 +4,30 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
 import { usePurchaseOrders } from "../../../context/po-context"
 import { formatCurrency, getFormattedDateTime } from "../../../utils/general"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
+import api from "../../../axiosSetup"
+import { useToast } from "../../../hooks/use-toast"
+import { useGlobalContext } from "../../../context/global-context"
 
 interface PurchaseOrderViewModalProps {
-  isOpen: boolean
-  onClose: () => void
   purchaseOrder: PurchaseOrder
 }
 
-export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: PurchaseOrderViewModalProps) {
+export function PurchaseOrderViewModal({ purchaseOrder }: PurchaseOrderViewModalProps) {
+  const { openSignModal, setOpenSignModal, openViewPO, setOpenViewPO } = useGlobalContext();
   const { downloadPdf } = usePurchaseOrders()
+  const { toast } = useToast();
 
   if (!purchaseOrder) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl bg-white max-h-[90vh] overflow-y-auto">
+    <>
+    {/* <div className="fixed w-full h-full top-0 z-[1000] bg-white/70" onClick={() => console.log("??")}/> */}
+    <Dialog open={openViewPO} onOpenChange={() => {
+      if (!openSignModal) {
+        setOpenViewPO(false);
+      }
+    }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
             <span>Purchase Order #{purchaseOrder.poNumber}</span>
@@ -26,14 +35,14 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               <Button variant="outline" size="sm" onClick={() => downloadPdf(purchaseOrder._id)}>
                 <FileDown className="h-4 w-4 mr-1" /> Download PDF
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpenViewPO(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="border rounded-lg p-6 mt-4 bg-white">
+        <div className="border rounded-lg p-6 mt-4 bg-white dark:bg-gray-900">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold">PURCHASE ORDER</h2>
@@ -46,7 +55,9 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               <p className="mt-2">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    purchaseOrder.status === "Signed" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                    purchaseOrder.status === "Signed"
+                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                      : "bg-amber-100 text-amber-800 dark:bg-yellow-700 dark:text-yellow-100"
                   }`}
                 >
                   {purchaseOrder.status}
@@ -126,7 +137,6 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               </div>
             </div>
           </div>
-
           {/* {purchaseOrder.status === "Signed" && (
             <div className="mt-8 border-t pt-4">
               <div className="flex justify-between">
@@ -138,8 +148,60 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               </div>
             </div>
           )} */}
+          <div className="mt-8 border-t pt-6">
+            <div className="flex justify-between items-center">
+              {purchaseOrder.signedImg ? (
+                <>
+                  <div>
+                    <p className="font-semibold">Signed by: {typeof purchaseOrder.submitter === "string"
+                    ? purchaseOrder.submitter // fallback if not populated
+                    : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`}</p>
+                    <img
+                      src={purchaseOrder.signedImg}
+                      alt="Signature"
+                      className="w-[250px] h-[80px] object-contain mt-2"
+                    />
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={async () => {
+                      try {
+                        await api.put(`/api/purchase-orders/${purchaseOrder._id}/revert-signature`);
+                        () => setOpenViewPO(false); // or refetch data after
+                        toast({
+                          title: "Signature Reverted",
+                          description: "Signature was cleared and status set to Pending.",
+                          variant: "default",
+                        });
+                      } catch (err) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to revert signature.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    Revert Signature
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  variant="default"
+                  onClick={() => {
+                    setOpenSignModal(true);
+                  }}
+                >
+                  Sign Purchase Order
+                </Button>
+              )}
+            </div>
+          </div>
+
         </div>
       </DialogContent>
     </Dialog>
+    </>
   )
 }

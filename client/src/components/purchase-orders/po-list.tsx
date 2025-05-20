@@ -19,11 +19,11 @@ import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
 
 export function PurchaseOrderList() {
-  const { setOpenSignModal } = useGlobalContext();
+  const { setOpenSignModal, setOpenViewPO } = useGlobalContext();
   const { downloadPdf } = usePurchaseOrders()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  // const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [currentPO, setCurrentPO] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -56,7 +56,7 @@ export function PurchaseOrderList() {
 
   const handleView = (po: any) => {
     setCurrentPO(po)
-    setIsViewModalOpen(true)
+    setOpenViewPO(true)
   }
 
   const handleEdit = (po: any) => {
@@ -113,6 +113,7 @@ export function PurchaseOrderList() {
   };
 
   return (
+    <>
     <div className="space-y-4">
       <div className="flex justify-end items-center flex-wrap gap-4">
         <Button onClick={() => setIsCreateModalOpen(true)}>
@@ -245,7 +246,8 @@ export function PurchaseOrderList() {
           </TableBody>
         </Table>
       </div>
-
+    </div>
+      
       <PurchaseOrderModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
 
       {currentPO && (
@@ -257,17 +259,18 @@ export function PurchaseOrderList() {
             purchaseOrder={currentPO}
           />
           <PurchaseOrderViewModal
-            isOpen={isViewModalOpen}
-            onClose={() => setIsViewModalOpen(false)}
             purchaseOrder={currentPO}
           />
         </>
       )}
-    
+      
       {currentPO && (
+        <>
         <SignatureModal selectedPurchaseOrder={currentPO}   />
+        {/* <div className="fixed w-full h-full bg-red-500 top-0 z-[100] bg-[#0000006b]"/> */}
+        </>
       )}
 
-    </div>
+    </>
   )
 }

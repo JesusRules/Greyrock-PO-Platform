@@ -102,7 +102,19 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
         withCloseButton={false}
         opened={openSignModal}
         onClose={() => setOpenSignModal(false)}
+        zIndex={1000}
         centered
+        styles={{
+            content: {
+            pointerEvents: 'auto', // Ensure modal itself is clickable
+            },
+            overlay: {
+            pointerEvents: 'auto', // Prevent clicks through the overlay
+            }
+        }}
+        // overlayProps={{
+        //     opacity: 0,
+        // }}
         title={
             <div className="w-full flex justify-between items-center">
             <div className="flex flex-col gap-3">

@@ -13,6 +13,9 @@ interface GlobalContextType {
 
 	openSignModal: boolean;
 	setOpenSignModal: React.Dispatch<React.SetStateAction<boolean>>;
+	
+	openViewPO: boolean;
+	setOpenViewPO: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const GlobalContext = createContext<GlobalContextType | null>(null);
@@ -22,12 +25,14 @@ function GlobalContextProvider({ children }: GlobalContextProps) {
 	const [openCreateVendor, setOpenCreateVendor] = useState(false);
 	const [openEditVendor, setOpenEditVendor] = useState(false);
 	const [openSignModal, setOpenSignModal] = useState(false);
+	const [openViewPO, setOpenViewPO] = useState(false)
     //Modals
     return (
 		<GlobalContext.Provider value={{ 
 			openCreateVendor, setOpenCreateVendor,
 			openEditVendor, setOpenEditVendor,
-			openSignModal, setOpenSignModal
+			openSignModal, setOpenSignModal,
+			openViewPO, setOpenViewPO
 		}}  
 		> 
 			{children}
