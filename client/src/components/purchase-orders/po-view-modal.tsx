@@ -58,11 +58,11 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
           <div className="grid grid-cols-2 gap-8 mt-8">
             <div>
               <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Vendor</h3>
-              <p className="font-semibold">{purchaseOrder.vendor.companyName}</p>
-              <p>{purchaseOrder.vendor.contactName}</p>
-              <p className="whitespace-pre-line">{purchaseOrder.vendor.address}</p>
-              <p className="mt-2">Phone:&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.phoneNumber}</span></p>
-              <p>Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.email}</span></p>
+              <p>Company:&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.companyName}</span></p>
+              <p>Contact:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.contactName}</span></p>
+              <p>Address:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.address}</span></p>
+              <p>Phone:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.phoneNumber}</span></p>
+              <p>Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.email}</span></p>
             </div>
             <div>
               <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Payment Details</h3>
@@ -71,10 +71,11 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               <div className="mt-4">
                 <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Approval</h3>
                 <p>
-                  Submitter:{" "}
+                  Submitter:&nbsp;&nbsp;&nbsp;<span className="font-semibold">
                   {typeof purchaseOrder.submitter === "string"
                     ? purchaseOrder.submitter // fallback if not populated
                     : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`}
+                    </span>
                 </p>
                 {/* <p>Manager: {purchaseOrder.manager}</p> */}
               </div>

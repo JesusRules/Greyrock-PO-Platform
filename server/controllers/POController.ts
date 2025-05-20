@@ -11,7 +11,8 @@ export const getAllPurchaseOrders = async (req: Request, res: Response) => {
     const orders = await PurchaseOrder.find()
       .sort({ createdAt: -1 })
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor });
+      .populate({ path: 'vendor', model: Vendor })
+      .populate({ path: 'submitter', model: User });
 
     res
     .status(200)
@@ -33,7 +34,8 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
 
     const populatedOrder = await PurchaseOrder.findById(savedOrder._id)
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor });
+      .populate({ path: 'vendor', model: Vendor })
+      .populate({ path: 'submitter', model: User });
 
     res
     .status(201)
@@ -57,7 +59,8 @@ export const updatePurchaseOrder = async (req: Request, res: Response) => {
       { new: true }
     )
     .populate({ path: 'department', model: Department })
-    .populate({ path: 'vendor', model: Vendor });
+    .populate({ path: 'vendor', model: Vendor })
+    .populate({ path: 'submitter', model: User });
 
     if (!updated) {
       res
@@ -115,7 +118,8 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
 
     const populatedOrder = await order
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor });
+      .populate({ path: 'vendor', model: Vendor })
+      .populate({ path: 'submitter', model: User });
 
     res
     .set(createNoCacheHeaders())

@@ -117,18 +117,23 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   useEffect(() => {
     if (!isOpen) return;
 
+    console.log('purchaseOrder', purchaseOrder);
+    console.log('isEditing', isEditing);
+    
     if (isEditing && purchaseOrder) {
       form.reset({
-        department: purchaseOrder.department || "",
+        department: purchaseOrder.department.name || "",
         poNumber: purchaseOrder.poNumber || "",
         date: purchaseOrder.date || new Date(),
-        vendor: purchaseOrder.vendor || "",
-        contactName: purchaseOrder.contactName || "",
-        phone: purchaseOrder.phone || "",
-        email: purchaseOrder.email || "",
-        payableTo: purchaseOrder.payableTo || "",
+        vendor: purchaseOrder.vendor?.companyName || "",
+        contactName: purchaseOrder.vendor.contactName || "",
+        phone: purchaseOrder.vendor.phoneNumber || "",
+        email: purchaseOrder.vendor.email || "",
+        payableTo: purchaseOrder.vendor.payableTo || "",
         paymentMethod: purchaseOrder.paymentMethod || "Cheque",
-        submitter: purchaseOrder.submitter || "",
+        submitter: typeof purchaseOrder.submitter === "string"
+          ? purchaseOrder.submitter
+          : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`,
       });
 
       setLineItems(purchaseOrder.lineItems || []);
