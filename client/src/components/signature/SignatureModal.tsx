@@ -36,8 +36,10 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
     if (existingSignature) {
       setSignatureUrl(existingSignature);
       setIsSigning(false); // Show preview, not canvas
+      console.log("NO", existingSignature)
     } else {
       setSignatureUrl(null);
+      console.log("YES")
       setIsSigning(true); // Go straight to signing mode
     }
   };
@@ -58,7 +60,7 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
     setLoading(true);
 
     if (!selectedPurchaseOrder || !user) return;
-    
+
     try {
         const dataUrl = sigCanvas.current?.getTrimmedCanvas().toDataURL("image/png");
 
@@ -73,7 +75,7 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
 
         // ✅ Dispatch Redux thunk to update purchase order
         await dispatch(
-            signPurchaseOrder({ id: selectedPurchaseOrder._id, signature: dataUrl })
+            signPurchaseOrder({ id: selectedPurchaseOrder._id, signature: dataUrl, signedBy: user._id })
         ).unwrap();
 
         toast({

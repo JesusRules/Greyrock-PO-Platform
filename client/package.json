@@ -51,6 +51,7 @@
     "@types/node": "^22.14.1",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@types/react-signature-canvas": "^1.0.7",
     "@vitejs/plugin-react-swc": "^3.8.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.22.0",

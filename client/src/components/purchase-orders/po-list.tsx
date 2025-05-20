@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, Plus, FileDown, Eye, Pencil, CheckSquare, Trash2 } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -36,6 +36,16 @@ export function PurchaseOrderList() {
   const dispatch = useDispatch<AppDispatch>();
   const purchaseOrders = useAppSelector(state => state.purchaseOrdersRouter.purchaseOrders);
   const departments = useAppSelector(state => state.departmentsReducer.departments);
+
+  useEffect(() => { //Instead of storing currentPO in redux, we do this
+    if (!currentPO) return;
+
+    const updatedPO = purchaseOrders.find(po => po._id === currentPO._id);
+    if (updatedPO && JSON.stringify(updatedPO) !== JSON.stringify(currentPO)) {
+      setCurrentPO(updatedPO);
+    }
+  }, [purchaseOrders, currentPO]);
+
 
   const filteredPOs = purchaseOrders.filter((po) => {
   const query = searchQuery.toLowerCase();
@@ -259,7 +269,7 @@ export function PurchaseOrderList() {
             purchaseOrder={currentPO}
           />
           <PurchaseOrderViewModal
-            purchaseOrder={currentPO}
+            purchaseOrderId={currentPO._id}
           />
         </>
       )}

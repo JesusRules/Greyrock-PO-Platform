@@ -38,6 +38,7 @@ export interface PurchaseOrder {
   taxAmount: number;
   total: number;
   submitter: User | string;
+  signedBy: User | string;
   // manager: string;
   signedImg: string | null;
   status: string;

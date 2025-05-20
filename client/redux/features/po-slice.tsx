@@ -62,6 +62,15 @@ const purchaseOrdersSlice = createSlice({
         state.purchaseOrders[index] = updatedPO;
       }
     })
+    // revert signature
+    .addCase(revertSignature.fulfilled, (state, action) => {
+      const updatedPO = action.payload;
+      const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
+      if (index !== -1) {
+        state.purchaseOrders[index].signedImg = null;
+        state.purchaseOrders[index] = updatedPO;
+      }
+    })
   },
 });
 
@@ -129,14 +138,27 @@ export const togglePurchaseOrderStatus = createAsyncThunk(
 
 export const signPurchaseOrder = createAsyncThunk<
   PurchaseOrder,
-  { id: string; signature: string },
+  { id: string; signature: string, signedBy: string },
   { rejectValue: string }
->("purchaseOrders/sign", async ({ id, signature }, thunkAPI) => {
+>("purchaseOrders/sign", async ({ id, signature, signedBy }, thunkAPI) => {
   try {
-    const res = await api.put(`/api/purchase-orders/${id}/sign`, { signature });
+    const res = await api.put(`/api/purchase-orders/${id}/sign`, { signature, signedBy });
     return res.data.purchaseOrder;
   } catch (err: any) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to sign purchase order");
+  }
+});
+
+export const revertSignature = createAsyncThunk<
+  PurchaseOrder,
+  string,
+  { rejectValue: string }
+>("purchaseOrders/revertSignature", async (_id, thunkAPI) => {
+  try {
+    const res = await api.put(`/api/purchase-orders/${_id}/revert-signature`);
+    return res.data.purchaseOrder;
+  } catch (err: any) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to revert signature");
   }
 });
 

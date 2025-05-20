@@ -55,7 +55,7 @@ const PurchaseOrderSchema = new mongoose.Schema({
   signedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
+    required: false,
   },
   pdfUrl: { type: String }, // Optional if generated and uploaded
 

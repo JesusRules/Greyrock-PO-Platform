@@ -7,17 +7,53 @@ import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import api from "../../../axiosSetup"
 import { useToast } from "../../../hooks/use-toast"
 import { useGlobalContext } from "../../../context/global-context"
+import { revertSignature } from "../../../redux/features/po-slice"
+import { useDispatch } from "react-redux"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
 
+// interface PurchaseOrderViewModalProps {
+//   purchaseOrder: PurchaseOrder
+// }
 interface PurchaseOrderViewModalProps {
-  purchaseOrder: PurchaseOrder
+  purchaseOrderId: string;
 }
 
-export function PurchaseOrderViewModal({ purchaseOrder }: PurchaseOrderViewModalProps) {
+export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewModalProps) {
   const { openSignModal, setOpenSignModal, openViewPO, setOpenViewPO } = useGlobalContext();
   const { downloadPdf } = usePurchaseOrders()
   const { toast } = useToast();
+  //Redux
+  const dispatch = useDispatch<AppDispatch>();
 
-  if (!purchaseOrder) return null
+  const handleRevertSignature = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to revert the signature and set the status back to Pending?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await dispatch(revertSignature(purchaseOrderId)).unwrap();
+
+      // setOpenViewPO(false);
+      toast({
+        title: "Signature Reverted",
+        description: "Signature was cleared and status set to Pending.",
+        variant: "success",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to revert signature.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const purchaseOrder = useAppSelector((state) =>
+    state.purchaseOrdersRouter.purchaseOrders.find((po) => po._id === purchaseOrderId)
+  );
+
+  if (!purchaseOrder) return null;
 
   return (
     <>
@@ -153,37 +189,18 @@ export function PurchaseOrderViewModal({ purchaseOrder }: PurchaseOrderViewModal
               {purchaseOrder.signedImg ? (
                 <>
                   <div>
-                    <p className="font-semibold">Signed by: {typeof purchaseOrder.submitter === "string"
-                    ? purchaseOrder.submitter // fallback if not populated
-                    : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`}</p>
+                    <p className="font-semibold">Signed by: {typeof purchaseOrder?.signedBy === "string"
+                    ? purchaseOrder?.signedBy // fallback if not populated
+                    : `${purchaseOrder?.signedBy?.firstName} ${purchaseOrder?.signedBy?.lastName}`}</p>
                     <img
-                      src={purchaseOrder.signedImg}
+                      src={purchaseOrder?.signedImg}
                       alt="Signature"
-                      className="w-[250px] h-[80px] object-contain mt-2"
+                      className="w-[253px] p-2 h-[83px] object-contain mt-2 bg-white"
                     />
                   </div>
-                  <Button
-                    variant="destructive"
-                    onClick={async () => {
-                      try {
-                        await api.put(`/api/purchase-orders/${purchaseOrder._id}/revert-signature`);
-                        () => setOpenViewPO(false); // or refetch data after
-                        toast({
-                          title: "Signature Reverted",
-                          description: "Signature was cleared and status set to Pending.",
-                          variant: "default",
-                        });
-                      } catch (err) {
-                        toast({
-                          title: "Error",
-                          description: "Failed to revert signature.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                  >
-                    Revert Signature
-                  </Button>
+                 <Button variant="destructive" onClick={handleRevertSignature}>
+                  Revert Signature
+                </Button>
                 </>
               ) : (
                 <Button

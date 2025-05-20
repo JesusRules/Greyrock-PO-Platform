@@ -158,7 +158,7 @@ export const purchaseOrderSign = async (req: Request, res: Response): Promise<vo
     }
 
     // Delete old signature if exists
-    if (purchaseOrder.signedImg) {
+    if (purchaseOrder.signedImg !== null && purchaseOrder.signedImg !== undefined) {
       const urlParts = purchaseOrder.signedImg.split("/");
       const fileName = urlParts[urlParts.length - 1];
       const publicId = `po_signed/${fileName.split(".")[0]}`;
@@ -194,5 +194,52 @@ export const purchaseOrderSign = async (req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error("Signature error:", error);
     res.status(500).set(createNoCacheHeaders()).json({ error: "Server error" });
+  }
+};
+
+// PUT /api/purchase-orders/:id/revert-signature
+export const revertPurchaseOrderSignature = async (req: Request, res: Response) => {
+  try {
+    const order = await PurchaseOrder.findById(req.params.id);
+    if (!order) {
+      res
+      .set(createNoCacheHeaders())
+      .status(404).json({ message: "PO not found" });
+      return;
+    }
+
+    // Delete old signature if exists
+    if (order.signedImg) {
+      const urlParts = order.signedImg.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+      const publicId = `po_signed/${fileName.split(".")[0]}`;
+
+      try {
+        await cloudinary.uploader.destroy(publicId);
+        console.log(`🗑️ Deleted previous signature: ${publicId}`);
+      } catch (deleteErr) {
+        console.warn("⚠️ Failed to delete old signature:", deleteErr);
+      }
+    }
+
+    order.signedImg = null;
+    order.signedBy = null;
+    order.status = "Pending";
+    await order.save();
+
+    const populatedOrder = await PurchaseOrder.findById(order._id)
+      .populate({ path: 'department', model: Department })
+      .populate({ path: 'vendor', model: Vendor })
+      .populate({ path: 'submitter', model: User })
+      .populate({ path: 'signedBy', model: User });
+
+    res
+    .set(createNoCacheHeaders())
+    .status(200).json({ message: "Signature reverted", purchaseOrder: populatedOrder });
+  } catch (err) {
+    console.error("Error reverting signature:", err);
+    res
+    .set(createNoCacheHeaders())
+    .status(500).json({ message: "Failed to revert signature", error: err });
   }
 };
