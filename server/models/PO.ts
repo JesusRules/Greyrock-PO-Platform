@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const OrderItemSchema = new mongoose.Schema({
+const LineItemSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },
   itemId: { type: String, required: true },
   description: { type: String, required: true },
@@ -35,7 +35,7 @@ const PurchaseOrderSchema = new mongoose.Schema({
     invoiceEmail: { type: String, default: 'Finance@GreyRock-Casino.com' },
   },
 
-  orderItems: [OrderItemSchema],
+  lineItems: [LineItemSchema],
 
   // Financial fields
   shipping: { type: Number, required: true },

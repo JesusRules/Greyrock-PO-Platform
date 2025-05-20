@@ -46,7 +46,7 @@ export function Drawer() {
             </SheetTitle>
             </SheetHeader>
 
-            {/* <p className="text-center text-sm mb-10">Logged In: {user?.firstName} ({user?.lastName})</p> */}
+            <p className="text-center text-sm mt-5 mb-10">Logged In: {user?.firstName} {user?.lastName}</p>
 
             <nav className="mt-8 space-y-4 px-2">
             <Button onClick={() => navigate("/purchase-orders")}

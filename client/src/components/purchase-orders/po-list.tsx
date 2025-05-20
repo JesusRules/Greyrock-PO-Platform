@@ -11,7 +11,10 @@ import { formatCurrency } from "../../../utils/general"
 import { PurchaseOrderViewModal } from "./po-view-modal"
 // import { PurchaseOrderModal } from "./po-modal"
 import { PurchaseOrderModal } from "./po-modal-2"
-import { useAppSelector } from "../../../redux/store"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
+import { useDispatch } from "react-redux"
+import { deletePurchaseOrder } from "../../../redux/features/po-slice"
+import { useToast } from "../../../hooks/use-toast"
 
 export function PurchaseOrderList() {
   const { downloadPdf } = usePurchaseOrders()
@@ -22,9 +25,11 @@ export function PurchaseOrderList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
+  const { toast } = useToast();
   //Delete purchase order
   const [poToDelete, setPoToDelete] = useState<any>(null)
   //Redux
+  const dispatch = useDispatch<AppDispatch>();
   const purchaseOrders = useAppSelector(state => state.purchaseOrdersRouter.purchaseOrders);
   const departments = useAppSelector(state => state.departmentsReducer.departments);
 
@@ -32,8 +37,8 @@ export function PurchaseOrderList() {
   const query = searchQuery.toLowerCase();
 
   const matchesSearch =
-      (po.vendor?.name?.toLowerCase() || "").includes(query) ||
-      (po.vendor?.contactName?.toLowerCase() || "").includes(query) ||
+      (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
+      (po.vendor?.email?.toLowerCase() || "").includes(query) ||
       (po.poNumber?.toLowerCase() || "").includes(query) ||
       po.orderItems?.some(item =>
         item.description.toLowerCase().includes(query)
@@ -55,17 +60,32 @@ export function PurchaseOrderList() {
     setIsEditModalOpen(true)
   }
 
-  const handleDelete = (po: any) => {
-    if (!po?.id) {
-      alert("Invalid purchase order. Cannot delete.")
-      return
-    }
-    const confirmed = window.confirm(`Are you sure you want to delete PO #${po.poNumber}?`)
-    if (!confirmed) return
-    const updated = purchaseOrders.filter((p) => p._id !== po.id)
-    localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
-    window.location.reload()
+  const handleDelete = async (po: any) => {
+  if (!po?._id) {
+    alert("Invalid purchase order. Cannot delete.");
+    return;
   }
+
+  const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
+  if (!confirmed) return;
+
+  try {
+    await dispatch(deletePurchaseOrder(po._id)).unwrap();
+    toast({
+      title: "Deleted",
+      description: `PO #${po.poNumber} has been deleted.`,
+      variant: "destructive",
+    });
+  } catch (err) {
+    console.error("Failed to delete:", err);
+    toast({
+      title: "Error",
+      description: "Failed to delete the purchase order.",
+      variant: "destructive",
+    });
+  }
+};
+
 
   return (
     <div className="space-y-4">

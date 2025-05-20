@@ -224,7 +224,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
       const vendorName = form.getValues("vendor");
       const selectedVendor = vendors.find(v => v.companyName === vendorName);
-      const vendorId = selectedVendor?._id;
+      const vendorId = selectedVendor;
 
       const poData = {
         department: departmentId,

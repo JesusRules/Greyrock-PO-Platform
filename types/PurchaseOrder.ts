@@ -1,3 +1,5 @@
+import { Vendor } from "./Vendor";
+
 export interface OrderItem {
   quantity: number;
   itemId: string;
@@ -19,7 +21,7 @@ export interface PurchaseOrder {
   //   email: string;
   //   payableTo: string;
   // };
-  vendor: string
+  vendor: Vendor
   companyInfo: {
     name: string;
     address: string;
