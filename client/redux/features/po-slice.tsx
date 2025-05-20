@@ -64,7 +64,7 @@ export const fetchPurchaseOrders = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const res = await api.get("/api/purchase-orders");
-      return res.data;
+      return res.data.purchaseOrders;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to fetch");
     }
@@ -76,7 +76,7 @@ export const createPurchaseOrder = createAsyncThunk(
   async (newOrder: Partial<PurchaseOrder>, thunkAPI) => {
     try {
       const res = await api.post("/api/purchase-orders", newOrder);
-      return res.data;
+      return res.data.purchaseOrder;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to create");
     }
@@ -88,7 +88,7 @@ export const updatePurchaseOrder = createAsyncThunk(
   async ({ _id, updatedData }: { _id: string; updatedData: Partial<PurchaseOrder> }, thunkAPI) => {
     try {
       const res = await api.put(`/api/purchase-orders/${_id}`, updatedData);
-      return res.data;
+      return res.data.purchaseOrder;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to update");
     }
@@ -112,7 +112,7 @@ export const togglePurchaseOrderStatus = createAsyncThunk(
   async (_id: string, thunkAPI) => {
     try {
       const res = await api.patch(`/api/purchase-orders/${_id}/toggle-status`);
-      return res.data;
+      return res.data.purchaseOrder;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to toggle status");
     }

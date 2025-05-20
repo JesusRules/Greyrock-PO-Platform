@@ -6,8 +6,15 @@ import { useGlobalContext } from "../../../context/global-context"
 export function CreateVendorModal() {
   const { openCreateVendor, setOpenCreateVendor } = useGlobalContext();
   return (
-      <Dialog open={openCreateVendor} onOpenChange={setOpenCreateVendor}>
-        <DialogContent className={`sm:max-w-[600px] bg-white dark:bg-darkModal`}>
+        <Dialog
+          open={openCreateVendor}
+          onOpenChange={(open) => {
+            if (!open) {
+              setOpenCreateVendor(false);            // local modal closing logic
+            }
+          }}
+        >        
+        <DialogContent className={`sm:max-w-[700px] bg-white dark:bg-darkModal`}>
           <DialogHeader>
             <DialogTitle>Add New Vendor</DialogTitle>
           </DialogHeader>

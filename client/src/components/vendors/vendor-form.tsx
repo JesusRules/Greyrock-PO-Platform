@@ -15,19 +15,22 @@ import { addVendor, fetchVendorById, updateVendor } from "../../../redux/feature
 
 const vendorSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
+  contactName: z.string().min(1, "Contact name is required"),
   email: z.string().email("Invalid email address"),
   phoneNumber: z.string().min(1, "Phone number is required"),
   address: z.string().min(1, "Address is required"),
+  payableTo: z.string().min(1, "Payable to is required"),
   comment: z.string().optional(),
 })
 
 type VendorFormValues = z.infer<typeof vendorSchema>
 
 interface VendorFormProps {
-  vendorId?: string
+  vendorId?: string;
+  onClose?: () => void;
 }
 
-export function VendorForm({ vendorId }: VendorFormProps) {
+export function VendorForm({ vendorId, onClose }: VendorFormProps) {
   const { setOpenCreateVendor, setOpenEditVendor } = useGlobalContext();
 
   const [loading, setLoading] = useState(false)
@@ -45,15 +48,26 @@ export function VendorForm({ vendorId }: VendorFormProps) {
     resolver: zodResolver(vendorSchema),
     defaultValues: {
       companyName: "",
+      contactName: "",
       email: "",
       phoneNumber: "",
       address: "",
+      payableTo: "",
       comment: "",
     },
   })
 
   useEffect(() => {
     if (vendorId) {
+      form.reset({
+        companyName: '',
+        contactName: '',
+        email: '',
+        phoneNumber: '',
+        address: '',
+        payableTo: '',
+        comment: '',
+      });
       dispatch(fetchVendorById(vendorId)).catch(() => {
         toast({
           title: "Error",
@@ -66,15 +80,17 @@ export function VendorForm({ vendorId }: VendorFormProps) {
   }, [vendorId, dispatch]);
 
   useEffect(() => {
-  if (vendorId && selectedVendor) {
+    if (vendorId && selectedVendor && selectedVendor._id === vendorId) {
       form.reset({
         companyName: selectedVendor.companyName,
+        contactName: selectedVendor.contactName,
         email: selectedVendor.email,
         phoneNumber: selectedVendor.phoneNumber,
         address: selectedVendor.address,
+        payableTo: selectedVendor.payableTo,
         comment: selectedVendor.comment || "",
       });
-      setInitialLoading(false); // move this here
+      setInitialLoading(false);
     }
   }, [vendorId, selectedVendor, form]);
 
@@ -98,8 +114,7 @@ export function VendorForm({ vendorId }: VendorFormProps) {
       }
 
       navigate(location.pathname, { replace: true });
-      setOpenCreateVendor(false);
-      setOpenEditVendor(false);
+      onClose?.();
     } catch (error) {
       console.error('Error saving vendor:', error);
       toast({
@@ -118,7 +133,7 @@ export function VendorForm({ vendorId }: VendorFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-2 gap-y-3 gap-x-3 items-center">
         <FormField
           control={form.control}
           name="companyName"
@@ -132,7 +147,19 @@ export function VendorForm({ vendorId }: VendorFormProps) {
             </FormItem>
           )}
         />
-
+        <FormField
+          control={form.control}
+          name="contactName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Acme Inc." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"
@@ -146,7 +173,6 @@ export function VendorForm({ vendorId }: VendorFormProps) {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="phoneNumber"
@@ -177,9 +203,22 @@ export function VendorForm({ vendorId }: VendorFormProps) {
 
         <FormField
           control={form.control}
+          name="payableTo"
+          render={({ field }) => (
+            <FormItem className="col-span-2">
+              <FormLabel>Payable To</FormLabel>
+              <FormControl>
+                <Input placeholder="ABC Industrial Supplies Ltd" className="resize-none" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="comment"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="col-span-2">
               <FormLabel>Comment (optional)</FormLabel>
               <FormControl>
                 <Textarea placeholder="Additional notes about this vendor" className="resize-none" {...field} />
@@ -189,10 +228,11 @@ export function VendorForm({ vendorId }: VendorFormProps) {
           )}
         />
 
-        <div className="flex gap-4 justify-end">
+        <div className="flex gap-4 justify-end col-span-2 mt-4">
           <Button type="button" variant="outline" onClick={() => {
               setOpenCreateVendor(false);
               setOpenEditVendor(false);
+              onClose?.();
             }}>
             Cancel
           </Button>

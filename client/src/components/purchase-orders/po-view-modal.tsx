@@ -1,15 +1,14 @@
-"use client"
-
 import { X, FileDown } from "lucide-react"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
 import { usePurchaseOrders } from "../../../context/po-context"
-import { formatCurrency } from "../../../utils/general"
+import { formatCurrency, getFormattedDateTime } from "../../../utils/general"
+import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 
 interface PurchaseOrderViewModalProps {
   isOpen: boolean
   onClose: () => void
-  purchaseOrder: any
+  purchaseOrder: PurchaseOrder
 }
 
 export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: PurchaseOrderViewModalProps) {
@@ -24,7 +23,7 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
           <DialogTitle className="flex justify-between items-center">
             <span>Purchase Order #{purchaseOrder.poNumber}</span>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => downloadPdf(purchaseOrder.id)}>
+              <Button variant="outline" size="sm" onClick={() => downloadPdf(purchaseOrder._id)}>
                 <FileDown className="h-4 w-4 mr-1" /> Download PDF
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
@@ -38,11 +37,12 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold">PURCHASE ORDER</h2>
-              <p className="text-muted-foreground">{purchaseOrder.department || "ADMINISTRATION"}</p>
+              <p className="text-muted-foreground">{purchaseOrder.department.name || "ADMINISTRATION"}</p>
             </div>
             <div className="text-right">
-              <p className="font-semibold">PO #{purchaseOrder.poNumber}</p>
-              <p>Date: {purchaseOrder.date}</p>
+              <p className="font-semibold mb-1">PO #{purchaseOrder.poNumber}</p>
+              <p>Created:&nbsp;&nbsp;<span className="font-semibold">{getFormattedDateTime(String(purchaseOrder.date))}</span>
+              </p>
               <p className="mt-2">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -58,20 +58,20 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
           <div className="grid grid-cols-2 gap-8 mt-8">
             <div>
               <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Vendor</h3>
-              <p className="font-semibold">{purchaseOrder.vendor}</p>
-              <p>{purchaseOrder.contactName}</p>
-              <p className="whitespace-pre-line">{purchaseOrder.contactAddress}</p>
-              <p className="mt-2">Phone: {purchaseOrder.phone}</p>
-              <p>Email: {purchaseOrder.email}</p>
+              <p className="font-semibold">{purchaseOrder.vendor.companyName}</p>
+              <p>{purchaseOrder.vendor.contactName}</p>
+              <p className="whitespace-pre-line">{purchaseOrder.vendor.address}</p>
+              <p className="mt-2">Phone:&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.phoneNumber}</span></p>
+              <p>Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.email}</span></p>
             </div>
             <div>
               <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Payment Details</h3>
-              <p>Payment: {purchaseOrder.payment}</p>
-              <p>Cheque Payable To: {purchaseOrder.payableTo}</p>
+              <p>Payment:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.paymentMethod}</span></p>
+              <p>Payable To:&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.payableTo}</span></p>
               <div className="mt-4">
                 <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Approval</h3>
-                <p>Submitter: {purchaseOrder.submitter}</p>
-                <p>Manager: {purchaseOrder.manager}</p>
+                <p>Submitter: {purchaseOrder.submitter.firstName}</p>
+                {/* <p>Manager: {purchaseOrder.manager}</p> */}
               </div>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
               </div>
               <div className="flex justify-between py-1">
                 <span>Tax ({purchaseOrder.taxRate}%):</span>
-                <span>{formatCurrency(purchaseOrder.tax)}</span>
+                <span>{formatCurrency(purchaseOrder.taxAmpunt)}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span>Shipping:</span>
@@ -121,7 +121,7 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
             </div>
           </div>
 
-          {purchaseOrder.status === "Signed" && (
+          {/* {purchaseOrder.status === "Signed" && (
             <div className="mt-8 border-t pt-4">
               <div className="flex justify-between">
                 <div>
@@ -131,7 +131,7 @@ export function PurchaseOrderViewModal({ isOpen, onClose, purchaseOrder }: Purch
                 <div className="italic text-muted-foreground">Digital Signature</div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </DialogContent>
     </Dialog>

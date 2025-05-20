@@ -46,3 +46,9 @@ export const getCurrentDate = (dateTimeString: string) => {
   const date = moment(dateTimeString).tz('America/Moncton');
   return date.format('YYYY-MM-DD');
 };
+
+export const getFormattedDateTime = (dateTimeString: string) => {
+  const dateTime = moment(dateTimeString).tz("America/Moncton")
+  // return dateTime.format("YYYY-MM-DD [at] h:mm:ss A") // Example: 2025-05-20 at 9:07:42 PM
+    return dateTime.format("MMMM Do YYYY [at] h:mm:ss A")
+}

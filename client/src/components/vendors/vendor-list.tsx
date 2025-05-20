@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Eye } from "lucide-react"
 
 import { Button } from "@components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@components/ui/table"
@@ -20,6 +20,7 @@ import { useGlobalContext } from "../../../context/global-context"
 import { deleteVendor, fetchVendors } from "../../../redux/features/vendors-slice"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
+import { VendorViewModal } from "./view-vendor-modal"
 
 interface Vendor {
   id: string
@@ -32,10 +33,12 @@ interface Vendor {
 
 export function VendorList() {
   const { setOpenCreateVendor, setOpenEditVendor } = useGlobalContext();
-
+  const [vendorBeingEdited, setVendorBeingEdited] = useState<string | null>(null);
+  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [vendorToDelete, setVendorToDelete] = useState<string | null>(null)
   const { toast } = useToast()
+  const [viewVendor, setViewVendor] = useState<any | null>(null);
   //Redux
   const dispatch = useDispatch<AppDispatch>();
   const vendors = useAppSelector(state => state.vendorsReducer.vendors);
@@ -107,10 +110,11 @@ export function VendorList() {
           <TableHeader>
             <TableRow>
               <TableHead>Company Name</TableHead>
+              <TableHead>Contact Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone Number</TableHead>
               <TableHead>Address</TableHead>
-              <TableHead>Comment</TableHead>
+              {/* <TableHead>Comment</TableHead> */}
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -118,10 +122,11 @@ export function VendorList() {
             {vendors.map((vendor) => (
               <TableRow key={vendor._id}>
                 <TableCell className="font-medium">{vendor.companyName}</TableCell>
+                <TableCell>{vendor.contactName}</TableCell>
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>{vendor.phoneNumber}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{vendor.address}</TableCell>
-                <TableCell className="max-w-[200px]">
+                {/* <TableCell className="max-w-[200px]">
                   {vendor.comment ? (
                     <CommentViewModal comment={vendor.comment} companyName={vendor.companyName}>
                       <span className="truncate block">{vendor.comment}</span>
@@ -129,11 +134,22 @@ export function VendorList() {
                   ) : (
                     <span className="text-muted-foreground italic">No comment</span>
                   )}
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <div className="flex space-x-2">
-                      <EditVendorModal vendorId={vendor._id!} />
-                      <Button onClick={() => setOpenEditVendor(true)} variant="outline" size="icon">
+                      <Button
+                        onClick={() => setViewVendor(vendor)}
+                        variant="outline"
+                        size="icon"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View</span>
+                      </Button>
+                      <Button
+                        onClick={() => setVendorBeingEdited(vendor._id!)}
+                        variant="outline"
+                        size="icon"
+                      >
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
@@ -172,6 +188,20 @@ export function VendorList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {viewVendor && (
+      <VendorViewModal
+        isOpen={!!viewVendor}
+        onClose={() => setViewVendor(null)}
+        vendor={viewVendor}
+      />
+    )}
+    {vendorBeingEdited && (
+      <EditVendorModal
+        vendorId={vendorBeingEdited}
+        onClose={() => setVendorBeingEdited(null)}
+      />
+    )}
     </div>
   )
 }

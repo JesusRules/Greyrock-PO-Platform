@@ -1,3 +1,5 @@
+import { Department } from "./Department";
+import { User } from "./User";
 import { Vendor } from "./Vendor";
 
 export interface OrderItem {
@@ -13,7 +15,7 @@ export interface PurchaseOrder {
   poNumber: string;
   date: Date;
   paymentMethod: string;
-  department: string;
+  department: Department;
   // vendor: {
   //   name: string;
   //   contactName: string;
@@ -35,8 +37,8 @@ export interface PurchaseOrder {
   subtotal: number;
   taxAmount: number;
   total: number;
-  submitter: string;
-  manager: string;
+  submitter: User;
+  // manager: string;
   status: string;
   pdfUrl?: string;
   createdAt: string;

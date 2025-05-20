@@ -8,19 +8,26 @@ import { VendorForm } from "./vendor-form"
 import { useGlobalContext } from "../../../context/global-context"
 
 interface EditVendorModalProps {
-  // children: React.ReactNode
   vendorId: string
+  onClose: () => void
 }
 
-export function EditVendorModal({ vendorId }: EditVendorModalProps) {
+export function EditVendorModal({ vendorId, onClose }: EditVendorModalProps) {
   const { openEditVendor, setOpenEditVendor } = useGlobalContext();
   return (
-      <Dialog open={openEditVendor} onOpenChange={setOpenEditVendor}>
-        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-darkModal">
+      <Dialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              onClose();               // local modal closing logic
+            }
+          }}
+        >
+        <DialogContent className="max-w-[700px] min-h-[563px] bg-white dark:bg-darkModal">
           <DialogHeader>
             <DialogTitle>Edit Vendor</DialogTitle>
           </DialogHeader>
-          <VendorForm vendorId={vendorId} />
+          <VendorForm vendorId={vendorId} onClose={onClose} />
         </DialogContent>
       </Dialog>
   )

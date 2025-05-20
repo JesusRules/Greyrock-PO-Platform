@@ -227,7 +227,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       const vendorId = selectedVendor;
 
       const poData = {
-        department: departmentId,
+        department: selectedDepartment,
         poNumber: finalPoNumber,
         date,
         vendor: vendorId,
@@ -239,8 +239,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         taxAmount: taxRate,
         total,
         status: "Pending",
-        submitter: `${user?.firstName} ${user?.lastName}`,
-        manager: `${user?.firstName} ${user?.lastName}`,
+        submitter: user!,
       };
       if (!isEditing) {
         const result = await dispatch(createPurchaseOrder(poData)).unwrap();
@@ -278,8 +277,46 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   <Dialog open={isOpen} onOpenChange={onClose}>
     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
       <DialogHeader>
-        <DialogTitle>{isEditing ? "Edit Purchase Order" : "Create Purchase Order"}</DialogTitle>
-        <DialogDescription>Fill in the details for the purchase order</DialogDescription>
+        <div className="flex justify-between items-start mr-3">
+          <div>
+            <DialogTitle className="mb-1 text-left">
+              {isEditing ? "Edit Purchase Order" : "Create Purchase Order"}
+            </DialogTitle>
+            <DialogDescription>Fill in the details for the purchase order</DialogDescription>
+          </div>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => {
+              form.reset({
+                department: "",
+                poNumber: "",
+                date: new Date(),
+                vendor: "",
+                contactName: "",
+                phone: "",
+                email: "",
+                payableTo: "",
+                paymentMethod: "Cheque",
+              });
+              setPoNumber("");
+              setLineItems([{
+                id: crypto.randomUUID(),
+                quantity: 1,
+                itemId: "",
+                description: "",
+                unitPrice: 0,
+                lineTotal: 0,
+              }]);
+              setShipping(0);
+              setTaxRate(13);
+            }}
+            className="bg-blue-500 hover:bg-blue-600"
+          >
+            Clear
+          </Button>
+        </div>
       </DialogHeader>
 
       <Form {...form}>
@@ -357,7 +394,20 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Vendor</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  {/* <Select onValueChange={field.onChange} value={field.value}> */}
+                  <Select
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        const selectedVendor = vendors.find((v) => v.companyName === val);
+
+                        // Auto-populate related fields
+                        form.setValue("contactName", selectedVendor?.contactName || "");
+                        form.setValue("phone", selectedVendor?.phoneNumber || "");
+                        form.setValue("email", selectedVendor?.email || "");
+                        form.setValue("payableTo", selectedVendor?.payableTo || "");
+                      }}
+                      value={field.value}
+                    >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select vendor" />

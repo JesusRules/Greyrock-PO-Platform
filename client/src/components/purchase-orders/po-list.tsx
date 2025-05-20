@@ -7,7 +7,7 @@ import { Input } from "../ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { usePurchaseOrders } from "../../../context/po-context"
-import { formatCurrency } from "../../../utils/general"
+import { formatCurrency, getFormattedDateTime } from "../../../utils/general"
 import { PurchaseOrderViewModal } from "./po-view-modal"
 // import { PurchaseOrderModal } from "./po-modal"
 import { PurchaseOrderModal } from "./po-modal-2"
@@ -61,31 +61,30 @@ export function PurchaseOrderList() {
   }
 
   const handleDelete = async (po: any) => {
-  if (!po?._id) {
-    alert("Invalid purchase order. Cannot delete.");
-    return;
-  }
+    if (!po?._id) {
+      alert("Invalid purchase order. Cannot delete.");
+      return;
+    }
 
-  const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
-  if (!confirmed) return;
+    const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
+    if (!confirmed) return;
 
-  try {
-    await dispatch(deletePurchaseOrder(po._id)).unwrap();
-    toast({
-      title: "Deleted",
-      description: `PO #${po.poNumber} has been deleted.`,
-      variant: "destructive",
-    });
-  } catch (err) {
-    console.error("Failed to delete:", err);
-    toast({
-      title: "Error",
-      description: "Failed to delete the purchase order.",
-      variant: "destructive",
-    });
-  }
-};
-
+    try {
+      await dispatch(deletePurchaseOrder(po._id)).unwrap();
+      toast({
+        title: "Deleted",
+        description: `PO #${po.poNumber} has been deleted.`,
+        variant: "destructive",
+      });
+    } catch (err) {
+      console.error("Failed to delete:", err);
+      toast({
+        title: "Error",
+        description: "Failed to delete the purchase order.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -164,9 +163,9 @@ export function PurchaseOrderList() {
               filteredPOs.map((po) => (
                 <TableRow key={po._id}>
                   <TableCell>{po.poNumber}</TableCell>
-                  <TableCell>{po.date}</TableCell>
-                  <TableCell>{po.vendor.name}</TableCell>
-                  <TableCell>{po.department}</TableCell>
+                  <TableCell>{getFormattedDateTime(String(po.date))}</TableCell>
+                  <TableCell>{po.vendor.companyName}</TableCell>
+                  <TableCell>{po.department.name}</TableCell>
                   <TableCell>{formatCurrency(po.total)}</TableCell>
                   <TableCell className="text-center">
                     {(po.orderItems || []).length}

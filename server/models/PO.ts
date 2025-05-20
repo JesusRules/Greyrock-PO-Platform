@@ -45,15 +45,20 @@ const PurchaseOrderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
 
   // Signatures
-  submitter: { type: String, required: true },
-  manager: { type: String, required: true },
+  // submitter: { type: String, required: true },
+  submitter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  // manager: { type: String, required: true },
 
   status: {
     type: String,
     enum: ['Pending', 'Signed', 'Rejected', 'Approved'],
     default: 'Pending',
   },
-
+  signedImg: { type: String, default: null, required: false }, // Stores Base64
   pdfUrl: { type: String }, // Optional if generated and uploaded
 
 }, {
