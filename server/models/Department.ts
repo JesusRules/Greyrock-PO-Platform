@@ -10,7 +10,7 @@ const departmentSchema = new mongoose.Schema(
     },
     departmentCode: {
       type: String,
-      required: false,
+      required: true,
       unique: true,
       trim: true,
     },

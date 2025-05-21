@@ -52,36 +52,41 @@ export function DepartmentModal({
   }, [mode, department, isOpen]);
 
 
-  const validateDepartment = (name: string): boolean => {
+  const validateDepartment = (name: string, code: string): boolean => {
     if (!name.trim()) {
-      setError("Department name cannot be empty")
-      return false
+      setError("Department name cannot be empty");
+      return false;
     }
+
+    if (!code.trim()) {
+      setError("Department code cannot be empty");
+      return false;
+    }
+
+    const inputName = name.trim().toLowerCase();
 
     const isDuplicate = departments.some((dept) => {
-      const inputName = name.trim().toLowerCase()
-      const existingName = dept.name.trim().toLowerCase()
+      const existingName = dept.name.trim().toLowerCase();
+      const isSame = inputName === existingName;
+      const isEditingDifferent = mode === "edit" && existingName !== department?.trim().toLowerCase();
 
-      const isSame = inputName === existingName
-      const isEditingDifferent = mode === "edit" && existingName !== department?.trim().toLowerCase()
-
-      return isSame && (mode === "create" || isEditingDifferent)
-    })
+      return isSame && (mode === "create" || isEditingDifferent);
+    });
 
     if (isDuplicate) {
-      setError("Department name already exists")
-      return false
+      setError("Department name already exists");
+      return false;
     }
 
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = () => {
     if (mode === "delete") {
       onDeleteDepartment()
       return
     }
-    if (validateDepartment(departmentName)) {
+    if (validateDepartment(departmentName, departmentCode)) {
       if (mode === "create") {
         onCreateDepartment(departmentName, departmentCode);
       } else if (mode === "edit") {

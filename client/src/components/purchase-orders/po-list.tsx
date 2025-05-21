@@ -231,7 +231,7 @@ export function PurchaseOrderList() {
                   <TableCell>
                   <span
                     onClick={() => { 
-                      po.status === 'Pending' && setOpenSignModal(true)
+                      (po.status === 'Pending' || po.status === 'Signed') && setOpenSignModal(true)
                       setCurrentPO(po)}
                     }
                     className={`cursor-pointer px-2 py-1 rounded-full text-xs font-medium ${

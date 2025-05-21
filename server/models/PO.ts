@@ -3,11 +3,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 const LineItemSchema = new mongoose.Schema({
   uuid: { type: String, default: uuidv4 },
-  quantity: { type: Number, required: true },
-  itemId: { type: String, required: true },
-  description: { type: String, required: true },
-  unitPrice: { type: Number, required: true },
-  lineTotal: { type: Number, required: true },
+  quantity: { type: Number, required: false },
+  itemId: { type: String, required: false },
+  description: { type: String, required: false },
+  unitPrice: { type: Number, required: false },
+  lineTotal: { type: Number, required: false },
 }, { _id: false });
 
 const PurchaseOrderSchema = new mongoose.Schema({
@@ -20,10 +20,18 @@ const PurchaseOrderSchema = new mongoose.Schema({
     ref: "Department",
     required: true,
   },
+  // vendor: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "Vendor",
+  //   required: true,
+  // },
   vendor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Vendor",
-    required: true,
+    companyName: { type: String, required: true },
+    contactName: { type: String, required: true },
+    payableTo: { type: String, required: true },
+    email: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    address: { type: String },
   },
   // Company details (right side static block in PDF)
   companyInfo: {

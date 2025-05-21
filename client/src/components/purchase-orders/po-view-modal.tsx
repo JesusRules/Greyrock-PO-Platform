@@ -93,7 +93,12 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     purchaseOrder.status === "Signed"
                       ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                      : "bg-amber-100 text-amber-800 dark:bg-yellow-700 dark:text-yellow-100"
+                      : purchaseOrder.status === 'Approved' 
+                      ? "bg-emerald-100 text-emerald-800" 
+                      : purchaseOrder.status === 'Pending'
+                      ? 'bg-amber-100 text-amber-800'
+                      : purchaseOrder.status === 'Rejected'
+                      ? 'bg-red-200' : 'bg-white'
                   }`}
                 >
                   {purchaseOrder.status}

@@ -25,6 +25,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { createPurchaseOrder, updatePurchaseOrder } from "../../../redux/features/po-slice"
 import { useDispatch } from "react-redux"
 import { useToast } from "../../../hooks/use-toast"
+import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 
 type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
 
@@ -42,7 +43,7 @@ interface PurchaseOrderModalProps {
   isOpen: boolean
   onClose: () => void
   mode: "create" | "edit"
-  purchaseOrder?: any
+  purchaseOrder?: PurchaseOrder
 }
 
 const PAYMENT_METHODS = ["Cheque", "Credit Card", "Electronic Funds Transfer"]
@@ -82,8 +83,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     resolver: zodResolver(purchaseOrderSchema),
     defaultValues: {
       department: "",
+      address: '',
       // poNumber: "",
-      date,
+      // date,
       vendor: "",
       contactName: "",
       phone: "",
@@ -125,7 +127,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       form.reset({
         department: purchaseOrder.department.name || "",
         // poNumber: purchaseOrder.poNumber || "",
-        date: purchaseOrder.date || new Date(),
+        // date: purchaseOrder.date || new Date(),
         vendor: purchaseOrder.vendor?.companyName || "",
         contactName: purchaseOrder.vendor.contactName || "",
         phone: purchaseOrder.vendor.phoneNumber || "",
@@ -137,6 +139,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         : purchaseOrder.submitter?._id || "",
       });
       setPoNumber(purchaseOrder.poNumber || "");
+      setDate(purchaseOrder.date || new Date());
 
       setLineItems(purchaseOrder.lineItems || []);
       setShipping(purchaseOrder.shipping || 0);
@@ -145,7 +148,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       form.reset({
         department: "",
         // poNumber: "",
-        date: new Date(),
+        // date: new Date(),
         vendor: "",
         contactName: "",
         phone: "",
@@ -207,12 +210,20 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const tax = (subtotal * taxRate) / 100
   const total = subtotal + tax + shipping
 
+
   const handleSubmit = async () => {
     try {
       const isValid = await form.trigger();
 
       if (!isValid) {
+
         console.log(form.formState.errors); // 👈 shows which fields failed
+        toast({
+            title: 'Error',
+            description: 'Please fillout all required fields.',
+            variant: 'destructive',
+        });
+        return
       }
 
       setIsLoading(true);
@@ -235,13 +246,31 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
       const vendorName = form.getValues("vendor");
       const selectedVendor = vendors.find(v => v.companyName === vendorName);
-      const vendorId = selectedVendor;
+      // const vendorId = selectedVendor;
+      const vendorFromForm = {
+        companyName: vendorName,
+        contactName: form.getValues("contactName"),
+        email: form.getValues("email"),
+        phoneNumber: form.getValues("phone"),
+        payableTo: form.getValues("payableTo"),
+        address: selectedVendor?.address || "", // fallback from original if not in form
+        _id: selectedVendor?._id, // include ID for update if needed
+      };
+      // const vendorFromForm = {
+      //   companyName: 'asdasd',
+      //   contactName: 'asdasd',
+      //   email: 'asdas@email.com',
+      //   phoneNumber: '1231231',
+      //   payableTo: 'asdasdasd',
+      //   address: 'asdasasd', // fallback from original if not in form
+      //   _id: selectedVendor?._id, // include ID for update if needed
+      // };
 
       const poData = {
         department: selectedDepartment,
         poNumber: finalPoNumber,
         date,
-        vendor: vendorId,
+        vendor: vendorFromForm,
         paymentMethod,
         lineItems,
         shipping,
@@ -249,7 +278,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         subtotal,
         taxAmount: taxRate,
         total,
-        status: "Pending",
+        status: purchaseOrder?.status,
         submitter: form.getValues("submitter"),
       };
       if (!isEditing) {
@@ -261,7 +290,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         });
       } else {
         const result = await dispatch(updatePurchaseOrder({
-          _id: purchaseOrder._id,
+          _id: purchaseOrder?._id || '',
           updatedData: poData
         })).unwrap();
         toast({
@@ -303,7 +332,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
               form.reset({
                 department: "",
                 // poNumber: "",
-                date: new Date(),
+                // date: new Date(),
                 vendor: "",
                 contactName: "",
                 phone: "",
@@ -440,6 +469,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                         form.setValue("contactName", selectedVendor?.contactName || "");
                         form.setValue("phone", selectedVendor?.phoneNumber || "");
                         form.setValue("email", selectedVendor?.email || "");
+                        form.setValue("address", selectedVendor?.address || "");
                         form.setValue("payableTo", selectedVendor?.payableTo || "");
                       }}
                       value={field.value}
@@ -506,9 +536,23 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
             <FormField
               control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem className="">
+                  <FormLabel>Address</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
               name="payableTo"
               render={({ field }) => (
-                <FormItem className="sm:col-span-2">
+                <FormItem className="">
                   <FormLabel>Payable To</FormLabel>
                   <FormControl>
                     <Input {...field} />

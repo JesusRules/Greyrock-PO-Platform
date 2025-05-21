@@ -28,6 +28,11 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
       borderBottom: "1px solid #000",
       paddingBottom: 20,
       alignItems: "center",
+
+      //Add to all components
+      marginHorizontal: 'auto',
+      maxWidth: '530px', //570
+      width: '100%'
     },
     logo: {
       width: 95,
@@ -40,7 +45,11 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
     },
     section: {
       marginBottom: 10,
-      marginTop: 9
+      marginTop: 9,
+       //Add to all components
+      marginHorizontal: 'auto',
+      maxWidth: '530px',
+      width: '100%'
     },
     table: {
       borderWidth: 1,
@@ -104,10 +113,18 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
       padding: 5,
       backgroundColor: "#e4e4e4",
       borderRadius: 3,
+       //Add to all components
+      marginHorizontal: 'auto',
+      maxWidth: '530px',
+      width: '100%'
     },
     summaryContainer: {
       flexDirection: "row",
       justifyContent: "space-between",
+      //Add to all components
+      marginHorizontal: 'auto',
+      maxWidth: '530px',
+      width: '100%'
     },
     approvalSection: {
       width: "50%",
@@ -153,7 +170,9 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
     //   borderColor: "#000",
       padding: 10,
       borderRadius: 5,
-      backgroundColor: "#fff", // Added background to ensure visibility
+      backgroundColor: "#fff",
+      //Add to all components - RIGHT
+      marginRight: 32
     },
     dateInfoRow: {
       flexDirection: "row",
@@ -191,15 +210,9 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
     },
   })
 
-  const rowsPerPage = 20;
-  const chunkedLineItems = [];
-  for (let i = 0; i < purchaseOrder.lineItems.length; i += rowsPerPage) {
-    chunkedLineItems.push(purchaseOrder.lineItems.slice(i, i + rowsPerPage));
-  }
-
   // Calculate subtotal, tax, and total
   const subtotal = purchaseOrder.lineItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0)
-  const taxRate = 0.13 // 13% tax rate (adjust as needed)
+  const taxRate = purchaseOrder.taxAmount / 100
   const salesTax = subtotal * taxRate
   const shipping = 0 // Set shipping cost if available
   const total = subtotal + salesTax + shipping
@@ -213,7 +226,8 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
 
   return (
     <Document>
-      <Page size={{ width: 612, height: 792 }} style={styles.page}>
+      {/* <Page size={{ width: 612, height: 792 }} style={styles.page}> */}
+      <Page size={{ width: 700, height: 792 }} style={styles.page}>
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
