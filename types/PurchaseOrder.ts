@@ -2,7 +2,7 @@ import { Department } from "./Department";
 import { User } from "./User";
 import { Vendor } from "./Vendor";
 
-export interface OrderItem {
+export interface LineItem {
   quantity: number;
   itemId: string;
   description: string;
@@ -32,7 +32,7 @@ export interface PurchaseOrder {
     phone: string;
     invoiceEmail: string;
   };
-  lineItems: OrderItem[];
+  lineItems: LineItem[];
   shipping: number;
   taxRate: number;
   subtotal: number;

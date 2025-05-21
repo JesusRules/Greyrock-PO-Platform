@@ -6,8 +6,10 @@ import Department from "../models/Department";
 import { createNoCacheHeaders } from "../utils/noCacheResponse";
 import { v2 as cloudinary } from "cloudinary";
 import React from 'react';
-import { PO_PDF } from '../pdf/PO_PDF'
 import { PurchaseOrder as POType } from "../../types/PurchaseOrder";
+import { PO_PDF } from '../pdf/PO_PDF'
+import { PO_PDF2 } from "../pdf/PO_PDF2";
+import { PO_PDF3 } from "../pdf/PO_PDF3";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -288,7 +290,7 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
     //     View={View} 
     //     Image={Image}
     //     StyleSheet={StyleSheet} />);
-    const pdfStream = await renderToStream(<PO_PDF purchaseOrder={purchaseOrder}
+    const pdfStream = await renderToStream(<PO_PDF3 purchaseOrder={purchaseOrder}
       Document={Document} 
       Page={Page} 
       Text={Text} 

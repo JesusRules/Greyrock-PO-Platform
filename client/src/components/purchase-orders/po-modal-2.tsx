@@ -29,12 +29,13 @@ import { useToast } from "../../../hooks/use-toast"
 type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
 
 interface LineItem {
-  id: string
+  // id: string
   quantity: number
   itemId: string
   description: string
   unitPrice: number
   lineTotal: number
+  uuid: string
 }
 
 interface PurchaseOrderModalProps {
@@ -68,7 +69,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const [shipping, setShipping] = useState(0)
   const [taxRate, setTaxRate] = useState(13)
   const [lineItems, setLineItems] = useState<LineItem[]>([{
-    id: "1",
+    uuid: "1",
     quantity: 1,
     itemId: "",
     description: "",
@@ -157,7 +158,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       setPoNumber("");
       setLineItems([
         {
-          id: "1",
+          uuid: "1",
           quantity: 1,
           itemId: "",
           description: "",
@@ -173,7 +174,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
     setLineItems((prev) =>
       prev.map((item) =>
-        item.id === id
+        item.uuid === id
           ? {
               ...item,
               [field]: value,
@@ -189,7 +190,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const addLineItem = () => {
     const newId = crypto.randomUUID() // ensures uniqueness
     setLineItems([...lineItems, {
-      id: newId,
+      uuid: newId,
       quantity: 1,
       itemId: "",
       description: "",
@@ -199,7 +200,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   }
 
   const removeLineItem = (id: string) => {
-    if (lineItems.length > 1) setLineItems(lineItems.filter((item) => item.id !== id))
+    if (lineItems.length > 1) setLineItems(lineItems.filter((item) => item.uuid !== id))
   }
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.lineTotal, 0)
@@ -312,7 +313,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
               });
               setPoNumber("");
               setLineItems([{
-                id: crypto.randomUUID(),
+                uuid: crypto.randomUUID(),
                 quantity: 1,
                 itemId: "",
                 description: "",
@@ -525,7 +526,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         <div className="space-y-4">
         <div className="flex justify-between items-center">
             <Label className="text-base font-medium">Line Items</Label>
-            <Button variant="outline" size="sm" onClick={addLineItem}>
+            <Button type="button" variant="outline" size="sm" onClick={addLineItem}>
             <Plus className="w-4 h-4 mr-1" /> Add Item
             </Button>
         </div>
@@ -543,7 +544,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         {/* Line Items */}
         {lineItems.map((item) => (
         <div
-          key={item.id}
+          key={item.uuid}
           className="grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-start border p-2 rounded-md"
         >
           {/* Trash */}
@@ -551,7 +552,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => removeLineItem(item.id)}
+              onClick={() => removeLineItem(item.uuid)}
               disabled={lineItems.length <= 1}
             >
               <Trash2 className="h-4 w-4 text-red-500" />
@@ -562,14 +563,14 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           <Input
             placeholder="Item ID"
             value={item.itemId}
-            onChange={(e) => updateLineItem(item.id, "itemId", e.target.value)}
+            onChange={(e) => updateLineItem(item.uuid, "itemId", e.target.value)}
           />
 
           {/* Description */}
           <textarea
             placeholder="Description"
             value={item.description}
-            onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+            onChange={(e) => updateLineItem(item.uuid, "description", e.target.value)}
             rows={1}
             className="w-full min-h-[2.25rem] px-3 py-2 text-sm border border-input rounded-md bg-background shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
           />
@@ -579,7 +580,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             type="number"
             placeholder="Qty"
             value={item.quantity}
-            onChange={(e) => updateLineItem(item.id, "quantity", Number(e.target.value))}
+            onChange={(e) => updateLineItem(item.uuid, "quantity", Number(e.target.value))}
           />
 
           {/* Unit Price */}
@@ -587,7 +588,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             type="number"
             placeholder="Price"
             value={item.unitPrice}
-            onChange={(e) => updateLineItem(item.id, "unitPrice", Number(e.target.value))}
+            onChange={(e) => updateLineItem(item.uuid, "unitPrice", Number(e.target.value))}
           />
 
           {/* Total */}
