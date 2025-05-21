@@ -17,6 +17,7 @@ import { deletePurchaseOrder, togglePurchaseOrderStatus } from "../../../redux/f
 import { useToast } from "../../../hooks/use-toast"
 import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
+import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 
 export function PurchaseOrderList() {
   const { setOpenSignModal, setOpenViewPO } = useGlobalContext();
@@ -36,6 +37,8 @@ export function PurchaseOrderList() {
   const dispatch = useDispatch<AppDispatch>();
   const purchaseOrders = useAppSelector(state => state.purchaseOrdersRouter.purchaseOrders);
   const departments = useAppSelector(state => state.departmentsReducer.departments);
+  //PDF
+  const [PDFLoader, setPDFLoader] = useState(false);
 
   useEffect(() => { //Instead of storing currentPO in redux, we do this
     if (!currentPO) return;
@@ -121,6 +124,24 @@ export function PurchaseOrderList() {
       });
     }
   };
+
+  // PDF STUFF
+   const viewPO_PDF = async (purchaseOrder: PurchaseOrder) => {
+    try {
+      setPDFLoader(true);
+      // window.open(`/pdf/bcr/${item._id}`, "_blank"); // Open in a new tab
+      window.open(`${import.meta.env.VITE_API_BASE_URL}/api/purchase-orders/pdf/${purchaseOrder._id}`, "_blank");
+      setPDFLoader(false);
+    } catch (error) {
+      setPDFLoader(false);
+      toast({
+        title: "Error",
+        description: "Failed to open Purchase Order.",
+        variant: "destructive",
+      });
+      console.log(error);
+    }
+  }
 
   return (
     <>
@@ -234,7 +255,7 @@ export function PurchaseOrderList() {
                     <Button className="text-yellow-700 dark:text-yellow-500" variant="ghost" size="icon" onClick={() => handleEdit(po)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => downloadPdf(po._id)}>
+                    <Button variant="ghost" size="icon" onClick={() => viewPO_PDF(po)}>
                       <FileDown className="h-4 w-4" />
                     </Button>
                     {/* {po.status !== "Signed" && ( */}

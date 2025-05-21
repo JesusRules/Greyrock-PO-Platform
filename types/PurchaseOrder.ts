@@ -8,6 +8,7 @@ export interface OrderItem {
   description: string;
   unitPrice: number;
   lineTotal: number;
+  uuid: string;
 }
 
 export interface PurchaseOrder {

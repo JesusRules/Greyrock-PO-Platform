@@ -5,6 +5,9 @@ import Vendor from "../models/Vendor";
 import Department from "../models/Department";
 import { createNoCacheHeaders } from "../utils/noCacheResponse";
 import { v2 as cloudinary } from "cloudinary";
+import React from 'react';
+import { PO_PDF } from '../pdf/PO_PDF'
+import { PurchaseOrder as POType } from "../../types/PurchaseOrder";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -248,5 +251,67 @@ export const revertPurchaseOrderSignature = async (req: Request, res: Response) 
     res
     .set(createNoCacheHeaders())
     .status(500).json({ message: "Failed to revert signature", error: err });
+  }
+};
+
+export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
+  try {
+    const isDownload = req.query.download === 'true';
+
+   const purchaseOrder = await PurchaseOrder.findById(req.params.id)
+      .populate({ path: 'department', model: Department })
+      .populate({ path: 'vendor', model: Vendor })
+      .populate({ path: 'submitter', model: User })
+      .populate({ path: 'signedBy', model: User })
+      .lean<POType>()
+    
+      if (!purchaseOrder) {
+        res
+        .set(createNoCacheHeaders())
+        .status(404).json({ message: "Purchase order not found" });
+        return;
+      }
+
+    const {
+      renderToStream,
+      Document,
+      Page,
+      Text,
+      View,
+      Image,
+      StyleSheet,
+    } = await import('@react-pdf/renderer');
+    // const pdfStream = await renderToStream(<BCRDoc bcr={populatedBCR}
+    //     Document={Document} 
+    //     Page={Page} 
+    //     Text={Text} 
+    //     View={View} 
+    //     Image={Image}
+    //     StyleSheet={StyleSheet} />);
+    const pdfStream = await renderToStream(<PO_PDF purchaseOrder={purchaseOrder}
+      Document={Document} 
+      Page={Page} 
+      Text={Text} 
+      View={View} 
+      Image={Image}
+      StyleSheet={StyleSheet} />);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      isDownload
+        ? `attachment; filename="${purchaseOrder?.poNumber}.pdf"`
+        : `inline; filename="${purchaseOrder?.poNumber}.pdf"`
+    );
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+    res.setHeader('Netlify-CDN-Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    pdfStream.pipe(res);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

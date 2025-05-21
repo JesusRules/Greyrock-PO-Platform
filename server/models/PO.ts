@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const LineItemSchema = new mongoose.Schema({
+  uuid: { type: String, default: uuidv4 },
   quantity: { type: Number, required: true },
   itemId: { type: String, required: true },
   description: { type: String, required: true },
