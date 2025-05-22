@@ -20,8 +20,8 @@ async function main() {
 
   app.use(
     cors({
-      // origin: process.env.DOMAIN,
-      origin: "https://greyrock-po-platform.vercel.app",
+      origin: process.env.DOMAIN,
+      // origin: "https://greyrock-po-platform.vercel.app",
       credentials: true,
     })
   );
