@@ -56,8 +56,8 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     //     httpOnly: true,
     //     maxAge: 3600 * 1000, // 1 hour
     //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    //     secure: process.env.NODE_ENV === 'production',
-    //     domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
+    //     secure: procceess.env.NODE_ENV === 'production',
+    //     domain: pross.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
     //     path: '/',
     // })
     res.cookie("token", token, {

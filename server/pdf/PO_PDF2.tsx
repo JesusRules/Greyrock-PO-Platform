@@ -2,14 +2,25 @@ import { PurchaseOrder } from '../../types/PurchaseOrder';
 import React from 'react';
 import { convertISODateToReadableEnglishTime } from './PO_PDF';
 
+// interface PODocProps {
+//   purchaseOrder: PurchaseOrder,
+//   Document: typeof import('@react-pdf/renderer').Document;
+//   Page: typeof import('@react-pdf/renderer').Page;
+//   Text: typeof import('@react-pdf/renderer').Text;
+//   View: typeof import('@react-pdf/renderer').View;
+//   Image: typeof import('@react-pdf/renderer').Image;
+//   StyleSheet: typeof import('@react-pdf/renderer').StyleSheet;
+// }
 interface PODocProps {
-  purchaseOrder: PurchaseOrder,
-  Document: typeof import('@react-pdf/renderer').Document;
-  Page: typeof import('@react-pdf/renderer').Page;
-  Text: typeof import('@react-pdf/renderer').Text;
-  View: typeof import('@react-pdf/renderer').View;
-  Image: typeof import('@react-pdf/renderer').Image;
-  StyleSheet: typeof import('@react-pdf/renderer').StyleSheet;
+  purchaseOrder: PurchaseOrder;
+  Document: any;
+  Page: any;
+  Text: any;
+  View: any;
+  Image: any;
+  StyleSheet: {
+    create: (styles: any) => any;
+  };
 }
 
 export const PO_PDF2: React.FC<PODocProps> = ({

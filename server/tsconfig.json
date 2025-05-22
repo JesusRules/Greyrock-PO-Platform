@@ -2,7 +2,8 @@
     "extends": "../tsconfig.json",
     "compilerOptions": {
       "jsx": "react",
-      "target": "es2017",
+      "target": "es2020",
+      // "module": "ESNext",
       "module": "commonjs",
       "rootDir": "../",                // compile from root
       "outDir": "./dist",      // or ./dist if you prefer
