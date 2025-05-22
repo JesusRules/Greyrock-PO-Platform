@@ -20,10 +20,12 @@ async function main() {
 
   app.use(
     cors({
-      origin: process.env.DOMAIN,
+      // origin: process.env.DOMAIN,
+      origin: "https://greyrock-po-platform.vercel.app",
       credentials: true,
     })
   );
+ 
 
   app.use(cookieParser());
   app.use(express.json());

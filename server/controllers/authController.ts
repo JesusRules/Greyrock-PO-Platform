@@ -50,16 +50,24 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     await loginRecord.save();
 
     // 4. Set HTTP-only cookie
-    res
-    .set(createNoCacheHeaders())
-    .cookie('token', token, {
-        httpOnly: true,
-        maxAge: 3600 * 1000, // 1 hour
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
-        path: '/',
-    })
+    // res
+    // .set(createNoCacheHeaders())
+    // .cookie('token', token, {
+    //     httpOnly: true,
+    //     maxAge: 3600 * 1000, // 1 hour
+    //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    //     secure: process.env.NODE_ENV === 'production',
+    //     domain: process.env.NODE_ENV === 'production' ? process.env.COOKIE_DOMAIN : undefined,
+    //     path: '/',
+    // })
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 3600 * 1000,
+      path: "/",
+      // ❌ NO domain
+    });
 
     // 5. Return user (password is already stripped by your toJSON transform)
     res
