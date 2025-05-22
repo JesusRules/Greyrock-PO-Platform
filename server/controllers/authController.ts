@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+import User from "../models/User.js";
 import dotenv from 'dotenv';
 import { NextFunction, Request, Response } from 'express';
-import { createNoCacheHeaders } from "../utils/noCacheResponse";
+import { createNoCacheHeaders } from "../utils/noCacheResponse.js";
 import bcrypt from "bcryptjs";
-import { AuthRequest } from "server/middleware/auth";
-import LoginRecord from "../models/LoginRecords";
+import { AuthRequest } from "server/middleware/auth.js";
+import LoginRecord from "../models/LoginRecords.js";
 dotenv.config(); // loads .env
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {

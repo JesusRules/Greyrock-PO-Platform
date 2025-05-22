@@ -6,9 +6,9 @@ import {
   updateVendor,
   deleteVendor,
   getVendorById,
-} from '../controllers/vendorController';
-import { protect } from '../middleware/auth';
-import { adminOnly } from '../middleware/adminOnly';
+} from '../controllers/vendorController.js';
+import { protect } from '../middleware/auth.js';
+import { adminOnly } from '../middleware/adminOnly.js';
 
 const vendorRouter = express.Router();
 

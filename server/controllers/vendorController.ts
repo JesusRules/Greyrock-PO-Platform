@@ -1,7 +1,7 @@
 // controllers/vendorController.ts
 import { Request, Response } from 'express';
-import Vendor from '../models/Vendor';
-import { createNoCacheHeaders } from '../utils/noCacheResponse';
+import Vendor from '../models/Vendor.js';
+import { createNoCacheHeaders } from '../utils/noCacheResponse.js';
 
 export const getVendorById = async (_req: Request, res: Response) => {
   try {

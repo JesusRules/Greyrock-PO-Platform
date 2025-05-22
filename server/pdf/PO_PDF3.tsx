@@ -1,7 +1,7 @@
-import  { PurchaseOrder } from "../../types/PurchaseOrder"
+import  { PurchaseOrder } from "../../types/PurchaseOrder.js"
 import  React from "react"
-import { convertISODateToReadableEnglish } from "./PO_PDF"
-import { truncateWithSmartDots } from "../utils/general"
+import { convertISODateToReadableEnglish } from "./PO_PDF.js"
+import { truncateWithSmartDots } from "../utils/general.js"
 
 // interface PODocProps {
 //   purchaseOrder: PurchaseOrder

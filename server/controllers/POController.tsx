@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
-import PurchaseOrder from "../models/PO";
-import User from "../models/User";
-import Vendor from "../models/Vendor";
-import Department from "../models/Department";
-import { createNoCacheHeaders } from "../utils/noCacheResponse";
+import PurchaseOrder from "../models/PO.js";
+import User from "../models/User.js";
+import Vendor from "../models/Vendor.js";
+import Department from "../models/Department.js";
+import { createNoCacheHeaders } from "../utils/noCacheResponse.js";
 import { v2 as cloudinary } from "cloudinary";
 import React from 'react';
-import { PurchaseOrder as POType } from "../../types/PurchaseOrder";
-import { PO_PDF } from '../pdf/PO_PDF'
-import { PO_PDF2 } from "../pdf/PO_PDF2";
-import { PO_PDF3 } from "../pdf/PO_PDF3";
+import { PurchaseOrder as POType } from "../../types/PurchaseOrder.js";
+import { PO_PDF } from '../pdf/PO_PDF.js'
+import { PO_PDF2 } from "../pdf/PO_PDF2.js";
+import { PO_PDF3 } from "../pdf/PO_PDF3.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,

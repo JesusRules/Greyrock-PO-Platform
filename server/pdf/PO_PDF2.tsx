@@ -1,6 +1,6 @@
-import { PurchaseOrder } from '../../types/PurchaseOrder';
+import { PurchaseOrder } from '../../types/PurchaseOrder.js';
 import React from 'react';
-import { convertISODateToReadableEnglishTime } from './PO_PDF';
+import { convertISODateToReadableEnglishTime } from './PO_PDF.js';
 
 // interface PODocProps {
 //   purchaseOrder: PurchaseOrder,

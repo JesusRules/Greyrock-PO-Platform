@@ -1,6 +1,6 @@
-import { Department } from "./Department";
-import { User } from "./User";
-import { Vendor } from "./Vendor";
+import { Department } from "./Department.js";
+import { User } from "./User.js";
+import { Vendor } from "./Vendor.js";
 
 export interface LineItem {
   quantity: number;

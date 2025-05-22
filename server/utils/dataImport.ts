@@ -1,8 +1,8 @@
 // scripts/createUser.ts
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import User from 'server/models/User';
-import connectMongo from 'server/libs/connectMongo';
+import User from 'server/models/User.js';
+import connectMongo from 'server/libs/connectMongo.js';
 
 dotenv.config(); // Loads MONGODB_URI from .env
 

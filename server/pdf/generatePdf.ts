@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStream } from "@react-pdf/renderer";
-import { PO_PDF3 } from "./PO_PDF3";
+import { PO_PDF3 } from "./PO_PDF3.js";
 
 export async function generatePdfStream(purchaseOrder: any) {
   const {

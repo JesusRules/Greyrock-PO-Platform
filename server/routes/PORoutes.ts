@@ -1,5 +1,5 @@
 import express from "express";
-import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getPurchaseOrderPDF, purchaseOrderSign, revertPurchaseOrderSignature, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController";
+import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getPurchaseOrderPDF, purchaseOrderSign, revertPurchaseOrderSignature, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController.js";
 
 const PORouter = express.Router();
 

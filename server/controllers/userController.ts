@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
-import User from "../models/User"
-import { createNoCacheHeaders } from "../utils/noCacheResponse"
+import User from "../models/User.js"
+import { createNoCacheHeaders } from "../utils/noCacheResponse.js"
 
 // GET /api/users
 export const getUsers = async (req: Request, res: Response) => {

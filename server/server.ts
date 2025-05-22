@@ -3,12 +3,12 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import connectMongo from "./libs/connectMongo";
-import authRoutes from "./routes/authRoutes";
-import PORoutes from "./routes/PORoutes";
-import vendorRoutes from "./routes/vendorRoutes";
-import departmentRoutes from "./routes/departmentRoutes";
-import userRoutes from "./routes/userRoutes";
+import connectMongo from "./libs/connectMongo.js";
+import authRoutes from "./routes/authRoutes.js";
+import PORoutes from "./routes/PORoutes.js";
+import vendorRoutes from "./routes/vendorRoutes.js";
+import departmentRoutes from "./routes/departmentRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import { PurchaseOrder } from '../../types/PurchaseOrder';
+import { PurchaseOrder } from '../../types/PurchaseOrder.js';
 import React from 'react';
 
 // export interface BCRProps {
