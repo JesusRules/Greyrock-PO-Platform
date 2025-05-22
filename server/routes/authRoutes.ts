@@ -10,7 +10,7 @@ authRouter.post('/login', loginUser);
 authRouter.post('/logout', logoutUser);
 
 authRouter.get('/me', protect, getCurrentUser);
-// authRouter.get('/me', protect, adminOnly, getCurrentUser);
+/// authRouter.get('/me', protect, adminOnly, getCurrentUser);
 
 authRouter.post('/', protect, createUser);
 authRouter.put('/:id', protect, updateUser);
