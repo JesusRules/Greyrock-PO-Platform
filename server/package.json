@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "ts-node-dev --respawn server.ts",
     "build": "tsc",
-    "postbuild": "cp pdf/generatePdf.mjs dist/pdf/generatePdf.mjs",
     "start": "node dist/server.js"
   },
   "keywords": [],

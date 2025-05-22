@@ -275,7 +275,7 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
       }
 
       // @ts-ignore
-      const { generatePdfStream } = await import("../pdf/generatePdf.mjs");
+      const { generatePdfStream } = await import("../pdf/generatePdf.js");
       // const { generatePdfStream } =
       // process.env.NODE_ENV === "production"
       // // @ts-ignore
