@@ -3,8 +3,8 @@
     "compilerOptions": {
       "jsx": "react",
       "target": "es2020",
-      // "module": "ESNext",
-      "module": "commonjs",
+      "module": "ESNext",
+      // "module": "commonjs",
       "rootDir": "../",                // compile from root
       "outDir": "./dist",      // or ./dist if you prefer
       "strict": true,

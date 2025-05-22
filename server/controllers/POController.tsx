@@ -275,7 +275,7 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
       }
 
       // @ts-ignore
-      const { generatePdfStream } = await import("../pdf/generatePdf.mjs");
+      // const { generatePdfStream } = await import("../pdf/generatePdf.mjs");
       // const { generatePdfStream } =
       // process.env.NODE_ENV === "production"
       // // @ts-ignore
@@ -283,24 +283,24 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
       // // @ts-ignore
       // : await import("../pdf/generatePdf.ts");
 
-      const pdfStream = await generatePdfStream(purchaseOrder);
-    // const {
-    //   renderToStream,
-    //   Document,
-    //   Page,
-    //   Text,
-    //   View,
-    //   Image,
-    //   StyleSheet,
-    // } = await import('@react-pdf/renderer');
+      // const pdfStream = await generatePdfStream(purchaseOrder);
+    const {
+      renderToStream,
+      Document,
+      Page,
+      Text,
+      View,
+      Image,
+      StyleSheet,
+    } = await import('@react-pdf/renderer');
 
-    // const pdfStream = await renderToStream(<PO_PDF3 purchaseOrder={purchaseOrder}
-    //   Document={Document} 
-    //   Page={Page} 
-    //   Text={Text} 
-    //   View={View} 
-    //   Image={Image}
-    //   StyleSheet={StyleSheet} />);
+    const pdfStream = await renderToStream(<PO_PDF3 purchaseOrder={purchaseOrder}
+      Document={Document} 
+      Page={Page} 
+      Text={Text} 
+      View={View} 
+      Image={Image}
+      StyleSheet={StyleSheet} />);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
