@@ -49,7 +49,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     });
     await loginRecord.save();
 
-    // 4. Set HTTP-only cookie
+    // 4. Set HTTP-only cookie //
     res
     .set(createNoCacheHeaders())
     .cookie('token', token, {
