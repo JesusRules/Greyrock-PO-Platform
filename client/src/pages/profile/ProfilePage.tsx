@@ -13,6 +13,7 @@ import { Separator } from "../../components/ui/separator"
 import { ProfileSignatureModal } from "../../components/profile/profile-signature-modal"
 import { Upload, Pen, Trash2, Eye, EyeOff } from "lucide-react"
 import { useToast } from "../../../hooks/use-toast"
+import { Drawer } from "@components/layout/Drawer"
 
 export default function ProfilePage() {
   const { toast } = useToast()
@@ -156,6 +157,8 @@ export default function ProfilePage() {
   }
 
   return (
+    <>
+    <Drawer />
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
@@ -184,14 +187,14 @@ export default function ProfilePage() {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 mb-2 gap-0">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="signature">Signature</TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
-          <TabsContent value="profile">
+          <TabsContent value="profile" className="">
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
@@ -418,5 +421,6 @@ export default function ProfilePage() {
         onSave={handleSaveDrawnSignature}
       />
     </div>
+    </>
   )
 }

@@ -22,7 +22,6 @@ import ProfilePage from './pages/profile/ProfilePage';
 // import '@mantine/dates/styles.css';
 //Pages
 
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ReduxProvider>
