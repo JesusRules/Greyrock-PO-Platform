@@ -18,6 +18,7 @@ import { useToast } from "../../../hooks/use-toast"
 import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 export function PurchaseOrderList() {
   const { setOpenSignModal, setOpenViewPO } = useGlobalContext();
@@ -214,7 +215,7 @@ export function PurchaseOrderList() {
               <TableHead>Total</TableHead>
               <TableHead>Items</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right border-r-[1px]">Actions</TableHead>
+              <TableHead className="text-center border-r-[1px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -256,7 +257,8 @@ export function PurchaseOrderList() {
                   </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
+
+                    {/* <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button className="text-yellow-700 dark:text-yellow-500" variant="ghost" size="icon" onClick={() => handleEdit(po)}>
@@ -265,7 +267,6 @@ export function PurchaseOrderList() {
                     <Button variant="ghost" size="icon" onClick={() => viewPO_PDF(po)}>
                       <FileDown className="h-4 w-4" />
                     </Button>
-                    {/* {po.status !== "Signed" && ( */}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -274,14 +275,72 @@ export function PurchaseOrderList() {
                       >
                         <CheckSquare 
                             className={`h-4 w-4 text-red-600`} />
-                            {/* className={`h-4 w-4 ${po.status === 'Pending' ? 'text-green-600' 
-                                                : po.status === 'Signed' ? 'text-yellow-600' 
-                                                : po.status === 'Rejected' ? 'text-red-600' : 'text-black-600'}`} /> */}
                       </Button>
-                      {/* )} */}
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
+                    </Button> */}
+                    <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View purchase order</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              className="text-yellow-700 dark:text-yellow-500"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(po)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Edit purchase order</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => viewPO_PDF(po)}>
+                              <FileDown className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download PDF</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(po)}>
+                              <CheckSquare className={`h-4 w-4 text-red-600`} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Toggle status</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delete purchase order</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
                   </TableCell>
                 </TableRow>
               ))

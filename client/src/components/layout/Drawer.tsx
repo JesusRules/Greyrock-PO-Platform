@@ -81,7 +81,7 @@ export function Drawer() {
             <Button 
             onClick={() => handleLogout()}
             variant="destructive"
-            className="w-full justify-center cursor-pointer"
+            className="w-full justify-center cursor-pointer dark:bg-red-600"
             >
             Logout
             </Button>
