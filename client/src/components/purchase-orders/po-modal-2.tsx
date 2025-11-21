@@ -352,7 +352,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
               setShipping(0);
               setTaxRate(13);
             }}
-            className="bg-blue-500 hover:bg-blue-600"
+            className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:text-white"
           >
             Clear
           </Button>
@@ -570,7 +570,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         <div className="space-y-4">
         <div className="flex justify-between items-center">
             <Label className="text-base font-medium">Line Items</Label>
-            <Button type="button" variant="outline" size="sm" onClick={addLineItem}>
+            <Button className="border-black" type="button" variant="outline" size="sm" onClick={addLineItem}>
             <Plus className="w-4 h-4 mr-1" /> Add Item
             </Button>
         </div>
@@ -589,7 +589,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         {lineItems.map((item) => (
         <div
           key={item.uuid}
-          className="grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-start border p-2 rounded-md"
+          className="border-gray-500 grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-start border p-2 rounded-md"
         >
           {/* Trash */}
           <div className="flex sm:block justify-center">
@@ -616,7 +616,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             value={item.description}
             onChange={(e) => updateLineItem(item.uuid, "description", e.target.value)}
             rows={1}
-            className="w-full min-h-[2.25rem] px-3 py-2 text-sm border border-input rounded-md bg-background shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+            className="border-gray-500 w-full min-h-[2.25rem] px-3 py-2 text-sm border border-input rounded-md bg-background shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
           />
 
           {/* Qty */}
@@ -641,8 +641,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           </div>
         </div>
       ))}
-
-        <Separator />
+        <div className="pt-1" />
+        <Separator className="bg-gray-500" />
 
         <div className="space-y-2">
             <div className="flex justify-between">
@@ -670,7 +670,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             <span>Shipping:</span>
             <span>${shipping.toFixed(2)}</span>
             </div>
-            <Separator />
+
+            <Separator className="border-gray-400 dark:border-gray-500 border" />
+
             <div className="flex justify-between font-semibold pt-3">
             <span>Total:</span>
             <span>${total.toFixed(2)}</span>

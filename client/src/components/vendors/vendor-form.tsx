@@ -221,7 +221,7 @@ export function VendorForm({ vendorId, onClose }: VendorFormProps) {
             <FormItem className="col-span-2">
               <FormLabel>Comment (optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Additional notes about this vendor" className="resize-none" {...field} />
+                <Textarea placeholder="Additional notes about this vendor" className="resize-none border-gray-500" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
