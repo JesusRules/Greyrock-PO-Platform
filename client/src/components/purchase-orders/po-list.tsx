@@ -18,7 +18,7 @@ import { useToast } from "../../../hooks/use-toast"
 import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
-import { Tooltip } from "@mantine/core"
+import { Tooltip, Modal, Text, Group, Button as MantineButton } from "@mantine/core"
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 export function PurchaseOrderList() {
@@ -33,8 +33,6 @@ export function PurchaseOrderList() {
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const { toast } = useToast();
-  //Delete purchase order
-  const [poToDelete, setPoToDelete] = useState<any>(null)
   //Redux
   const dispatch = useDispatch<AppDispatch>();
   const purchaseOrders = useAppSelector(state => state.purchaseOrdersRouter.purchaseOrders);
@@ -42,6 +40,8 @@ export function PurchaseOrderList() {
   const user = useAppSelector(state => state.authReducer.user);
   //PDF
   const [PDFLoader, setPDFLoader] = useState(false);
+  // Delete purchase order
+  const [poToDelete, setPoToDelete] = useState<PurchaseOrder | null>(null);
 
   useEffect(() => { //Instead of storing currentPO in redux, we do this
     if (!currentPO) return;
@@ -80,19 +80,33 @@ export function PurchaseOrderList() {
     setIsEditModalOpen(true)
   }
 
-  const handleDelete = async (po: any) => {
+  // Open confirm modal
+  const openDeleteConfirm = (po: PurchaseOrder) => {
     if (!po?._id) {
       alert("Invalid purchase order. Cannot delete.");
       return;
     }
-    const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
+    setPoToDelete(po);
+  };
+
+  const cancelDelete = () => {
+    setPoToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!poToDelete?._id) {
+      setPoToDelete(null);
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to delete purchase order #${poToDelete.poNumber}?`);
     if (!confirmed) return;
 
     try {
-      await dispatch(deletePurchaseOrder(po._id)).unwrap();
+      await dispatch(deletePurchaseOrder(poToDelete._id)).unwrap();
       toast({
         title: "Deleted",
-        description: `PO #${po.poNumber} has been deleted.`,
+        description: `PO #${poToDelete.poNumber} has been deleted.`,
         variant: "destructive",
       });
     } catch (err) {
@@ -102,8 +116,34 @@ export function PurchaseOrderList() {
         description: "Failed to delete the purchase order.",
         variant: "destructive",
       });
+    } finally {
+      setPoToDelete(null);
     }
   };
+  // const handleDelete = async (po: any) => {
+  //   if (!po?._id) {
+  //     alert("Invalid purchase order. Cannot delete.");
+  //     return;
+  //   }
+  //   const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
+  //   if (!confirmed) return;
+
+  //   try {
+  //     await dispatch(deletePurchaseOrder(po._id)).unwrap();
+  //     toast({
+  //       title: "Deleted",
+  //       description: `PO #${po.poNumber} has been deleted.`,
+  //       variant: "destructive",
+  //     });
+  //   } catch (err) {
+  //     console.error("Failed to delete:", err);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to delete the purchase order.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const handleToggleStatus = async (po: any) => {
     try {
@@ -305,7 +345,7 @@ export function PurchaseOrderList() {
                       )}
 
                     <Tooltip label="Delete Purchase Order" withArrow>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
+                    <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(po)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                     </Tooltip>
@@ -403,6 +443,54 @@ export function PurchaseOrderList() {
         {/* <div className="fixed w-full h-full bg-red-500 top-0 z-[100] bg-[#0000006b]"/> */}
         </>
       )}
+
+      <Modal
+        opened={poToDelete !== null}
+        onClose={cancelDelete}
+        title={
+            <div
+              style={{
+                fontSize: '17px',
+                position: 'absolute',
+                top: 10,
+                right: 0,
+                left: 0,
+                textAlign: 'center',
+                display: 'block',
+                margin: 0,
+                padding: '10px',
+              }}
+            >
+              Delete Purchase Order
+            </div>
+        }
+        centered
+      >
+        <div className="space-y-0 text-center">
+          {/* <Text>
+            Are you sure you want to delete purchase order{' '}
+            <strong>#{poToDelete?.poNumber}</strong>? This action cannot be undone.
+          </Text> */}
+          <Text>
+            Are you sure you want to delete purchase order
+          </Text>
+          <Text>
+            <strong>{poToDelete?.poNumber}</strong>?
+          </Text>
+          <Text mt={10}>
+            This action cannot be undone.
+          </Text>
+
+          <Group justify="center" mt="md">
+            <MantineButton variant="default" onClick={cancelDelete}>
+              Cancel
+            </MantineButton>
+            <MantineButton color="red" onClick={confirmDelete}>
+              Delete
+            </MantineButton>
+          </Group>
+        </div>
+      </Modal>
     </>
   )
 }

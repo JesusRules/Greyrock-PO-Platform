@@ -21,6 +21,7 @@ import { deleteVendor, fetchVendors } from "../../../redux/features/vendors-slic
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
 import { VendorViewModal } from "./view-vendor-modal"
+import { Tooltip } from "@mantine/core"
 
 interface Vendor {
   id: string
@@ -137,6 +138,7 @@ export function VendorList() {
                 </TableCell> */}
                 <TableCell>
                   <div className="flex space-x-2">
+                    <Tooltip label="View Vendor" withArrow>
                       <Button
                         onClick={() => setViewVendor(vendor)}
                         variant="outline"
@@ -145,6 +147,9 @@ export function VendorList() {
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">View</span>
                       </Button>
+                      </Tooltip>
+
+                      <Tooltip label="Edit Vendor" withArrow>
                       <Button
                         onClick={() => setVendorBeingEdited(vendor._id!)}
                         variant="outline"
@@ -153,15 +158,19 @@ export function VendorList() {
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
+                      </Tooltip>
+
+                    <Tooltip label="Delete Vendor" withArrow>
                      <Button
                       variant="outline"
                       size="icon"
-                      className="text-destructive"
+                      className="text-destructive dark:text-red-500"
                       onClick={() => handleDeleteClick(vendor._id!)}
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
                     </Button>
+                    </Tooltip>
                   </div>
                 </TableCell>
               </TableRow>

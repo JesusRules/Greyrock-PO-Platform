@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "../../components/ui/dialog"
 import { createDepartment, deleteDepartment, fetchDepartments, updateDepartment } from "../../../redux/features/departments-slice"
+import { Tooltip, Modal, Text, Group, Button as MantineButton } from "@mantine/core"
 
 // Department card colors for visual variety
 const cardColors = [
@@ -130,12 +131,12 @@ export default function DepartmentsPage() {
             </p>
           </div>
 
-          <Card className="border shadow-md bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-end border-b border-slate-200 dark:border-slate-700 pb-4">
+          <Card className="border border-slate-500 shadow-md bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-end border-slate-200 dark:border-slate-700 pb-4">
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Button
                   onClick={() => handleOpenModal("create")}
-                  className="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-200 dark:bg-gray-900"
+                  // className="bg-slate-800 hover:bg-slate-700 text-white font-medium px-5 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-200 dark:bg-gray-900"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Department
@@ -158,7 +159,7 @@ export default function DepartmentsPage() {
                     className={`
                       flex items-center justify-between p-4 border rounded-lg shadow-sm 
                       ${isLocked ? "bg-gray-100 dark:bg-gray-700" : "bg-slate-50 dark:bg-slate-800"} 
-                      border-slate-200 dark:border-slate-700 
+                      border-slate-500 dark:border-slate-500 
                       transition-all duration-200
                     `}
                   >
@@ -172,11 +173,12 @@ export default function DepartmentsPage() {
                         {department.name}
                       </span>
                       {department.departmentCode && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Code: {department.departmentCode}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Code: {department.departmentCode}</p>
                       )}
                     </div>
 
                     <div className="flex gap-0">
+                      <Tooltip label="Edit Department" withArrow>
                       <Button
                         className={`
                           ${isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-slate-200 dark:hover:bg-slate-600"}
@@ -195,7 +197,9 @@ export default function DepartmentsPage() {
                         <Pencil className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
-
+                      </Tooltip>
+                      
+                      <Tooltip label="Delete Department" withArrow>
                       <Button
                         className={`
                           ${isLocked ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 dark:hover:bg-red-900/20"}
@@ -214,6 +218,7 @@ export default function DepartmentsPage() {
                         <Trash2 className="h-4 w-4" />
                         <span className="sr-only">Delete</span>
                       </Button>
+                      </Tooltip>
                     </div>
                   </div>
                 );
