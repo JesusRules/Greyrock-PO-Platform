@@ -14,17 +14,11 @@ const PurchaseOrderSchema = new mongoose.Schema({
   poNumber: { type: String, required: true, unique: true }, // e.g. "GREADM" or "PO-2023-0001"
   date: { type: Date, required: true },
   paymentMethod: { type: String, required: true }, // e.g. "Cheque"
-
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
     required: true,
   },
-  // vendor: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Vendor",
-  //   required: true,
-  // },
   vendor: {
     companyName: { type: String, required: true },
     contactName: { type: String, required: true },
@@ -48,26 +42,25 @@ const PurchaseOrderSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   taxAmount: { type: Number, required: true },
   total: { type: Number, required: true },
-  // Signatures
+  // Created (Denis/Admin can create for them)
   submitter: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  // manager: { type: String, required: true },
   status: {
     type: String,
     enum: ['Pending', 'Signed', 'Rejected', 'Approved'],
     default: 'Pending',
   },
-  signedImg: { type: String, default: null, required: false }, // Stores Base64
+  // manager: { type: String, required: true },
+  gmApprovedImg: { type: String, default: null, required: false }, // Stores Base64
   signedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: false,
   },
-  pdfUrl: { type: String }, // Optional if generated and uploaded
-
+  pdfUrl: { type: String },
 }, {
   timestamps: true,
 });
