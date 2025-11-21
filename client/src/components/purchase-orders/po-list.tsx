@@ -18,7 +18,8 @@ import { useToast } from "../../../hooks/use-toast"
 import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+import { Tooltip } from "@mantine/core"
+// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 export function PurchaseOrderList() {
   const { setOpenSignModal, setOpenViewPO } = useGlobalContext();
@@ -244,13 +245,13 @@ export function PurchaseOrderList() {
                     }
                     className={`cursor-pointer px-2 py-1 rounded-full text-xs font-medium ${
                       po.status === "Signed"
-                        ? "bg-green-100 text-green-800"
+                        ? "bg-green-100 dark:bg-green-700 dark:text-white text-green-800"
                         : po.status === "Approved"
                         ? "bg-emerald-100 text-emerald-800"
                         : po.status === "Pending" 
                         ? "bg-amber-100 text-amber-800"
                         : po.status === "Rejected" 
-                        ? "bg-red-200" : "bg-white"
+                        ? "bg-red-200 dark:bg-red-600 dark:text-white" : "bg-white"
                     }`}
                   >
                     {po.status}
@@ -258,28 +259,58 @@ export function PurchaseOrderList() {
                   </TableCell>
                   <TableCell className="text-right">
 
-                    {/* <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
+                    <Tooltip label="View Purchase Order" withArrow>
+                    <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
                       <Eye className="h-4 w-4" />
                     </Button>
+                    </Tooltip>
+
+                    <Tooltip label="Edit Purchase Order" withArrow>
                     <Button className="text-yellow-700 dark:text-yellow-500" variant="ghost" size="icon" onClick={() => handleEdit(po)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
+                    </Tooltip>
+
+                    <Tooltip label="Open/Download Purchase Order (PDF)" withArrow>
                     <Button variant="ghost" size="icon" onClick={() => viewPO_PDF(po)}>
                       <FileDown className="h-4 w-4" />
                     </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleToggleStatus(po)}
-                        title="Reject purchase order"
-                      >
-                        <CheckSquare 
-                            className={`h-4 w-4 text-red-600`} />
-                      </Button>
+                    </Tooltip>
+
+                      {po.status === 'Signed' && (
+                        <Tooltip label="Reject Purchase Order" withArrow>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleStatus(po)}
+                          title="Reject purchase order"
+                        >
+                          <CheckSquare 
+                              className={`h-4 w-4 text-red-600`} />
+                        </Button>
+                        </Tooltip>
+                      )}
+                      {po.status === 'Rejected' && (
+                        <Tooltip label="Purchase Order Signed?" withArrow>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleStatus(po)}
+                          title="Reject purchase order"
+                        >
+                          <CheckSquare 
+                              className={`h-4 w-4 text-green-700 dark:text-green-600`} />
+                        </Button>
+                        </Tooltip>
+                      )}
+
+                    <Tooltip label="Delete Purchase Order" withArrow>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button> */}
-                    <TooltipProvider>
+                    </Button>
+                    </Tooltip>
+
+                    {/* <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
@@ -339,7 +370,7 @@ export function PurchaseOrderList() {
                             <p>Delete purchase order</p>
                           </TooltipContent>
                         </Tooltip>
-                      </TooltipProvider>
+                      </TooltipProvider> */}
 
                   </TableCell>
                 </TableRow>
@@ -372,7 +403,6 @@ export function PurchaseOrderList() {
         {/* <div className="fixed w-full h-full bg-red-500 top-0 z-[100] bg-[#0000006b]"/> */}
         </>
       )}
-
     </>
   )
 }
