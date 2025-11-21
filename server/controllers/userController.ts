@@ -73,14 +73,22 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 
     // Update fields
+    // user.firstName   = updates.firstName   ?? user.firstName;
+    // user.lastName    = updates.lastName    ?? user.lastName;
+    // user.email       = updates.email       ?? user.email;
+    // user.role        = updates.role        ?? user.role;
+    // user.phoneNumber = updates.phoneNumber ?? user.phoneNumber;
     user.firstName = updates.firstName || user.firstName
     user.lastName = updates.lastName || user.lastName
     user.email = updates.email || user.email
     user.role = updates.role || user.role
     user.phoneNumber = updates.phoneNumber || user.phoneNumber
+    if ('phoneNumber' in updates) {
+      user.phoneNumber = updates.phoneNumber; // can be ""
+    }
 
     if (updates.password) {
-      user.password = updates.password // Will be hashed by pre-save hook
+      user.password = updates.password 
     }
 
     const updated = await user.save()

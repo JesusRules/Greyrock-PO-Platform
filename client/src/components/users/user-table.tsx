@@ -75,7 +75,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Phone Number</TableHead>
+              {/* <TableHead>Phone Number</TableHead> */}
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -116,7 +116,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   <div className="capitalize">{user.role}</div>
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phoneNumber}</TableCell>
+                {/* <TableCell>{user.phoneNumber}</TableCell> */}
                 <TableCell>
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>

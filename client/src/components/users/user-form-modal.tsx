@@ -195,31 +195,39 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 <FormItem>
                   <FormLabel>Email *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Jake Paul" {...field} />
+                    <Input className="" placeholder="Jake Paul" {...field} />
                   </FormControl>
                   {/* <FormDescription>This will be used for logging in.</FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {/* <FormField
-              control={form.control}
-              name="login"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Login</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Jake Paul" {...field} />
-                  </FormControl>
-                  <FormDescription>This will be used for logging in.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
+            <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full cursor-pointer py-0">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem className="cursor-pointer" value="admin">Admin</SelectItem>
+                        <SelectItem className="cursor-pointer" value="manager">Manager</SelectItem>
+                        <SelectItem className="cursor-pointer" value="user">User</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-              <FormField
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start"> */}
+              {/* <FormField
                 control={form.control}
                 name="role"
                 render={({ field }) => (
@@ -240,8 +248,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-              <FormField
+              /> */}
+              {/* <FormField
                 control={form.control}
                 name="phoneNumber"
                 render={({ field }) => (
@@ -253,9 +261,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-            </div>
-
+              /> */}
+            {/* </div> */}
             <FormField
               control={form.control}
               name="password"
@@ -286,42 +293,6 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 </FormItem>
               )}
             />
-
-            {/* <div className=" flex flex-col items-center">
-              <div className="text-sm font-medium">Avatar</div>
-              <div className="flex items-center gap-4">
-                <div className="relative h-22 w-22 rounded-full overflow-hidden border border-gray-200">
-                  {avatarPreview ? (
-                    <Image
-                      src={avatarPreview || "/placeholder.svg"}
-                      alt="Avatar preview"
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">No image</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="avatar-upload"
-                    className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors text-sm"
-                  >
-                    Choose file
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1">JPG, PNG or GIF. Max 2MB.</p>
-                </div>
-              </div>
-            </div> */}
 
             <DialogFooter>
               <Button className="cursor-pointer" type="button" variant="outline" onClick={() => onOpenChange(false)}>
