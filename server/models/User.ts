@@ -13,7 +13,8 @@ export const userSchema = new mongoose.Schema({
     },
     role: { type: String, default: 'admin' }, // Gonna need more
     password: { type: String, required: true, default: '000000' },
-    phoneNumber: { type: String, default: '' },
+    // phoneNumber: { type: String, default: '' },
+    signedImg: { type: String, default: null, required: false }, // Stores Base64
  }, {
     timestamps: true,
     //Hide password

@@ -77,7 +77,7 @@ export function ProfileSignatureModal({ open, onOpenChange, existingSignature, o
           </DialogDescription>
         </DialogHeader>
 
-        <div className="border border-border rounded-md p-1 bg-white">
+        <div className="border border-border rounded-md p-1 bg-white w-full border-gray-500">
           <SignatureCanvas
             ref={sigCanvas}
             penColor="black"

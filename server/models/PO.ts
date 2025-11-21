@@ -54,7 +54,7 @@ const PurchaseOrderSchema = new mongoose.Schema({
     default: 'Pending',
   },
   // manager: { type: String, required: true },
-  gmApprovedImg: { type: String, default: null, required: false }, // Stores Base64
+  signedImg: { type: String, default: null, required: false }, // Stores Base64
   signedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

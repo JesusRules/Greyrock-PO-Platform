@@ -44,7 +44,7 @@ function TabsTrigger({
       className={cn(
         `
         inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5
-        rounded-md border border-gray-500 px-2 py-2 text-sm font-medium whitespace-nowrap
+        rounded-md border border-gray-600 dark:border-gray-500 px-2 py-2 text-sm font-medium whitespace-nowrap
         text-foreground dark:text-muted-foreground transition-[color,box-shadow]
         focus-visible:ring-[3px] focus-visible:outline-1 focus-visible:ring-ring/50
         
@@ -52,10 +52,11 @@ function TabsTrigger({
         [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
 
         data-[state=active]:bg-blue-100
+        data-[state=active]:border-[1.15px]
         dark:data-[state=active]:bg-blue-900/40
         dark:data-[state=active]:text-blue-200
         data-[state=active]:text-blue-700
-        data-[state=active]:border-blue-400
+        data-[state=active]:border-blue-600
         `,
         className,
       )}

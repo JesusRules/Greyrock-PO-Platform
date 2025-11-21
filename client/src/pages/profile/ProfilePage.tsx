@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
@@ -14,6 +14,9 @@ import { ProfileSignatureModal } from "../../components/profile/profile-signatur
 import { Upload, Pen, Trash2, Eye, EyeOff } from "lucide-react"
 import { useToast } from "../../../hooks/use-toast"
 import { Drawer } from "@components/layout/Drawer"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
+import { updateUser } from "../../../redux/features/users-slice"
+import { useDispatch } from "react-redux"
 
 export default function ProfilePage() {
   const { toast } = useToast()
@@ -34,6 +37,53 @@ export default function ProfilePage() {
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null)
   const [openSignatureModal, setOpenSignatureModal] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  // Redux
+  const dispatch = useDispatch<AppDispatch>()
+  const user = useAppSelector(state => state.authReducer.user);
+
+  useEffect(() => {
+    if (user) {
+        // console.log('user', user)
+        setFirstName(user.firstName);
+        setLastName(user.lastName);
+        setEmail(user.email);
+    }
+  }, [user])
+
+//   async function handleProfileUpdate() {
+//     try {
+//         setIsSaving(true);
+
+//         const updatedPayload = { ...userPayload };
+//         if (!data.password) {
+//           delete updatedPayload.password; // Don't send blank password
+//         }
+//         console.log('initialData', initialData._id)
+//         const resultAction = await dispatch(updateUser({ _id: initialData._id, updatedData: updatedPayload }));
+//         if (updateUser.rejected.match(resultAction)) {
+//           toast({
+//               title: 'Error',
+//               description: 'Failed to update user.',
+//               variant: 'destructive',
+//           });
+//         } else {
+//           toast({
+//               title: 'Success',
+//               description: 'The user has been updated successfully.',
+//               variant: 'success',
+//           });
+//         }
+//     } catch (error) {
+//       console.error(error);
+//       toast({
+//           title: 'Error',
+//           description: "Something went wrong. Please try again.",
+//           variant: 'destructive',
+//       });
+//     } finally {
+//       setIsSaving(false);
+//     }
+//   }
 
   const handleProfileUpdate = async () => {
     setIsSaving(true)
@@ -177,7 +227,7 @@ export default function ProfilePage() {
               </Avatar>
               <div>
                 <h2 className="text-2xl font-semibold">
-                  {firstName} {lastName}
+                  {user?.firstName} {user?.lastName}
                 </h2>
                 <p className="text-muted-foreground">{email}</p>
               </div>
@@ -335,15 +385,15 @@ export default function ProfilePage() {
                 {signatureUrl && (
                   <div className="space-y-3">
                     <Label>Current Signature</Label>
-                    <div className="border border-border rounded-lg p-4 bg-muted/30">
+                    <div className="border border-border rounded-lg p-4 bg-muted/30 border-gray-500 border-[1px]">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <img
                             src={signatureUrl || "/placeholder.svg"}
                             alt="Your Signature"
-                            className="h-24 w-auto max-w-[300px] object-contain bg-white border border-border rounded p-2"
+                            className="border-gray-500 border-[1px] h-24 w-auto max-w-[300px] object-contain bg-white border border-border rounded p-2"
                           />
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm">
                             {signatureType === "draw" ? "E-Signature (Drawn)" : "Uploaded Image"}
                           </div>
                         </div>
