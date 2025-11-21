@@ -37,6 +37,7 @@ export function PurchaseOrderList() {
   const dispatch = useDispatch<AppDispatch>();
   const purchaseOrders = useAppSelector(state => state.purchaseOrdersRouter.purchaseOrders);
   const departments = useAppSelector(state => state.departmentsReducer.departments);
+  const user = useAppSelector(state => state.authReducer.user);
   //PDF
   const [PDFLoader, setPDFLoader] = useState(false);
 
@@ -152,6 +153,8 @@ export function PurchaseOrderList() {
         </Button>
       </div>
 
+      {/* <button onClick={() => console.log('user', user)}>CLICK ME</button> */}
+
       <div className="flex justify-between gap-5 items-end">
         <div className="relative w-full max-w-[330px]">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -169,13 +172,17 @@ export function PurchaseOrderList() {
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent>
+              {/* Static "All Departments" option */}
+              <SelectItem value="all">All Departments</SelectItem>
+
               {departments
-              // .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-              .map((dept) => (
-                <SelectItem key={dept._id} value={dept.name === "All Departments" ? "all" : dept.name}>
-                  {dept.name}
-                </SelectItem>
-              ))}
+                // Optional: skip a real "All Departments" dept if it exists in DB
+                .filter((dept) => dept.name !== "All Departments")
+                .map((dept) => (
+                  <SelectItem key={dept._id} value={dept.name}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -200,14 +207,14 @@ export function PurchaseOrderList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>PO #</TableHead>
+              <TableHead className="border-l-[1px]" >PO #</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Vendor</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Items</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right border-r-[1px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
