@@ -18,6 +18,7 @@ import { Toaster } from '@components/ui/toaster';
 import POPage from './pages/purchase-orders/POPage';
 import DepartmentsPage from './pages/departments/DepartmentPage';
 import UsersPage from './pages/users/UsersPage';
+import ProfilePage from './pages/profile/ProfilePage';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')!).render(
     <AuthChecker>
       <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/purchase-orders" element={<POPage />} />
           <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/vendors" element={<VendorsPage />} />

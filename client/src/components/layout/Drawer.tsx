@@ -49,6 +49,14 @@ export function Drawer() {
             <p className="text-center text-sm font-bold mt-5 mb-10">Logged In: {user?.firstName} {user?.lastName}</p>
 
             <nav className="mt-8 space-y-4 px-2">
+
+            <Button onClick={() => navigate("/profile")}
+              variant="ghost"
+              className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
+              >
+             Profile
+            </Button>
+
             <Button onClick={() => navigate("/purchase-orders")}
             variant="ghost"
             className="py-2 border-gray-500 border cursor-pointer h-fit w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
