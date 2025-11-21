@@ -26,6 +26,7 @@ import { createPurchaseOrder, updatePurchaseOrder } from "../../../redux/feature
 import { useDispatch } from "react-redux"
 import { useToast } from "../../../hooks/use-toast"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
+import { ShippingInput } from "@components/ui/ShippingInput"
 
 type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
 
@@ -313,9 +314,17 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     if (lineItems.length > 1) setLineItems(lineItems.filter((item) => item.uuid !== id))
   }
 
+  // NO tax on shipping
+  // const subtotal = lineItems.reduce((sum, item) => sum + item.lineTotal, 0)
+  // const tax = (subtotal * taxRate) / 100
+  // const total = subtotal + tax + shipping
+  // YES tax on shipping
   const subtotal = lineItems.reduce((sum, item) => sum + item.lineTotal, 0)
-  const tax = (subtotal * taxRate) / 100
-  const total = subtotal + tax + shipping
+  // Tax is applied to subtotal + shipping
+  const taxableBase = subtotal + shipping
+  const taxAmount = (taxableBase * taxRate) / 100
+  // Grand total
+  const total = taxableBase + taxAmount
 
 
   const handleSubmit = async () => {
@@ -847,13 +856,122 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         <Separator className="bg-gray-500" />
 
         <div className="space-y-2">
+        {/* Subtotal */}
+        <div className="flex justify-between text-md">
+          <span>Subtotal:</span>
+          <span>${subtotal.toFixed(2)}</span>
+        </div>
+
+        {/* Shipping input (unchanged) */}
+        <div className="flex justify-between items-center text-md gap-4">
+          <span>Shipping:</span>
+          <div className="w-[6rem]">
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                $
+              </span>
+              <ShippingInput
+                type="number"
+                min={0}
+                step="0.01"
+                value={shipping}
+                className="pl-6 text-right"
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setShipping(0);
+                    return;
+                  }
+                  const num = parseFloat(raw);
+                  if (!Number.isNaN(num)) setShipping(num);
+                }}
+                onBlur={(e) => {
+                  const num = parseFloat(e.target.value);
+                  setShipping(Number.isNaN(num) ? 0 : num);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tax amount row – this will now show $2.25 for 10 + 5 @ 15% */}
+        <div className="flex justify-between text-md">
+          <span>Tax ({taxRate}%):</span>
+          <span>${taxAmount.toFixed(2)}</span>
+        </div>
+
+        {/* Tax rate selector (unchanged) */}
+        <div className="flex justify-between items-center gap-4">
+          <span className="text-md">Tax Rate:</span>
+          <div className="w-[6rem]">
+            <Select
+              value={taxRate.toString()}
+              onValueChange={(val) => setTaxRate(parseFloat(val))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Tax %" />
+              </SelectTrigger>
+              <SelectContent>
+                {[0, 5, 13, 15].map((rate) => (
+                  <SelectItem key={rate} value={rate.toString()}>
+                    {rate}%
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Separator className="border-gray-400 dark:border-gray-500 border" />
+
+        {/* Total */}
+        <div className="text-lg flex justify-between font-semibold pt-3">
+          <span>Total:</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+
+        </div>
+
+        {/* <div className="space-y-2">
             <div className="flex justify-between text-md">
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)}</span>
             </div>
+
+            <div className="flex justify-between items-center text-md gap-4">
+                <span>Shipping:</span>
+                <div className="w-[6rem]">
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                      $
+                    </span>
+                    <ShippingInput
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={shipping}
+                      className="pl-6 text-right"   // 👈 padding so text doesn’t overlap the $
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === "") {
+                          setShipping(0);
+                          return;
+                        }
+                        const num = parseFloat(raw);
+                        if (!Number.isNaN(num)) setShipping(num);
+                      }}
+                      onBlur={(e) => {
+                        const num = parseFloat(e.target.value);
+                        setShipping(Number.isNaN(num) ? 0 : num);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
             <div className="flex justify-between items-center gap-4">
             <span className="text-md">Tax Rate:</span>
-            <div className="w-[5rem]">
+            <div className="w-[6rem]">
                 <Select value={taxRate.toString()} onValueChange={(val) => setTaxRate(parseFloat(val))}>
                 <SelectTrigger>
                     <SelectValue placeholder="Tax %" />
@@ -868,10 +986,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                 </Select>
             </div>
             </div>
-            <div className="flex justify-between text-md">
-            <span>Shipping:</span>
-            <span>${shipping.toFixed(2)}</span>
-            </div>
             
             <div className="pt-1"/>
             <Separator className="border-gray-400 dark:border-gray-500 border" />
@@ -880,7 +994,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             <span>Total:</span>
             <span>${total.toFixed(2)}</span>
             </div>
-        </div>
+        </div> */}
         </div>
 
           <DialogFooter className="mt-10">

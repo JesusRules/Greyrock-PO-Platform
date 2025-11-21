@@ -227,9 +227,13 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
                 <span>Subtotal:</span>
                 <span>{formatCurrency(purchaseOrder.subtotal)}</span>
               </div>
-              <div className="flex justify-between py-1">
+              {/* <div className="flex justify-between py-1">
                 <span>Tax ({purchaseOrder.taxRate}%):</span>
                 <span>{formatCurrency((purchaseOrder.subtotal * purchaseOrder.taxRate) / 100)}</span>
+              </div> */}
+              <div className="flex justify-between py-1">
+                <span>Tax ({purchaseOrder.taxRate}%):</span>
+                <span>{formatCurrency(((purchaseOrder.subtotal + purchaseOrder.shipping) * purchaseOrder.taxRate) / 100)}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span>Shipping:</span>

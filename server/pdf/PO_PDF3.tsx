@@ -221,12 +221,39 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
     },
   })
 
-  // Calculate subtotal, tax, and total
-  const subtotal = purchaseOrder.lineItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0)
-  const taxRate = purchaseOrder.taxAmount / 100
-  const salesTax = subtotal * taxRate
-  const shipping = 0 // Set shipping cost if available
-  const total = subtotal + salesTax + shipping
+  // ---- totals / tax calculations ----
+
+    // ---- CALCULATE SUBTOTAL, TAX, SHIPPING, TOTAL ----
+  const computedSubtotal = purchaseOrder.lineItems.reduce(
+    (sum, item) => sum + (item.lineTotal || 0),
+    0
+  );
+
+  // Prefer stored subtotal if present, otherwise fall back to computed
+  const subtotal = purchaseOrder.subtotal ?? computedSubtotal;
+
+  const shipping = purchaseOrder.shipping ?? 0;
+
+  // percentage, e.g. 13 for 13%
+  const taxRatePercent = purchaseOrder.taxRate ?? 0;
+
+  // Same as the frontend: tax is applied on (subtotal + shipping)
+  const taxableBase = subtotal + shipping;
+
+  const salesTax = Number(
+    ((taxableBase * taxRatePercent) / 100).toFixed(2)
+  );
+
+  const total = Number((taxableBase + salesTax).toFixed(2));
+
+  // const subtotal = purchaseOrder.subtotal ?? purchaseOrder.lineItems.reduce(
+  //   (sum, item) => sum + (item.lineTotal || 0),
+  //   0
+  // );
+  // const shipping = purchaseOrder.shipping ?? 0;
+  // const taxRatePercent = purchaseOrder.taxRate ?? 0;    // e.g. 15
+  // const salesTax = purchaseOrder.taxAmount ?? 0;        // e.g. 2.25
+  // const total = purchaseOrder.total ?? (subtotal + shipping + salesTax);
 
   // Column widths for the table
   const quantityWidth = "11%" // Increased quantity column width
@@ -370,6 +397,28 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
               <Text style={styles.totalLabel}>Subtotal</Text>
               <Text>${subtotal.toFixed(2)}</Text>
             </View>
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Tax ({taxRatePercent}%)</Text>
+              <Text>${salesTax.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Shipping</Text>
+              <Text>${shipping.toFixed(2)}</Text>
+            </View>
+
+            <View style={[styles.totalRow, styles.grandTotal]}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
+            </View>
+          </View>
+
+          {/* <View style={styles.totalsSection}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Subtotal</Text>
+              <Text>${subtotal.toFixed(2)}</Text>
+            </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Tax Rate</Text>
               <Text>{(taxRate * 100).toFixed(0)}%</Text>
@@ -386,7 +435,7 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
             </View>
-          </View>
+          </View> */}
         </View>
 
         {/* Footer */}
