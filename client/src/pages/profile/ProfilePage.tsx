@@ -15,8 +15,10 @@ import { Upload, Pen, Trash2, Eye, EyeOff } from "lucide-react"
 import { useToast } from "../../../hooks/use-toast"
 import { Drawer } from "@components/layout/Drawer"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
-import { updateUser } from "../../../redux/features/users-slice"
+import { updateUser, updateUserSignature } from "../../../redux/features/users-slice"
 import { useDispatch } from "react-redux"
+import { User } from "../../../../types/User"
+import { updateAuthUser } from "../../../redux/features/auth-slice"
 
 export default function ProfilePage() {
   const { toast } = useToast()
@@ -49,6 +51,48 @@ export default function ProfilePage() {
         setEmail(user.email);
     }
   }, [user])
+
+  async function handleProfileUpdate() {
+    if (!user?._id) return;
+
+    try {
+      setIsSaving(true);
+
+      const updatedPayload = {
+        firstName,
+        lastName,
+        email,
+        // if you want phone here later, add phoneNumber
+      };
+
+      const resultAction = await dispatch(
+        updateAuthUser({ _id: user._id, updatedData: updatedPayload })
+      );
+
+      if (updateAuthUser.rejected.match(resultAction)) {
+        toast({
+          title: "Error",
+          description: resultAction.payload || "Failed to update profile.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Your profile has been updated successfully.",
+          variant: "success",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
 //   async function handleProfileUpdate() {
 //     try {
@@ -84,30 +128,31 @@ export default function ProfilePage() {
 //       setIsSaving(false);
 //     }
 //   }
+//   const handleProfileUpdate = async () => {
+//     setIsSaving(true)
 
-  const handleProfileUpdate = async () => {
-    setIsSaving(true)
+//     // Simulate API call
+//     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+//     toast({
+//       title: "Success",
+//       description: "Your profile has been updated successfully.",
+//       variant: "default",
+//     })
 
-    toast({
-      title: "Success",
-      description: "Your profile has been updated successfully.",
-      variant: "default",
-    })
-
-    setIsSaving(false)
-  }
+//     setIsSaving(false)
+//   }
 
   const handlePasswordChange = async () => {
+    if (!user?._id) return;
+
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
         title: "Error",
         description: "Please fill in all password fields.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (newPassword !== confirmPassword) {
@@ -115,36 +160,101 @@ export default function ProfilePage() {
         title: "Error",
         description: "New passwords do not match.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    if (newPassword.length < 8) {
+    if (newPassword.length < 3) {
       toast({
         title: "Error",
-        description: "Password must be at least 8 characters long.",
+        description: "Password must be at least 3 characters long.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSaving(true)
+    try {
+      setIsSaving(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+      const resultAction = await dispatch(
+        updateAuthUser({ _id: user._id, updatedData: { password: newPassword } })
+      );
 
-    toast({
-      title: "Success",
-      description: "Your password has been changed successfully.",
-      variant: "default",
-    })
+      if (updateAuthUser.rejected.match(resultAction)) {
+        toast({
+          title: "Error",
+          description: resultAction.payload || "Failed to update password.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Your password has been changed successfully.",
+          variant: "success",
+        });
 
-    // Clear password fields
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    setIsSaving(false)
-  }
+        // Clear password fields
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // const handlePasswordChange = async () => {
+  //   if (!currentPassword || !newPassword || !confirmPassword) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please fill in all password fields.",
+  //       variant: "destructive",
+  //     })
+  //     return
+  //   }
+
+  //   if (newPassword !== confirmPassword) {
+  //     toast({
+  //       title: "Error",
+  //       description: "New passwords do not match.",
+  //       variant: "destructive",
+  //     })
+  //     return
+  //   }
+
+  //   if (newPassword.length < 8) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Password must be at least 8 characters long.",
+  //       variant: "destructive",
+  //     })
+  //     return
+  //   }
+
+  //   setIsSaving(true)
+
+  //   // Simulate API call
+  //   await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  //   toast({
+  //     title: "Success",
+  //     description: "Your password has been changed successfully.",
+  //     variant: "default",
+  //   })
+
+  //   // Clear password fields
+  //   setCurrentPassword("")
+  //   setNewPassword("")
+  //   setConfirmPassword("")
+  //   setIsSaving(false)
+  // }
 
   const handleSignatureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -171,15 +281,49 @@ export default function ProfilePage() {
     }
 
     const reader = new FileReader()
-    reader.onloadend = () => {
-      setSignatureUrl(reader.result as string)
-      setSignatureType("upload")
-      toast({
-        title: "Success",
-        description: "Signature image uploaded successfully.",
-        variant: "default",
-      })
-    }
+    // reader.onloadend = () => {
+    //   setSignatureUrl(reader.result as string)
+    //   setSignatureType("upload")
+    //   toast({
+    //     title: "Success",
+    //     description: "Signature image uploaded successfully.",
+    //     variant: "default",
+    //   })
+    // }
+    reader.onloadend = async () => {
+      const dataUrl = reader.result as string;
+
+      if (!user?._id) return;
+
+      try {
+        setIsSaving(true);
+
+        const resultAction = await dispatch(
+          updateUserSignature({ _id: user._id, signature: dataUrl })
+        );
+
+        if (updateUserSignature.rejected.match(resultAction)) {
+          toast({
+            title: "Error",
+            description: resultAction.payload || "Failed to upload signature.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const updatedUser = resultAction.payload as User;
+        setSignatureUrl(updatedUser.signedImg || null);
+        setSignatureType("upload");
+
+        toast({
+          title: "Success",
+          description: "Signature image uploaded successfully.",
+          variant: "default",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    };
     reader.readAsDataURL(file)
   }
 
@@ -187,10 +331,40 @@ export default function ProfilePage() {
     setOpenSignatureModal(true)
   }
 
-  const handleSaveDrawnSignature = (dataUrl: string) => {
-    setSignatureUrl(dataUrl)
-    setSignatureType("draw")
-  }
+  // const handleSaveDrawnSignature = (dataUrl: string) => {
+  //   setSignatureUrl(dataUrl)
+  //   setSignatureType("draw")
+  // }
+  const handleSaveDrawnSignature = async (dataUrl: string) => {
+    if (!user?._id) return;
+
+    try {
+      setIsSaving(true);
+
+      const resultAction = await dispatch(
+        updateUserSignature({ _id: user._id, signature: dataUrl })
+      );
+
+      if (updateUserSignature.rejected.match(resultAction)) {
+        toast({
+          title: "Error",
+          description: resultAction.payload || "Failed to save signature.",
+          variant: "destructive",
+        });
+      } else {
+        const updatedUser = resultAction.payload as User;
+        setSignatureUrl(updatedUser.signedImg || null);
+        setSignatureType("draw");
+        toast({
+          title: "Success",
+          description: "Signature saved successfully.",
+          variant: "default",
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleDeleteSignature = () => {
     setSignatureUrl(null)
@@ -362,7 +536,7 @@ export default function ProfilePage() {
                     </Button>
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">Password must be at least 8 characters long</div>
+                <div className="text-sm text-muted-foreground">Password must be at least 3 characters long</div>
                 <Separator />
                 <div className="flex justify-end">
                   <Button onClick={handlePasswordChange} disabled={isSaving}>

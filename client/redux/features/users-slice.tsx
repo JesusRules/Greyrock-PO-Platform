@@ -91,7 +91,13 @@ const usersSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         // state.loading = false;
         state.error = action.payload || "Failed to update user";
-      });
+      })
+      // Update User Signature //////////////////////////////////
+      .addCase(updateUserSignature.fulfilled, (state, action: PayloadAction<User>) => {
+        state.users = state.users.map((user) =>
+          user._id === action.payload._id ? action.payload : user
+        );
+      })
   },
 });
 
@@ -146,6 +152,21 @@ export const updateUser = createAsyncThunk<
     }
   }
 );
+
+export const updateUserSignature = createAsyncThunk<
+  User,
+  { _id: string; signature: string },
+  { rejectValue: string }
+>("users/updateUserSignature", async ({ _id, signature }, { rejectWithValue }) => {
+  try {
+    const response = await api.post(`/api/users/${_id}/signature`, { signature });
+    return response.data.updatedUser;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update signature"
+    );
+  }
+});
 
 export const deleteUser = createAsyncThunk<
   User, // ✅ Return type (Updated User)

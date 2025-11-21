@@ -51,6 +51,49 @@ export const authSlice = createSlice({
             state.isAuth = false;
             state.user = null;
         })
+        // Update auth user
+        // .addCase(updateAuthUser.pending, (state) => {
+        //   state.loading = true;
+        //   state.error = null;
+        // })
+        // .addCase(updateAuthUser.fulfilled, (state, action: PayloadAction<User>) => {
+        //   state.user = action.payload;
+        // })
+        // .addCase(updateAuthUser.rejected, (state, action) => {
+        //   state.loading = false;
+        //   state.error = action.payload || "Failed to update user";
+        // })
+        // Does updateAuthUser AND updateAuthUserSignature - Shared handlers
+        builder
+        // Shared handlers:
+        .addMatcher(
+          (action) =>
+            action.type === updateAuthUser.pending.type ||
+            action.type === updateAuthUserSignature.pending.type,
+          (state) => {
+            state.loading = true;
+            state.error = null;
+          }
+        )
+        .addMatcher(
+          (action) =>
+            action.type === updateAuthUser.fulfilled.type ||
+            action.type === updateAuthUserSignature.fulfilled.type,
+          (state, action: PayloadAction<User>) => {
+            state.loading = false;
+            state.user = action.payload;
+          }
+        )
+        builder.addMatcher(
+        (action): action is ReturnType<typeof updateAuthUser.rejected> |
+                  ReturnType<typeof updateAuthUserSignature.rejected> =>
+          action.type === updateAuthUser.rejected.type ||
+          action.type === updateAuthUserSignature.rejected.type,
+        (state, action) => {
+          state.loading = false
+          state.error = (action.payload as string) || "Failed to update user"
+        }
+      )
     }
 })
 
@@ -85,6 +128,43 @@ export const loginUser = createAsyncThunk<
 export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
     await api.post("/api/auth/logout");
 })
+
+
+type UpdateUserPayload = {
+  _id: string;
+  updatedData: Partial<User>;
+};
+
+export const updateAuthUser = createAsyncThunk<
+  User, // Return type
+  UpdateUserPayload, // Argument type
+  { rejectValue: string } // Error type
+>(
+  "auth/updateAuthUser",
+  async ({ _id, updatedData }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/api/users/${_id}`, updatedData);
+      return response.data.updatedUser;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to update user");
+    }
+  }
+);
+
+export const updateAuthUserSignature = createAsyncThunk<
+  User,
+  { _id: string; signature: string },
+  { rejectValue: string }
+>("auth/updateAuthUserSignature", async ({ _id, signature }, { rejectWithValue }) => {
+  try {
+    const response = await api.post(`/api/users/${_id}/signature`, { signature });
+    return response.data.updatedUser;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update signature"
+    );
+  }
+});
 
 export const { setUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -7,5 +7,6 @@ export type User = {
     email: string;
     phoneNumber?: string;
     password?: string;
+    signedImg?: string;
     role: string;
 };

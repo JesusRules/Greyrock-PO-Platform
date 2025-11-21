@@ -1,6 +1,13 @@
 import { Request, Response } from "express"
 import User from "../models/User.js"
 import { createNoCacheHeaders } from "../utils/noCacheResponse.js"
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
 // GET /api/users
 export const getUsers = async (req: Request, res: Response) => {
@@ -57,6 +64,56 @@ export const createUser = async (req: Request, res: Response) => {
     .status(500).json({ message: "Failed to create user" })
   }
 }
+
+export const updateUserSignature = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { signature } = req.body; // base64 dataURL from canvas or uploaded image
+
+    const user = await User.findById(id);
+    if (!user) {
+      res
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: "User not found" });
+      return;
+    }
+
+    // Delete old signature if exists
+    if (user.signedImg) {
+      const urlParts = user.signedImg.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+      const publicId = `user_signatures/${fileName.split(".")[0]}`;
+
+      try {
+        await cloudinary.uploader.destroy(publicId);
+        console.log(`🗑️ Deleted previous user signature: ${publicId}`);
+      } catch (deleteErr) {
+        console.warn("⚠️ Failed to delete old user signature:", deleteErr);
+      }
+    }
+
+    // Upload new signature
+    const cloudinaryRes = await cloudinary.uploader.upload(signature, {
+      folder: "po_user_signatures",
+    });
+
+    user.signedImg = cloudinaryRes.secure_url;
+    const updatedUser = await user.save();
+
+    res
+      .status(201)
+      .set(createNoCacheHeaders())
+      .json({ updatedUser });
+  } catch (error) {
+    console.error("User signature error:", error);
+    res
+      .status(500)
+      .set(createNoCacheHeaders())
+      .json({ error: "Server error" });
+  }
+};
+
 
 // PUT /api/users/:id
 export const updateUser = async (req: Request, res: Response) => {
