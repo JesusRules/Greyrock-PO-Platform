@@ -22,7 +22,7 @@ interface VendorViewModalProps {
 export function VendorViewModal({ isOpen, onClose, vendor }: VendorViewModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-white max-w-xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="bg-white dark:bg-[#020719] max-w-xl max-h-[90vh] overflow-y-auto p-0">
         {/* <div className="bg-gray-50 p-6 rounded-t-lg border-b">
           <DialogHeader className="flex justify-between items-start">
             <div>
@@ -34,10 +34,9 @@ export function VendorViewModal({ isOpen, onClose, vendor }: VendorViewModalProp
             </Button>
           </DialogHeader>
         </div> */}
-
         <div className="p-6 space-y-6">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 border-gray-500 border rounded-lg">
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center">
                 <Building2 className="h-4 w-4 mr-2" />
                 COMPANY INFORMATION
@@ -56,7 +55,7 @@ export function VendorViewModal({ isOpen, onClose, vendor }: VendorViewModalProp
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 border-gray-500 border rounded-lg">
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center">
                 <CreditCard className="h-4 w-4 mr-2" />
                 PAYMENT INFORMATION
@@ -69,7 +68,7 @@ export function VendorViewModal({ isOpen, onClose, vendor }: VendorViewModalProp
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 border-gray-500 border rounded-lg">
               <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center">
                 <User className="h-4 w-4 mr-2" />
                 CONTACT INFORMATION
@@ -102,7 +101,7 @@ export function VendorViewModal({ isOpen, onClose, vendor }: VendorViewModalProp
 
           {vendor.comment && (
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-4 border-gray-500 border rounded-lg">
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center">
                   <MessageSquare className="h-4 w-4 mr-2" />
                   ADDITIONAL NOTES

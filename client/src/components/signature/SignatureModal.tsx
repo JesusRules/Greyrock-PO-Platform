@@ -144,7 +144,7 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
             </button>
             </div>
         }>
-          <div style={{ border: "1px solid #ccc", padding: 8}}>
+          <div style={{ border: "1px solid #ccc", padding: 4}}>
           {!isSigning && signatureUrl ? (
             <>
               <img src={signatureUrl} alt="Saved Signature" className="w-[400px] h-[150px] object-contain" />
@@ -159,6 +159,7 @@ export default function SignatureModal({ selectedPurchaseOrder }: { selectedPurc
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"
+              backgroundColor="white"
               canvasProps={{ width: 400, height: 150, className: "signature-canvas" }}
             />
           )}

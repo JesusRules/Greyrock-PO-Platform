@@ -126,6 +126,7 @@ export function PurchaseOrderProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("testPurchaseOrders", JSON.stringify(updated))
   }
 
+  // Doesnt work?
   const downloadPdf = (id: string) => {
     const po = purchaseOrders.find((item) => item.id === id)
     if (!po) return

@@ -289,7 +289,7 @@ export function PurchaseOrderList() {
                         : po.status === "Approved"
                         ? "bg-emerald-100 text-emerald-800"
                         : po.status === "Pending" 
-                        ? "bg-amber-100 text-amber-800"
+                        ? "bg-amber-100 text-amber-800 dark:bg-amber-600 dark:text-white"
                         : po.status === "Rejected" 
                         ? "bg-red-200 dark:bg-red-600 dark:text-white" : "bg-white"
                     }`}

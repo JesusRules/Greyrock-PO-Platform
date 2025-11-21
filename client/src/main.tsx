@@ -28,9 +28,8 @@ createRoot(document.getElementById('root')!).render(
       <GlobalContextProvider>
       <PurchaseOrderProvider>
       <MantineProvider theme={theme}>
-        <Toaster />
-      {/* <Toaster position="bottom-right" toastOptions={{ duration: 5000, style: { border: "1px solid black" } }} /> */}
       <ColorSchemeToggle />
+      <Toaster />
 
     <BrowserRouter>
     <AuthChecker>

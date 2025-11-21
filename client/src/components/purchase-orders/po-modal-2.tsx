@@ -133,6 +133,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         phone: purchaseOrder.vendor.phoneNumber || "",
         email: purchaseOrder.vendor.email || "",
         payableTo: purchaseOrder.vendor.payableTo || "",
+        address: purchaseOrder.vendor.address || "",   // 👈 add this
         paymentMethod: purchaseOrder.paymentMethod || "Cheque",
         submitter: typeof purchaseOrder.submitter === "string"
         ? purchaseOrder.submitter
@@ -169,7 +170,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           lineTotal: 0,
         },
       ]);
-      setShipping(0);
+      setShipping(0); // THIS IS WHERE TO ADJUST SHIPPING FOR TESTING
       setTaxRate(13);
     }
   }, [isOpen]);
@@ -295,7 +296,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         })).unwrap();
         toast({
             title: 'Success',
-            description: 'Purchase Order updated.',
+            description: `Purchase Order ${purchaseOrder?.poNumber} updated.`,
             variant: 'success',
         });
       }
@@ -589,7 +590,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         {lineItems.map((item) => (
         <div
           key={item.uuid}
-          className="border-gray-500 grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-start border p-2 rounded-md"
+          className="border-gray-500 grid grid-cols-1 sm:grid-cols-[3rem,9rem,1fr,4.5rem,7rem,4.5rem] gap-2 items-center border p-2 rounded-md"
         >
           {/* Trash */}
           <div className="flex sm:block justify-center">
@@ -645,12 +646,12 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         <Separator className="bg-gray-500" />
 
         <div className="space-y-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-md">
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center gap-4">
-            <Label className="text-sm">Tax Rate</Label>
+            <span className="text-md">Tax Rate:</span>
             <div className="w-[5rem]">
                 <Select value={taxRate.toString()} onValueChange={(val) => setTaxRate(parseFloat(val))}>
                 <SelectTrigger>
@@ -666,14 +667,15 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                 </Select>
             </div>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-md">
             <span>Shipping:</span>
             <span>${shipping.toFixed(2)}</span>
             </div>
-
+            
+            <div className="pt-1"/>
             <Separator className="border-gray-400 dark:border-gray-500 border" />
 
-            <div className="flex justify-between font-semibold pt-3">
+            <div className="text-lg flex justify-between font-semibold pt-3">
             <span>Total:</span>
             <span>${total.toFixed(2)}</span>
             </div>
