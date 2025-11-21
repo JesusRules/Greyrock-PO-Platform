@@ -78,6 +78,10 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     lineTotal: 0,
   }])
   const { toast } = useToast()
+  // NEW - Change PO number in edit mode?????
+  const [originalDepartment, setOriginalDepartment] = useState<string | null>(null);
+  const [originalPoNumber, setOriginalPoNumber] = useState<string | null>(null);
+
 
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(purchaseOrderSchema),
@@ -99,67 +103,109 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const { watch } = form;
   const department = watch("department");
 
+  // CHANGE? EDITING MODAL EFFECTS PO NUMBER
   useEffect(() => {
     const fetchPoNumber = async () => {
-      if (mode === "create" && department) {
-        try {
+      if (!department) return;
+
+      try {
+        // CREATE MODE: always preview based on current department
+        if (!isEditing) {
           const res = await api.post("/api/departments/po-number", {
             departmentName: department,
             preview: true,
           });
           setPoNumber(res.data.poNumber);
-        } catch (err) {
-          console.error("Failed to preview PO number", err);
+          return;
         }
+
+        // EDIT MODE
+        if (!originalDepartment) return;
+
+        // If user switched BACK to the original department -> restore original PO
+        if (department === originalDepartment) {
+          if (originalPoNumber) {
+            setPoNumber(originalPoNumber);
+          }
+          return;
+        }
+
+        // Department changed to a different one -> preview a new PO number
+        const res = await api.post("/api/departments/po-number", {
+          departmentName: department,
+          preview: true,
+        });
+        setPoNumber(res.data.poNumber);
+      } catch (err) {
+        console.error("Failed to preview PO number", err);
       }
     };
 
     fetchPoNumber();
-  }, [department, mode]);
+  }, [department, isEditing, originalDepartment, originalPoNumber]);
 
+  // I DO NOT KNOW!!!!!!!!!!!!!!!!!!
+  // useEffect(() => {
+  //   const fetchPoNumber = async () => {
+  //     if (mode === "create" && department) {
+  //       try {
+  //         const res = await api.post("/api/departments/po-number", {
+  //           departmentName: department,
+  //           preview: true,
+  //         });
+  //         setPoNumber(res.data.poNumber);
+  //       } catch (err) {
+  //         console.error("Failed to preview PO number", err);
+  //       }
+  //     }
+  //   };
+
+  //   fetchPoNumber();
+  // }, [department, mode]);
+
+  // CHANGE? EDITING MODAL EFFECTS PO NUMBER
   useEffect(() => {
     if (!isOpen) return;
 
-    console.log('purchaseOrder', purchaseOrder);
-    console.log('isEditing', isEditing);
-    
     if (isEditing && purchaseOrder) {
       form.reset({
         department: purchaseOrder.department.name || "",
-        // poNumber: purchaseOrder.poNumber || "",
-        // date: purchaseOrder.date || new Date(),
         vendor: purchaseOrder.vendor?.companyName || "",
         contactName: purchaseOrder.vendor.contactName || "",
         phone: purchaseOrder.vendor.phoneNumber || "",
         email: purchaseOrder.vendor.email || "",
         payableTo: purchaseOrder.vendor.payableTo || "",
-        address: purchaseOrder.vendor.address || "",   // 👈 add this
+        address: purchaseOrder.vendor.address || "",
         paymentMethod: purchaseOrder.paymentMethod || "Cheque",
-        submitter: typeof purchaseOrder.submitter === "string"
-        ? purchaseOrder.submitter
-        : purchaseOrder.submitter?._id || "",
+        submitter:
+          typeof purchaseOrder.submitter === "string"
+            ? purchaseOrder.submitter
+            : purchaseOrder.submitter?._id || "",
       });
-      setPoNumber(purchaseOrder.poNumber || "");
-      setDate(purchaseOrder.date || new Date());
 
+      const existingPo = purchaseOrder.poNumber || "";
+
+      setPoNumber(existingPo);
+      setOriginalPoNumber(existingPo);          // 👈 remember the original
+      setDate(purchaseOrder.date || new Date());
       setLineItems(purchaseOrder.lineItems || []);
       setShipping(purchaseOrder.shipping || 0);
       setTaxRate(purchaseOrder.taxRate || 13);
+      setOriginalDepartment(purchaseOrder.department.name || "");
     } else {
       form.reset({
         department: "",
-        // poNumber: "",
-        // date: new Date(),
         vendor: "",
         contactName: "",
         phone: "",
         email: "",
         payableTo: "",
         paymentMethod: "Cheque",
-        submitter: ""
+        submitter: "",
       });
 
       setPoNumber("");
+      setOriginalPoNumber(null);               // 👈 reset
       setLineItems([
         {
           uuid: "1",
@@ -170,10 +216,70 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           lineTotal: 0,
         },
       ]);
-      setShipping(0); // THIS IS WHERE TO ADJUST SHIPPING FOR TESTING
+      setShipping(0);
       setTaxRate(13);
+      setOriginalDepartment(null);
     }
-  }, [isOpen]);
+  }, [isOpen, isEditing, purchaseOrder, form]);
+
+  // I DO NOT KNOW?!?!
+  // useEffect(() => {
+  //   if (!isOpen) return;
+
+  //   console.log('purchaseOrder', purchaseOrder);
+  //   console.log('isEditing', isEditing);
+    
+  //   if (isEditing && purchaseOrder) {
+  //     form.reset({
+  //       department: purchaseOrder.department.name || "",
+  //       // poNumber: purchaseOrder.poNumber || "",
+  //       // date: purchaseOrder.date || new Date(),
+  //       vendor: purchaseOrder.vendor?.companyName || "",
+  //       contactName: purchaseOrder.vendor.contactName || "",
+  //       phone: purchaseOrder.vendor.phoneNumber || "",
+  //       email: purchaseOrder.vendor.email || "",
+  //       payableTo: purchaseOrder.vendor.payableTo || "",
+  //       address: purchaseOrder.vendor.address || "",   // 👈 add this
+  //       paymentMethod: purchaseOrder.paymentMethod || "Cheque",
+  //       submitter: typeof purchaseOrder.submitter === "string"
+  //       ? purchaseOrder.submitter
+  //       : purchaseOrder.submitter?._id || "",
+  //     });
+  //     setPoNumber(purchaseOrder.poNumber || "");
+  //     setDate(purchaseOrder.date || new Date());
+
+  //     setLineItems(purchaseOrder.lineItems || []);
+  //     setShipping(purchaseOrder.shipping || 0);
+  //     setTaxRate(purchaseOrder.taxRate || 13);
+  //   } else {
+  //     form.reset({
+  //       department: "",
+  //       // poNumber: "",
+  //       // date: new Date(),
+  //       vendor: "",
+  //       contactName: "",
+  //       phone: "",
+  //       email: "",
+  //       payableTo: "",
+  //       paymentMethod: "Cheque",
+  //       submitter: ""
+  //     });
+
+  //     setPoNumber("");
+  //     setLineItems([
+  //       {
+  //         uuid: "1",
+  //         quantity: 1,
+  //         itemId: "",
+  //         description: "",
+  //         unitPrice: 0,
+  //         lineTotal: 0,
+  //       },
+  //     ]);
+  //     setShipping(0); // THIS IS WHERE TO ADJUST SHIPPING FOR TESTING
+  //     setTaxRate(13);
+  //   }
+  // }, [isOpen]);
 
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
     setLineItems((prev) =>
@@ -227,21 +333,42 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         return
       }
 
-      setIsLoading(true);
-      let finalPoNumber;
 
-      // 🔁 On create: fetch and increment a fresh PO number
-      if (!isEditing) {
+      // I DO NOT KNOW // CHANGE PO NUMBER WHEN IN EDIT MODE!!!!!!!!!!
+      setIsLoading(true);
+
+      const departmentName = form.getValues("department");
+      const departmentChanged =
+        isEditing && originalDepartment && departmentName !== originalDepartment;
+
+      let finalPoNumber = poNumber;
+
+      // For create OR if department changed on edit, get a real incremented PO #
+      if (!isEditing || departmentChanged) {
         const res = await api.post("/api/departments/po-number", {
-          departmentName: department,
+          departmentName,
           preview: false, // real increment
         });
         finalPoNumber = res.data.poNumber;
-        console.log('finalPoNumber', finalPoNumber)
-        setPoNumber(finalPoNumber); // update state for consistency
+        setPoNumber(finalPoNumber);
       }
 
-      const departmentName = form.getValues("department"); // or use `watch("department")`
+      // I DO NOT KNOW // CHANGE PO NUMBER WHEN IN EDIT MODE!!!!!!!!!!
+      // setIsLoading(true);
+      // let finalPoNumber;
+
+      // // 🔁 On create: fetch and increment a fresh PO number
+      // if (!isEditing) {
+      //   const res = await api.post("/api/departments/po-number", {
+      //     departmentName: department,
+      //     preview: false, // real increment
+      //   });
+      //   finalPoNumber = res.data.poNumber;
+      //   console.log('finalPoNumber', finalPoNumber)
+      //   setPoNumber(finalPoNumber); // update state for consistency
+      // }
+      // const departmentName = form.getValues("department"); // or use `watch("department")`
+
       const selectedDepartment = departments.find(dept => dept.name === departmentName);
       const departmentId = selectedDepartment?._id;
 
@@ -330,6 +457,82 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             variant="default"
             size="sm"
             onClick={() => {
+              if (isEditing && purchaseOrder) {
+                // 🔁 In EDIT mode: restore original values from the existing PO
+                form.reset({
+                  department: purchaseOrder.department.name || "",
+                  vendor: purchaseOrder.vendor?.companyName || "",
+                  contactName: purchaseOrder.vendor.contactName || "",
+                  phone: purchaseOrder.vendor.phoneNumber || "",
+                  email: purchaseOrder.vendor.email || "",
+                  payableTo: purchaseOrder.vendor.payableTo || "",
+                  address: purchaseOrder.vendor.address || "",
+                  paymentMethod: purchaseOrder.paymentMethod || "Cheque",
+                  submitter:
+                    typeof purchaseOrder.submitter === "string"
+                      ? purchaseOrder.submitter
+                      : purchaseOrder.submitter?._id || "",
+                });
+
+                setPoNumber(purchaseOrder.poNumber || "");
+                setDate(purchaseOrder.date || new Date());
+                setLineItems(purchaseOrder.lineItems || [
+                  {
+                    uuid: crypto.randomUUID(),
+                    quantity: 1,
+                    itemId: "",
+                    description: "",
+                    unitPrice: 0,
+                    lineTotal: 0,
+                  },
+                ]);
+                setShipping(purchaseOrder.shipping ?? 0);
+                setTaxRate(purchaseOrder.taxRate ?? 13);
+
+                // keep preview logic consistent
+                setOriginalDepartment(purchaseOrder.department.name || "");
+                setOriginalPoNumber(purchaseOrder.poNumber || "");
+              } else {
+                // 🆕 In CREATE mode: clear everything
+                form.reset({
+                  department: "",
+                  vendor: "",
+                  contactName: "",
+                  phone: "",
+                  email: "",
+                  payableTo: "",
+                  address: "",
+                  paymentMethod: "Cheque",
+                  submitter: "",
+                });
+
+                setPoNumber("");
+                setDate(new Date());
+                setLineItems([
+                  {
+                    uuid: crypto.randomUUID(),
+                    quantity: 1,
+                    itemId: "",
+                    description: "",
+                    unitPrice: 0,
+                    lineTotal: 0,
+                  },
+                ]);
+                setShipping(0);
+                setTaxRate(13);
+                setOriginalDepartment(null);
+                setOriginalPoNumber(null);
+              }
+            }}
+            className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:text-white"
+          >
+            {isEditing ? 'Reset' : 'Clear'}
+          </Button>
+          {/* <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={() => {
               form.reset({
                 department: "",
                 // poNumber: "",
@@ -356,7 +559,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
             className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:text-white"
           >
             Clear
-          </Button>
+          </Button> */}
         </div>
       </DialogHeader>
 
