@@ -66,7 +66,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [payableTo, setPayableTo] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState("Cheque")
+  // const [paymentMethod, setPaymentMethod] = useState("Cheque")
   const [shipping, setShipping] = useState(0)
   const [taxRate, setTaxRate] = useState(13)
   const [lineItems, setLineItems] = useState<LineItem[]>([{
@@ -333,7 +333,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         return
       }
 
-
       // I DO NOT KNOW // CHANGE PO NUMBER WHEN IN EDIT MODE!!!!!!!!!!
       setIsLoading(true);
 
@@ -393,13 +392,12 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       //   address: 'asdasasd', // fallback from original if not in form
       //   _id: selectedVendor?._id, // include ID for update if needed
       // };
-
       const poData = {
         department: selectedDepartment,
         poNumber: finalPoNumber,
         date,
         vendor: vendorFromForm,
-        paymentMethod,
+        paymentMethod: form.getValues("paymentMethod"),
         lineItems,
         shipping,
         taxRate,
