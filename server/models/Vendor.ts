@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export const vendorSchema = new mongoose.Schema({ 
     companyName: { type: String, required: true },
     contactName: { type: String, required: true },
-    payableTo: { type: String, required: true }, // NEW
+    payableTo: { type: String, required: true },
     email: { 
         type: String, 
         required: true,

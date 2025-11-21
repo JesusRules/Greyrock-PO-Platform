@@ -46,7 +46,6 @@ const connectMongo = async (): Promise<Mongoose> => {
         throw err;
       });
   }
-
   cache.conn = await cache.promise;
   return cache.conn;
 };

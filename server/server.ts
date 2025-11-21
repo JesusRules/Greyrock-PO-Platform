@@ -25,7 +25,6 @@ async function main() {
       credentials: true,
     })
   );
- 
 
   app.use(cookieParser());
   app.use(express.json());

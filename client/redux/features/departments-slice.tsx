@@ -36,12 +36,10 @@ const departmentSlice = createSlice({
         state.loading = false
         state.error = action.error.message || "Failed to fetch departments"
       })
-
       // Create
       .addCase(createDepartment.fulfilled, (state, action) => {
         state.departments.push(action.payload)
       })
-
       // Update
       .addCase(updateDepartment.fulfilled, (state, action) => {
         const index = state.departments.findIndex((d) => d._id === action.payload._id)
@@ -49,7 +47,6 @@ const departmentSlice = createSlice({
           state.departments[index] = action.payload
         }
       })
-
       // Delete
       .addCase(deleteDepartment.fulfilled, (state, action) => {
         state.departments = state.departments.filter((d) => d._id !== action.payload)

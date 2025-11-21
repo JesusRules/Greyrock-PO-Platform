@@ -11,7 +11,7 @@ export const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
     },
-    role: { type: String, default: 'Admin' },
+    role: { type: String, default: 'admin' }, // Gonna need more
     password: { type: String, required: true, default: '000000' },
     phoneNumber: { type: String, default: '' },
  }, {

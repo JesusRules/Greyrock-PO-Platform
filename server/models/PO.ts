@@ -55,7 +55,6 @@ const PurchaseOrderSchema = new mongoose.Schema({
     required: true,
   },
   // manager: { type: String, required: true },
-
   status: {
     type: String,
     enum: ['Pending', 'Signed', 'Rejected', 'Approved'],

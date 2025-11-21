@@ -68,7 +68,6 @@ export const loginUser = createAsyncThunk<
 
          // ✅ Step 2: Store token in cookies (if using cookies for auth)
         //  document.cookie = `token=${token}; path=/; Secure`; // Bad? Let your server's res.cookie() handle everything
-
          try {
              await api.post("/api/auth/log-record", {}, { withCredentials: true });
              console.log("Login event recorded successfully!");
