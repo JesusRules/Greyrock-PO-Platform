@@ -3,7 +3,8 @@
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { Check } from "lucide-react"
-import { cn } from "@/components/lib/utils"
+
+import { cn } from "../../components/lib/utils"
 
 export interface CheckboxProps
   extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {}

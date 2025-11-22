@@ -20,6 +20,7 @@ import { User } from "../../../../types/User"
 import { createUserSchema, updateUserSchema } from '../../../types/userFormSchema'
 import { toast } from "../../../hooks/use-toast"
 import { fetchDepartments } from "../../../redux/features/departments-slice"
+import { Modal, Chip, Group, Text, Button as MantineButton, useMantineColorScheme } from "@mantine/core"
 
 type UserFormValues = z.infer<typeof createUserSchema> | z.infer<typeof updateUserSchema>
 
@@ -31,6 +32,7 @@ interface UserFormModalProps {
 
 export function UserFormModal({ open, onOpenChange, initialData }: UserFormModalProps) {
   const isEditMode = !!initialData
+  const { colorScheme } = useMantineColorScheme();
   const [avatar, setAvatar] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   // const [avatarPreview, setAvatarPreview] = useState<string | null>(initialData?.avatar || null)
@@ -40,6 +42,9 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
   //Redux
   const dispatch = useDispatch<AppDispatch>()
   const departments = useAppSelector(state => state.departmentsReducer.departments);
+  const user = useAppSelector(state => state.authReducer.user);
+  // 🔹 NEW: departments modal open state
+  const [departmentsModalOpen, setDepartmentsModalOpen] = useState(false)
   
   useEffect(() => {
     dispatch(fetchDepartments());
@@ -53,7 +58,6 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
       ? {
           ...initialData,
           password: "",
-          // if initialData.departments is populated with Department objects:
           departments:
             // @ts-ignore depending on your User type
             initialData.departments?.map((d: any) =>
@@ -156,6 +160,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
         ...data,
         // avatar: avatarPreview, // If applicable
       };
+
+      console.log('user', user)
 
       console.log('initialData', initialData)
 
@@ -278,7 +284,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                       </FormControl>
                       <SelectContent>
                         <SelectItem className="cursor-pointer" value="admin">Admin</SelectItem>
-                        <SelectItem className="cursor-pointer" value="manager">Manager</SelectItem>
+                        {/* <SelectItem className="cursor-pointer" value="manager">Manager</SelectItem> */}
                         <SelectItem className="cursor-pointer" value="user">User</SelectItem>
                       </SelectContent>
                     </Select>
@@ -288,45 +294,103 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
               />
             </div>
 
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start"> */}
-              {/* <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
+            {role === "user" && (
+            <FormField
+              control={form.control}
+              name="departments"
+              render={({ field }) => {
+                const value = (field.value || []) as string[];
+                const selectedDepartments = departments.filter((d) =>
+                  value.includes(d._id)
+                );
+
+                return (
                   <FormItem>
-                    <FormLabel>Role *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full cursor-pointer">
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem className="cursor-pointer" value="admin">Admin</SelectItem>
-                        <SelectItem className="cursor-pointer" value="manager">Manager</SelectItem>
-                        <SelectItem className="cursor-pointer" value="user">User</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>User Departments</FormLabel>
+                    <FormDescription>
+                      Select the departments this user is associated with.
+                    </FormDescription>
+
+                    {/* Button to open selector modal */}
+                    <div className="mt-2 pb-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size='default'
+                        onClick={() => setDepartmentsModalOpen(true)}
+                      >
+                        Manage Departments
+                      </Button>
+                    </div>
+
+                    {/* Show selected departments as chips under button */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selectedDepartments.length > 0 ? (
+                        selectedDepartments.map((dept) => (
+                          <span
+                            key={dept._id}
+                            className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-100 px-3 py-1 text-xs font-medium"
+                          >
+                            {dept.name}
+                            <span className="ml-1 text-[10px] text-blue-700/70 dark:text-blue-200/70">
+                              ({dept.departmentCode})
+                            </span>
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          No departments selected.
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Mantine modal for selecting departments */}
+                    <Modal
+                      opened={departmentsModalOpen}
+                      onClose={() => setDepartmentsModalOpen(false)}
+                      title="Select user departments"
+                      centered
+                    >
+                      <Text size="sm" mb="sm">
+                        Click on the departments to toggle them on or off.
+                      </Text>
+
+                      <Chip.Group
+                        multiple
+                        value={value}
+                        onChange={(newValues) => field.onChange(newValues)}
+                      >
+                        <Group gap="xs">
+                          {departments.map((dept) => (
+                            <Chip
+                              key={dept._id}
+                              value={dept._id}
+                              radius="xl"
+                              variant="outline"
+                            >
+                              {dept.name}
+                            </Chip>
+                          ))}
+                        </Group>
+                      </Chip.Group>
+
+                      <Group justify="flex-end" mt="md">
+                        <MantineButton
+                          variant="outline"
+                          color={colorScheme === 'light' ? 'dark' : 'gray'}
+                          onClick={() => setDepartmentsModalOpen(false)}
+                        >
+                          Done
+                        </MantineButton>
+                      </Group>
+                    </Modal>
+
                     <FormMessage />
                   </FormItem>
-                )}
-              /> */}
-              {/* <FormField
-                control={form.control}
-                name="phoneNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+1 (555) 123-4567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-            {/* </div> */}
-            
-            <button onClick={() => console.log('departments', departments)}>CLICK ME</button>
+                );
+              }}
+            />
+          )}
 
             <FormField
               control={form.control}

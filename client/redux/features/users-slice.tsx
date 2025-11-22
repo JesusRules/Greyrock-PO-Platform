@@ -128,7 +128,6 @@ export const createUser = createAsyncThunk<
   "users/createUser",
   async (user, { rejectWithValue }) => {
     try {
-      console.log("USER", user)
       const response = await api.post("/api/users", user); // ✅ Send user data in body
       return response.data.newUser; // ✅ Return user from API response
     } catch (error: any) {

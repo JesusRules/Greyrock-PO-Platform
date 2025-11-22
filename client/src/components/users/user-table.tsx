@@ -136,7 +136,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem disabled  onClick={() => handleDeleteClick(user)} className="cursor-pointer text-red-600">
+                      <DropdownMenuItem disabled  onClick={() => handleDeleteClick(user)} className="cursor-pointer dark:text-red-500 text-red-600">
                       {/* <DropdownMenuItem onClick={() => handleDeleteClick(user)} className="text-red-600"> */}
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete

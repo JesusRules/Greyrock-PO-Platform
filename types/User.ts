@@ -8,6 +8,6 @@ export type User = {
     phoneNumber?: string;
     password?: string;
     signedImg?: string;
-    departments: [],
+    departments?: string[];
     role: string;
 };
