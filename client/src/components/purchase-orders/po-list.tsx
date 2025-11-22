@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Search, Plus, FileDown, Eye, Pencil, CheckSquare, Trash2 } from "lucide-react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -42,6 +42,8 @@ export function PurchaseOrderList() {
   const [PDFLoader, setPDFLoader] = useState(false);
   // Delete purchase order
   const [poToDelete, setPoToDelete] = useState<PurchaseOrder | null>(null);
+  // Fiscal year filter (2025-2026, 2026-2027, etc.)
+  const [fiscalYearFilter, setFiscalYearFilter] = useState("all");
 
   useEffect(() => { //Instead of storing currentPO in redux, we do this
     if (!currentPO) return;
@@ -52,22 +54,71 @@ export function PurchaseOrderList() {
     }
   }, [purchaseOrders, currentPO]);
 
+   const getFiscalYearLabel = (dateInput: string | Date | undefined): string | null => {
+      if (!dateInput) return null;
+      const date = new Date(dateInput);
+      if (isNaN(date.getTime())) return null;
 
+      const year = date.getFullYear();
+      const month = date.getMonth(); // 0 = Jan, 9 = Oct
+
+      // Fiscal year starts Oct 1
+      const startYear = month >= 9 ? year : year - 1;
+      const endYear = startYear + 1;
+
+      return `${startYear}-${endYear}`;
+    };
+
+    const fiscalYearOptions = useMemo(() => {
+      const set = new Set<string>();
+
+      purchaseOrders.forEach((po) => {
+        const label = getFiscalYearLabel(po.createdAt as any);
+        if (label) set.add(label);
+      });
+
+      // Sort ascending; you can reverse() if you want newest first
+      return Array.from(set).sort();
+    }, [purchaseOrders]);
+    
+      // const filteredPOs = purchaseOrders.filter((po) => {
+  // const query = searchQuery.toLowerCase();
+
+  // const matchesSearch =
+  //     (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
+  //     (po.vendor?.email?.toLowerCase() || "").includes(query) ||
+  //     (po.poNumber?.toLowerCase() || "").includes(query) ||
+  //     po.lineItems?.some(item =>
+  //       item.description.toLowerCase().includes(query)
+  //     );
+
+  //   const matchesDepartment = departmentFilter === "all" || po.department.name === departmentFilter;
+  //   const matchesStatus = statusFilter === "all" || po.status === statusFilter;
+
+  //   return matchesSearch && matchesDepartment && matchesStatus;
+  // });
   const filteredPOs = purchaseOrders.filter((po) => {
-  const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase();
 
-  const matchesSearch =
+    const matchesSearch =
       (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
       (po.vendor?.email?.toLowerCase() || "").includes(query) ||
       (po.poNumber?.toLowerCase() || "").includes(query) ||
-      po.lineItems?.some(item =>
+      po.lineItems?.some((item) =>
         item.description.toLowerCase().includes(query)
       );
 
-    const matchesDepartment = departmentFilter === "all" || po.department.name === departmentFilter;
-    const matchesStatus = statusFilter === "all" || po.status === statusFilter;
+    const matchesDepartment =
+      departmentFilter === "all" || po.department.name === departmentFilter;
 
-    return matchesSearch && matchesDepartment && matchesStatus;
+    const matchesStatus =
+      statusFilter === "all" || po.status === statusFilter;
+
+    const poFiscalYear = getFiscalYearLabel(po.createdAt as any);
+    const matchesFiscalYear =
+      fiscalYearFilter === "all" || poFiscalYear === fiscalYearFilter;
+
+    return matchesSearch && matchesDepartment && matchesStatus && matchesFiscalYear;
   });
 
   const handleView = (po: any) => {
@@ -120,30 +171,6 @@ export function PurchaseOrderList() {
       setPoToDelete(null);
     }
   };
-  // const handleDelete = async (po: any) => {
-  //   if (!po?._id) {
-  //     alert("Invalid purchase order. Cannot delete.");
-  //     return;
-  //   }
-  //   const confirmed = window.confirm(`Are you sure you want to delete purchase order #${po.poNumber}?`);
-  //   if (!confirmed) return;
-
-  //   try {
-  //     await dispatch(deletePurchaseOrder(po._id)).unwrap();
-  //     toast({
-  //       title: "Deleted",
-  //       description: `PO #${po.poNumber} has been deleted.`,
-  //       variant: "destructive",
-  //     });
-  //   } catch (err) {
-  //     console.error("Failed to delete:", err);
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to delete the purchase order.",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
 
   const handleToggleStatus = async (po: any) => {
     try {
@@ -207,7 +234,28 @@ export function PurchaseOrderList() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      <div className="flex gap-4 justify-end">
+      <div className="flex gap-4 justify-end flex-col sm:flex-row">
+          {/* Fiscal Year */}
+          <div className="w-44">
+            <Select
+              value={fiscalYearFilter}
+              onValueChange={setFiscalYearFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Fiscal Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Fiscal Years</SelectItem>
+                {fiscalYearOptions.map((fy) => (
+                  <SelectItem key={fy} value={fy}>
+                    {fy}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        
+        {/* Departments */}
         <div className="w-48">
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
             <SelectTrigger>
@@ -228,6 +276,8 @@ export function PurchaseOrderList() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Statuses */}
         <div className="w-40">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
@@ -349,68 +399,6 @@ export function PurchaseOrderList() {
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                     </Tooltip>
-
-                    {/* <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View purchase order</p>
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              className="text-yellow-700 dark:text-yellow-500"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(po)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Edit purchase order</p>
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => viewPO_PDF(po)}>
-                              <FileDown className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Download PDF</p>
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleToggleStatus(po)}>
-                              <CheckSquare className={`h-4 w-4 text-red-600`} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Toggle status</p>
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(po)}>
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Delete purchase order</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider> */}
 
                   </TableCell>
                 </TableRow>
