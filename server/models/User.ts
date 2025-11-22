@@ -15,6 +15,13 @@ export const userSchema = new mongoose.Schema({
     password: { type: String, required: true, default: '000000' },
     // phoneNumber: { type: String, default: '' },
     signedImg: { type: String, default: null, required: false }, // Stores Base64
+    // 🔹 New: departments user is associated with (for role === "user")
+    departments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Department",
+      },
+    ],
  }, {
     timestamps: true,
     //Hide password

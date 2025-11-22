@@ -9,15 +9,17 @@ import { z } from "zod"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog"
 import { Button } from "../ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Eye, EyeOff } from "lucide-react"
 import { useDispatch } from "react-redux"
-import { AppDispatch } from "../../../redux/store"
+import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { createUser, updateUser } from "../../../redux/features/users-slice"
 import { User } from "../../../../types/User"
 import { createUserSchema, updateUserSchema } from '../../../types/userFormSchema'
 import { toast } from "../../../hooks/use-toast"
+import { fetchDepartments } from "../../../redux/features/departments-slice"
 
 type UserFormValues = z.infer<typeof createUserSchema> | z.infer<typeof updateUserSchema>
 
@@ -37,21 +39,54 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
   const [showPassword, setShowPassword] = useState(false);
   //Redux
   const dispatch = useDispatch<AppDispatch>()
+  const departments = useAppSelector(state => state.departmentsReducer.departments);
+  
+  useEffect(() => {
+    dispatch(fetchDepartments());
+  }, [dispatch])
 
-  const form = useForm<z.infer<typeof createUserSchema | typeof updateUserSchema>>({
+  const form = useForm<
+    z.infer<typeof createUserSchema | typeof updateUserSchema>
+  >({
     resolver: zodResolver(isEditMode ? updateUserSchema : createUserSchema),
     defaultValues: initialData
-        ? { ...initialData, password: "" }
-        : {
-            firstName: "",
-            lastName: "",
-            email: "",
-            // login: "",
-            role: "user",
-            phoneNumber: "",
-            password: "",
-          },
-    })
+      ? {
+          ...initialData,
+          password: "",
+          // if initialData.departments is populated with Department objects:
+          departments:
+            // @ts-ignore depending on your User type
+            initialData.departments?.map((d: any) =>
+              typeof d === "string" ? d : d._id
+            ) ?? [],
+        }
+      : {
+          firstName: "",
+          lastName: "",
+          email: "",
+          role: "user",
+          phoneNumber: "",
+          password: "",
+          departments: [], // 🔹 important
+        },
+  });
+  // const form = useForm<z.infer<typeof createUserSchema | typeof updateUserSchema>>({
+  //   resolver: zodResolver(isEditMode ? updateUserSchema : createUserSchema),
+  //   defaultValues: initialData
+  //       ? { ...initialData, password: "" }
+  //       : {
+  //         // login: "",
+  //           firstName: "",
+  //           lastName: "",
+  //           email: "",
+  //           role: "user",
+  //           phoneNumber: "",
+  //           password: "",
+  //           departments: [],
+  //         },
+  //   })
+
+  const role = form.watch("role");
 
   // Reset form when modal opens/closes or initialData changes
   useEffect(() => {
@@ -59,24 +94,51 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
       if (initialData) {
         form.reset({
           ...initialData,
-          password: "", // Don't show the password in the form
-        })
-        // setAvatarPreview(initialData.avatar || '')
+          password: "",
+          // @ts-ignore
+          departments:
+            initialData.departments?.map((d: any) =>
+              typeof d === "string" ? d : d._id
+            ) ?? [],
+        });
       } else {
         form.reset({
           firstName: "",
           lastName: "",
-          email: '',
-          // login: "",
+          email: "",
           role: "user",
           phoneNumber: "",
           password: "",
-        })
-        setAvatarPreview(null)
+          departments: [],
+        });
+        setAvatarPreview(null);
       }
-      setAvatar(null)
+      setAvatar(null);
     }
-  }, [open, initialData, form])
+  }, [open, initialData, form]);
+  // useEffect(() => {
+  //   if (open) {
+  //     if (initialData) {
+  //       form.reset({
+  //         ...initialData,
+  //         password: "", // Don't show the password in the form
+  //       })
+  //       // setAvatarPreview(initialData.avatar || '')
+  //     } else {
+  //       form.reset({
+  //         firstName: "",
+  //         lastName: "",
+  //         email: '',
+  //         // login: "",
+  //         role: "user",
+  //         phoneNumber: "",
+  //         password: "",
+  //       })
+  //       setAvatarPreview(null)
+  //     }
+  //     setAvatar(null)
+  //   }
+  // }, [open, initialData, form])
 
   // const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   if (e.target.files && e.target.files[0]) {
@@ -263,6 +325,9 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 )}
               /> */}
             {/* </div> */}
+            
+            <button onClick={() => console.log('departments', departments)}>CLICK ME</button>
+
             <FormField
               control={form.control}
               name="password"

@@ -114,7 +114,7 @@ export const updateUserSignature = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/users/:id
+// Used in AUTH and USER routes!!!!!!!!
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -149,6 +149,11 @@ export const updateUser = async (req: Request, res: Response) => {
     user.role = updates.role || user.role;
     user.phoneNumber =
       "phoneNumber" in updates ? updates.phoneNumber : user.phoneNumber;
+
+    if (Array.isArray(updates.departments)) {
+      // Expecting an array of ObjectId strings
+      user.departments = updates.departments;
+    }
 
     if (updates.password) {
       user.password = updates.password; // hashed by pre-save hook
