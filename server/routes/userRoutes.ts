@@ -13,11 +13,11 @@ const userRouter = express.Router()
 
 userRouter.post("/", requireAdmin, createUser)
 
-userRouter.post('/:id/signature', requireAdmin, updateUserSignature); // Used in auth route
-userRouter.delete("/:id/signature", requireAdmin, deleteUserSignature); // Used in auth route
-userRouter.put("/:id", requireAdmin, updateUser) // Used in auth route
+userRouter.post('/:id/signature', protect, requireAdmin, updateUserSignature); // Used in auth route
+userRouter.delete("/:id/signature", protect, requireAdmin, deleteUserSignature); // Used in auth route
+userRouter.put("/:id", protect, requireAdmin, updateUser) // Used in auth route
 
-userRouter.delete("/:id", requireAdmin, deleteUser)
+userRouter.delete("/:id", protect, requireAdmin, deleteUser)
 userRouter.get("/", getUsers)
 
 export default userRouter
