@@ -185,6 +185,46 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // or use req.user.id from auth middleware
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      res
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: "User not found" });
+      return;
+    }
+
+    // 1) Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      res
+        .set(createNoCacheHeaders())
+        .status(400)
+        .json({ message: "Current password is incorrect" });
+      return;
+    }
+
+    // 2) Set new password (pre-save hook will hash it)
+    user.password = newPassword;
+    const updatedUser = await user.save();
+
+    res
+      .set(createNoCacheHeaders())
+      .json({ updatedUser });
+  } catch (err) {
+    console.error(err);
+    res
+      .set(createNoCacheHeaders())
+      .status(500)
+      .json({ message: "Failed to change password" });
+  }
+};
+
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

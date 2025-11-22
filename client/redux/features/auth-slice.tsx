@@ -166,6 +166,24 @@ export const updateAuthUserSignature = createAsyncThunk<
   }
 });
 
+export const changeAuthUserPassword = createAsyncThunk<
+  User,
+  { _id: string; currentPassword: string; newPassword: string },
+  { rejectValue: string }
+>("auth/changeAuthUserPassword", async ({ _id, currentPassword, newPassword }, { rejectWithValue }) => {
+  try {
+    const response = await api.put(`/api/auth/${_id}/change-password`, {
+      currentPassword,
+      newPassword,
+    });
+    return response.data.updatedUser;
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to change password"
+    );
+  }
+});
+
 export const { setUser } = authSlice.actions;
 export default authSlice.reducer;
 

@@ -118,46 +118,99 @@ export const updateUserSignature = async (req: Request, res: Response) => {
 // PUT /api/users/:id
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params
-    const updates = req.body
+    const { id } = req.params;
+    const updates = req.body;
 
-    const user = await User.findById(id)
+    const user = await User.findById(id);
     if (!user) {
-        res
+      res
         .set(createNoCacheHeaders())
         .status(404).json({ message: "User not found" });
-        return;
+      return;
     }
 
-    // Update fields
-    // user.firstName   = updates.firstName   ?? user.firstName;
-    // user.lastName    = updates.lastName    ?? user.lastName;
-    // user.email       = updates.email       ?? user.email;
-    // user.role        = updates.role        ?? user.role;
-    // user.phoneNumber = updates.phoneNumber ?? user.phoneNumber;
-    user.firstName = updates.firstName || user.firstName
-    user.lastName = updates.lastName || user.lastName
-    user.email = updates.email || user.email
-    user.role = updates.role || user.role
-    user.phoneNumber = updates.phoneNumber || user.phoneNumber
-    if ('phoneNumber' in updates) {
-      user.phoneNumber = updates.phoneNumber; // can be ""
+    // Optional: validate email format BEFORE saving
+    if (updates.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailRegex.test(updates.email)) {
+        res
+          .set(createNoCacheHeaders())
+          .status(400)
+          .json({ message: "Invalid email format" });
+        return;
+      }
     }
+
+    // Update fields safely
+    user.firstName = updates.firstName || user.firstName;
+    user.lastName = updates.lastName || user.lastName;
+    user.email = updates.email || user.email;
+
+    user.role = updates.role || user.role;
+    user.phoneNumber =
+      "phoneNumber" in updates ? updates.phoneNumber : user.phoneNumber;
 
     if (updates.password) {
-      user.password = updates.password 
+      user.password = updates.password; // hashed by pre-save hook
     }
 
-    const updated = await user.save()
+    const updated = await user.save();
+
     res
-    .set(createNoCacheHeaders())
-    .json({ updatedUser: updated })
+      .set(createNoCacheHeaders())
+      .json({ updatedUser: updated });
+
   } catch (err) {
+    console.error(err);
     res
-    .set(createNoCacheHeaders())
-    .status(500).json({ message: "Failed to update user" })
+      .set(createNoCacheHeaders())
+      .status(500).json({ message: "Failed to update user" });
   }
-}
+};
+
+// export const updateUser = async (req: Request, res: Response) => {
+//   try {
+//     const { id } = req.params
+//     const updates = req.body
+
+//     const user = await User.findById(id)
+//     if (!user) {
+//         res
+//         .set(createNoCacheHeaders())
+//         .status(404).json({ message: "User not found" });
+//         return;
+//     }
+
+//     // Update fields
+//     // user.firstName   = updates.firstName   ?? user.firstName;
+//     // user.lastName    = updates.lastName    ?? user.lastName;
+//     // user.email       = updates.email       ?? user.email;
+//     // user.role        = updates.role        ?? user.role;
+//     // user.phoneNumber = updates.phoneNumber ?? user.phoneNumber;
+//     user.firstName = updates.firstName || user.firstName
+//     user.lastName = updates.lastName || user.lastName
+//     user.email = updates.email || user.email
+//     user.role = updates.role || user.role
+//     user.phoneNumber = updates.phoneNumber || user.phoneNumber
+//     if ('phoneNumber' in updates) {
+//       user.phoneNumber = updates.phoneNumber; // can be ""
+//     }
+
+//     if (updates.password) {
+//       user.password = updates.password 
+//     }
+
+//     const updated = await user.save()
+//     res
+//     .set(createNoCacheHeaders())
+//     .json({ updatedUser: updated })
+//   } catch (err) {
+//     res
+//     .set(createNoCacheHeaders())
+//     .status(500).json({ message: "Failed to update user" })
+//   }
+// }
 
 // DELETE /api/users/:id
 export const deleteUser = async (req: Request, res: Response) => {

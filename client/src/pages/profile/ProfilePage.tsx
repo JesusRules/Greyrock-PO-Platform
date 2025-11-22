@@ -18,7 +18,7 @@ import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { updateUser, updateUserSignature } from "../../../redux/features/users-slice"
 import { useDispatch } from "react-redux"
 import { User } from "../../../../types/User"
-import { updateAuthUser } from "../../../redux/features/auth-slice"
+import { changeAuthUserPassword, updateAuthUser } from "../../../redux/features/auth-slice"
 
 export default function ProfilePage() {
   const { toast } = useToast()
@@ -55,6 +55,17 @@ export default function ProfilePage() {
   async function handleProfileUpdate() {
     if (!user?._id) return;
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -62,7 +73,6 @@ export default function ProfilePage() {
         firstName,
         lastName,
         email,
-        // if you want phone here later, add phoneNumber
       };
 
       const resultAction = await dispatch(
@@ -93,55 +103,47 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   }
+  // async function handleProfileUpdate() {
+  //   if (!user?._id) return;
 
-//   async function handleProfileUpdate() {
-//     try {
-//         setIsSaving(true);
+  //   try {
+  //     setIsSaving(true);
 
-//         const updatedPayload = { ...userPayload };
-//         if (!data.password) {
-//           delete updatedPayload.password; // Don't send blank password
-//         }
-//         console.log('initialData', initialData._id)
-//         const resultAction = await dispatch(updateUser({ _id: initialData._id, updatedData: updatedPayload }));
-//         if (updateUser.rejected.match(resultAction)) {
-//           toast({
-//               title: 'Error',
-//               description: 'Failed to update user.',
-//               variant: 'destructive',
-//           });
-//         } else {
-//           toast({
-//               title: 'Success',
-//               description: 'The user has been updated successfully.',
-//               variant: 'success',
-//           });
-//         }
-//     } catch (error) {
-//       console.error(error);
-//       toast({
-//           title: 'Error',
-//           description: "Something went wrong. Please try again.",
-//           variant: 'destructive',
-//       });
-//     } finally {
-//       setIsSaving(false);
-//     }
-//   }
-//   const handleProfileUpdate = async () => {
-//     setIsSaving(true)
+  //     const updatedPayload = {
+  //       firstName,
+  //       lastName,
+  //       email,
+  //       // if you want phone here later, add phoneNumber
+  //     };
 
-//     // Simulate API call
-//     await new Promise((resolve) => setTimeout(resolve, 1000))
+  //     const resultAction = await dispatch(
+  //       updateAuthUser({ _id: user._id, updatedData: updatedPayload })
+  //     );
 
-//     toast({
-//       title: "Success",
-//       description: "Your profile has been updated successfully.",
-//       variant: "default",
-//     })
-
-//     setIsSaving(false)
-//   }
+  //     if (updateAuthUser.rejected.match(resultAction)) {
+  //       toast({
+  //         title: "Error",
+  //         description: resultAction.payload || "Failed to update profile.",
+  //         variant: "destructive",
+  //       });
+  //     } else {
+  //       toast({
+  //         title: "Success",
+  //         description: "Your profile has been updated successfully.",
+  //         variant: "success",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Something went wrong. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // }
 
   const handlePasswordChange = async () => {
     if (!user?._id) return;
@@ -177,10 +179,14 @@ export default function ProfilePage() {
       setIsSaving(true);
 
       const resultAction = await dispatch(
-        updateAuthUser({ _id: user._id, updatedData: { password: newPassword } })
+        changeAuthUserPassword({
+          _id: user._id,
+          currentPassword,
+          newPassword,
+        })
       );
 
-      if (updateAuthUser.rejected.match(resultAction)) {
+      if (changeAuthUserPassword.rejected.match(resultAction)) {
         toast({
           title: "Error",
           description: resultAction.payload || "Failed to update password.",
@@ -193,7 +199,6 @@ export default function ProfilePage() {
           variant: "success",
         });
 
-        // Clear password fields
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -209,6 +214,73 @@ export default function ProfilePage() {
       setIsSaving(false);
     }
   };
+
+  // const handlePasswordChange = async () => {
+  //   if (!user?._id) return;
+
+  //   if (!currentPassword || !newPassword || !confirmPassword) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please fill in all password fields.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   if (newPassword !== confirmPassword) {
+  //     toast({
+  //       title: "Error",
+  //       description: "New passwords do not match.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   if (newPassword.length < 3) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Password must be at least 3 characters long.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsSaving(true);
+
+  //     const resultAction = await dispatch(
+  //       updateAuthUser({ _id: user._id, updatedData: { password: newPassword } })
+  //     );
+
+  //     if (updateAuthUser.rejected.match(resultAction)) {
+  //       toast({
+  //         title: "Error",
+  //         description: resultAction.payload || "Failed to update password.",
+  //         variant: "destructive",
+  //       });
+  //     } else {
+  //       toast({
+  //         title: "Success",
+  //         description: "Your password has been changed successfully.",
+  //         variant: "success",
+  //       });
+
+  //       // Clear password fields
+  //       setCurrentPassword("");
+  //       setNewPassword("");
+  //       setConfirmPassword("");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Something went wrong. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   // const handlePasswordChange = async () => {
   //   if (!currentPassword || !newPassword || !confirmPassword) {
@@ -403,7 +475,7 @@ export default function ProfilePage() {
                 <h2 className="text-2xl font-semibold">
                   {user?.firstName} {user?.lastName}
                 </h2>
-                <p className="text-muted-foreground">{email}</p>
+                <p className="text-muted-foreground">{user?.email}</p>
               </div>
             </div>
           </CardContent>
