@@ -146,44 +146,44 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
-  try {
-    const updates = { ...req.body };
-    const { id } = req.params;
+// export const updateUser = async (req: Request, res: Response) => {
+//   try {
+//     const updates = { ...req.body };
+//     const { id } = req.params;
 
-    // const allowedFields = ['firstName', 'lastName', 'email', 'phoneNumber', 'role', 'password'];
-    // const updates = Object.fromEntries(
-    // Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
-    // );
+//     // const allowedFields = ['firstName', 'lastName', 'email', 'phoneNumber', 'role', 'password'];
+//     // const updates = Object.fromEntries(
+//     // Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
+//     // );
 
-    // If password is being updated, hash it manually
-    if (updates.password) {
-      const salt = await bcrypt.genSalt(10);
-      updates.password = await bcrypt.hash(updates.password, salt);
-    }
+//     // If password is being updated, hash it manually
+//     if (updates.password) {
+//       const salt = await bcrypt.genSalt(10);
+//       updates.password = await bcrypt.hash(updates.password, salt);
+//     }
 
-    const user = await User.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true, // optional: ensure validations apply
-    }).select("-password");
+//     const user = await User.findByIdAndUpdate(id, updates, {
+//       new: true,
+//       runValidators: true, // optional: ensure validations apply
+//     }).select("-password");
 
-    if (!user) {
-      res
-      .set(createNoCacheHeaders())
-      .status(404).json({ message: "User not found." });
-      return;
-    }
+//     if (!user) {
+//       res
+//       .set(createNoCacheHeaders())
+//       .status(404).json({ message: "User not found." });
+//       return;
+//     }
 
-    res
-    .set(createNoCacheHeaders())
-    .status(200).json({ message: "User updated", user });
-  } catch (err) {
-    console.error(err);
-    res
-    .set(createNoCacheHeaders())
-    .status(500).json({ message: "Server error" });
-  }
-};
+//     res
+//     .set(createNoCacheHeaders())
+//     .status(200).json({ message: "User updated", user });
+//   } catch (err) {
+//     console.error(err);
+//     res
+//     .set(createNoCacheHeaders())
+//     .status(500).json({ message: "Server error" });
+//   }
+// };
 
 export const changePassword = async (req: Request, res: Response) => {
   try {

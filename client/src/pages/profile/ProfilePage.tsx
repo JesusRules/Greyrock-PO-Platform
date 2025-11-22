@@ -18,10 +18,13 @@ import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { updateUser, updateUserSignature } from "../../../redux/features/users-slice"
 import { useDispatch } from "react-redux"
 import { User } from "../../../../types/User"
-import { changeAuthUserPassword, updateAuthUser } from "../../../redux/features/auth-slice"
+import { changeAuthUserPassword, deleteAuthUserSignature, updateAuthUser, updateAuthUserSignature } from "../../../redux/features/auth-slice"
+import { useGlobalContext } from "../../../context/global-context"
+import { Modal, Text, Group, Button as MantineButton } from "@mantine/core";
 
 export default function ProfilePage() {
   const { toast } = useToast()
+  const { setGlobalLoading } = useGlobalContext();
 
   // User profile state
   const [firstName, setFirstName] = useState("John")
@@ -42,15 +45,26 @@ export default function ProfilePage() {
   // Redux
   const dispatch = useDispatch<AppDispatch>()
   const user = useAppSelector(state => state.authReducer.user);
+  // Delete signature modal
+  const [deleteSignatureOpen, setDeleteSignatureOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
-        // console.log('user', user)
-        setFirstName(user.firstName);
-        setLastName(user.lastName);
-        setEmail(user.email);
+      setFirstName(user.firstName);
+      setLastName(user.lastName);
+      setEmail(user.email);
+      console.log('user', user)
+
+      // 🔥 Initialize signature from backend if it exists
+      if (user.signedImg) {
+        setSignatureUrl(user.signedImg);
+        setSignatureType("upload"); // or "draw" if you want, doesn't really matter for display
+      } else {
+        setSignatureUrl(null);
+        setSignatureType(null);
+      }
     }
-  }, [user])
+  }, [user]);
 
   async function handleProfileUpdate() {
     if (!user?._id) return;
@@ -68,6 +82,7 @@ export default function ProfilePage() {
 
     try {
       setIsSaving(true);
+      setGlobalLoading(true);
 
       const updatedPayload = {
         firstName,
@@ -101,6 +116,7 @@ export default function ProfilePage() {
       });
     } finally {
       setIsSaving(false);
+      setGlobalLoading(false);
     }
   }
   // async function handleProfileUpdate() {
@@ -177,6 +193,7 @@ export default function ProfilePage() {
 
     try {
       setIsSaving(true);
+      setGlobalLoading(true);
 
       const resultAction = await dispatch(
         changeAuthUserPassword({
@@ -212,121 +229,9 @@ export default function ProfilePage() {
       });
     } finally {
       setIsSaving(false);
+      setGlobalLoading(false);
     }
   };
-
-  // const handlePasswordChange = async () => {
-  //   if (!user?._id) return;
-
-  //   if (!currentPassword || !newPassword || !confirmPassword) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Please fill in all password fields.",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   if (newPassword !== confirmPassword) {
-  //     toast({
-  //       title: "Error",
-  //       description: "New passwords do not match.",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   if (newPassword.length < 3) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Password must be at least 3 characters long.",
-  //       variant: "destructive",
-  //     });
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsSaving(true);
-
-  //     const resultAction = await dispatch(
-  //       updateAuthUser({ _id: user._id, updatedData: { password: newPassword } })
-  //     );
-
-  //     if (updateAuthUser.rejected.match(resultAction)) {
-  //       toast({
-  //         title: "Error",
-  //         description: resultAction.payload || "Failed to update password.",
-  //         variant: "destructive",
-  //       });
-  //     } else {
-  //       toast({
-  //         title: "Success",
-  //         description: "Your password has been changed successfully.",
-  //         variant: "success",
-  //       });
-
-  //       // Clear password fields
-  //       setCurrentPassword("");
-  //       setNewPassword("");
-  //       setConfirmPassword("");
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast({
-  //       title: "Error",
-  //       description: "Something went wrong. Please try again.",
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setIsSaving(false);
-  //   }
-  // };
-
-  // const handlePasswordChange = async () => {
-  //   if (!currentPassword || !newPassword || !confirmPassword) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Please fill in all password fields.",
-  //       variant: "destructive",
-  //     })
-  //     return
-  //   }
-
-  //   if (newPassword !== confirmPassword) {
-  //     toast({
-  //       title: "Error",
-  //       description: "New passwords do not match.",
-  //       variant: "destructive",
-  //     })
-  //     return
-  //   }
-
-  //   if (newPassword.length < 8) {
-  //     toast({
-  //       title: "Error",
-  //       description: "Password must be at least 8 characters long.",
-  //       variant: "destructive",
-  //     })
-  //     return
-  //   }
-
-  //   setIsSaving(true)
-
-  //   // Simulate API call
-  //   await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  //   toast({
-  //     title: "Success",
-  //     description: "Your password has been changed successfully.",
-  //     variant: "default",
-  //   })
-
-  //   // Clear password fields
-  //   setCurrentPassword("")
-  //   setNewPassword("")
-  //   setConfirmPassword("")
-  //   setIsSaving(false)
-  // }
 
   const handleSignatureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -353,15 +258,6 @@ export default function ProfilePage() {
     }
 
     const reader = new FileReader()
-    // reader.onloadend = () => {
-    //   setSignatureUrl(reader.result as string)
-    //   setSignatureType("upload")
-    //   toast({
-    //     title: "Success",
-    //     description: "Signature image uploaded successfully.",
-    //     variant: "default",
-    //   })
-    // }
     reader.onloadend = async () => {
       const dataUrl = reader.result as string;
 
@@ -369,12 +265,13 @@ export default function ProfilePage() {
 
       try {
         setIsSaving(true);
+        setGlobalLoading(true);
 
         const resultAction = await dispatch(
-          updateUserSignature({ _id: user._id, signature: dataUrl })
+          updateAuthUserSignature({ _id: user._id, signature: dataUrl })
         );
 
-        if (updateUserSignature.rejected.match(resultAction)) {
+        if (updateAuthUserSignature.rejected.match(resultAction)) {
           toast({
             title: "Error",
             description: resultAction.payload || "Failed to upload signature.",
@@ -390,10 +287,11 @@ export default function ProfilePage() {
         toast({
           title: "Success",
           description: "Signature image uploaded successfully.",
-          variant: "default",
+          variant: "success",
         });
       } finally {
         setIsSaving(false);
+        setGlobalLoading(false);
       }
     };
     reader.readAsDataURL(file)
@@ -408,16 +306,18 @@ export default function ProfilePage() {
   //   setSignatureType("draw")
   // }
   const handleSaveDrawnSignature = async (dataUrl: string) => {
+    // console.log("user", user)
     if (!user?._id) return;
 
     try {
       setIsSaving(true);
+      setGlobalLoading(true);
 
       const resultAction = await dispatch(
-        updateUserSignature({ _id: user._id, signature: dataUrl })
+        updateAuthUserSignature({ _id: user._id, signature: dataUrl })
       );
 
-      if (updateUserSignature.rejected.match(resultAction)) {
+      if (updateAuthUserSignature.rejected.match(resultAction)) {
         toast({
           title: "Error",
           description: resultAction.payload || "Failed to save signature.",
@@ -430,23 +330,59 @@ export default function ProfilePage() {
         toast({
           title: "Success",
           description: "Signature saved successfully.",
-          variant: "default",
+          variant: "success",
         });
       }
     } finally {
       setIsSaving(false);
+      setGlobalLoading(false);
     }
   };
 
-  const handleDeleteSignature = () => {
-    setSignatureUrl(null)
-    setSignatureType(null)
-    toast({
-      title: "Success",
-      description: "Signature removed successfully.",
-      variant: "default",
-    })
-  }
+  const handleDeleteSignature = async () => {
+    if (!user?._id) return;
+
+    try {
+      // Turn on global loader
+      setGlobalLoading(true);
+      setDeleteSignatureOpen(false);
+
+      const resultAction = await dispatch(
+        deleteAuthUserSignature({ _id: user._id })
+      );
+
+      if (deleteAuthUserSignature.rejected.match(resultAction)) {
+        toast({
+          title: "Error",
+          description: resultAction.payload || "Failed to delete signature.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update UI
+      setSignatureUrl(null);
+      setSignatureType(null);
+
+      toast({
+        title: "Success",
+        description: "Your signature has been removed.",
+        variant: "success",
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+
+    } finally {
+      // Turn off global loader
+      setGlobalLoading(false);
+    }
+  };
 
   const getInitials = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
@@ -630,20 +566,27 @@ export default function ProfilePage() {
                 {/* Current Signature Display */}
                 {signatureUrl && (
                   <div className="space-y-3">
-                    <Label>Current Signature</Label>
+                    <Label>Your Current Signature</Label>
                     <div className="border border-border rounded-lg p-4 bg-muted/30 border-gray-500 border-[1px]">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <img
                             src={signatureUrl || "/placeholder.svg"}
                             alt="Your Signature"
-                            className="border-gray-500 border-[1px] h-24 w-auto max-w-[300px] object-contain bg-white border border-border rounded p-2"
+                            className="border-gray-500 border-[1px] h-24 sm:h-40 w-auto object-contain bg-white border border-border rounded p-2"
                           />
                           <div className="text-sm">
-                            {signatureType === "draw" ? "E-Signature (Drawn)" : "Uploaded Image"}
+                            {/* {signatureType === "draw" ? "E-Signature (Drawn)" : "Uploaded Image"} */}
                           </div>
                         </div>
-                        <Button variant="destructive" size="icon" onClick={handleDeleteSignature}>
+                        {/* <Button variant="destructive" size="icon" onClick={handleDeleteSignature}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button> */}
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => setDeleteSignatureOpen(true)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -716,6 +659,27 @@ export default function ProfilePage() {
         existingSignature={signatureUrl}
         onSave={handleSaveDrawnSignature}
       />
+
+      {/* Delete Signature Modal */}
+      <Modal
+        opened={deleteSignatureOpen}
+        onClose={() => setDeleteSignatureOpen(false)}
+        title="Remove Signature"
+        centered
+      >
+        <Text mb="md">
+          Are you sure you want to delete your saved signature? This action cannot be undone.
+        </Text>
+
+        <Group justify="flex-end" mt="md">
+          <MantineButton variant="default" onClick={() => setDeleteSignatureOpen(false)}>
+            Cancel
+          </MantineButton>
+          <MantineButton color="red" onClick={handleDeleteSignature}>
+            Delete Signature
+          </MantineButton>
+        </Group>
+      </Modal>
     </div>
     </>
   )

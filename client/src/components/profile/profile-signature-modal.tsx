@@ -48,11 +48,11 @@ export function ProfileSignatureModal({ open, onOpenChange, existingSignature, o
 
       onSave(dataUrl)
 
-      toast({
-        title: "Success",
-        description: "Signature saved successfully.",
-        variant: "default",
-      })
+      // toast({
+      //   title: "Success",
+      //   description: "Signature saved successfully.",
+      //   variant: "default",
+      // })
 
       onOpenChange(false)
     } catch (error) {

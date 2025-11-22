@@ -69,7 +69,8 @@ export const authSlice = createSlice({
         .addMatcher(
           (action) =>
             action.type === updateAuthUser.pending.type ||
-            action.type === updateAuthUserSignature.pending.type,
+            action.type === updateAuthUserSignature.pending.type ||
+            action.type === deleteAuthUserSignature.pending.type,
           (state) => {
             state.loading = true;
             state.error = null;
@@ -78,7 +79,8 @@ export const authSlice = createSlice({
         .addMatcher(
           (action) =>
             action.type === updateAuthUser.fulfilled.type ||
-            action.type === updateAuthUserSignature.fulfilled.type,
+            action.type === updateAuthUserSignature.fulfilled.type ||
+            action.type === deleteAuthUserSignature.fulfilled.type,
           (state, action: PayloadAction<User>) => {
             state.loading = false;
             state.user = action.payload;
@@ -88,7 +90,8 @@ export const authSlice = createSlice({
         (action): action is ReturnType<typeof updateAuthUser.rejected> |
                   ReturnType<typeof updateAuthUserSignature.rejected> =>
           action.type === updateAuthUser.rejected.type ||
-          action.type === updateAuthUserSignature.rejected.type,
+          action.type === updateAuthUserSignature.rejected.type ||
+          action.type === deleteAuthUserSignature.rejected.type,
         (state, action) => {
           state.loading = false
           state.error = (action.payload as string) || "Failed to update user"
@@ -143,7 +146,7 @@ export const updateAuthUser = createAsyncThunk<
   "auth/updateAuthUser",
   async ({ _id, updatedData }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/api/users/${_id}`, updatedData);
+      const response = await api.put(`/api/auth/${_id}`, updatedData);
       return response.data.updatedUser;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to update user");
@@ -157,12 +160,25 @@ export const updateAuthUserSignature = createAsyncThunk<
   { rejectValue: string }
 >("auth/updateAuthUserSignature", async ({ _id, signature }, { rejectWithValue }) => {
   try {
-    const response = await api.post(`/api/users/${_id}/signature`, { signature });
+    const response = await api.post(`/api/auth/${_id}/signature`, { signature });
     return response.data.updatedUser;
   } catch (error: any) {
     return rejectWithValue(
       error.response?.data?.message || "Failed to update signature"
     );
+  }
+});
+
+export const deleteAuthUserSignature = createAsyncThunk<
+  User,
+  { _id: string },
+  { rejectValue: string }
+>("auth/deleteAuthUserSignature", async ({ _id }, { rejectWithValue }) => {
+  try {
+    const response = await api.delete(`/api/auth/${_id}/signature`);
+    return response.data.updatedUser;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to delete signature");
   }
 });
 

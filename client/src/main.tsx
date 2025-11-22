@@ -19,6 +19,7 @@ import POPage from './pages/purchase-orders/POPage';
 import DepartmentsPage from './pages/departments/DepartmentPage';
 import UsersPage from './pages/users/UsersPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import { GlobalLoader } from '@components/layout/GlobalLoader';
 // import '@mantine/dates/styles.css';
 //Pages
 
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
       <PurchaseOrderProvider>
       <MantineProvider theme={theme}>
       <ColorSchemeToggle />
+      <GlobalLoader />
       <Toaster />
 
     <BrowserRouter>

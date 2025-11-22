@@ -83,7 +83,7 @@ export const updateUserSignature = async (req: Request, res: Response) => {
     if (user.signedImg) {
       const urlParts = user.signedImg.split("/");
       const fileName = urlParts[urlParts.length - 1];
-      const publicId = `user_signatures/${fileName.split(".")[0]}`;
+      const publicId = `po_user_signatures/${fileName.split(".")[0]}`;
 
       try {
         await cloudinary.uploader.destroy(publicId);
@@ -113,7 +113,6 @@ export const updateUserSignature = async (req: Request, res: Response) => {
       .json({ error: "Server error" });
   }
 };
-
 
 // PUT /api/users/:id
 export const updateUser = async (req: Request, res: Response) => {
@@ -211,6 +210,58 @@ export const updateUser = async (req: Request, res: Response) => {
 //     .status(500).json({ message: "Failed to update user" })
 //   }
 // }
+
+export const deleteUserSignature = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      res
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: "User not found" });
+      return;
+    }
+
+    // If no signature exists, just return success
+    if (!user.signedImg) {
+      res
+        .status(200)
+        .set(createNoCacheHeaders())
+        .json({ updatedUser: user });
+      return;
+    }
+
+    // Extract Cloudinary publicId
+    const urlParts = user.signedImg.split("/");
+    const fileName = urlParts[urlParts.length - 1];
+    const publicId = `po_user_signatures/${fileName.split(".")[0]}`;
+
+    try {
+      await cloudinary.uploader.destroy(publicId);
+      console.log(`🗑️ Deleted user signature: ${publicId}`);
+    } catch (deleteErr) {
+      console.warn("⚠️ Failed to delete old user signature:", deleteErr);
+    }
+
+    // Clear signature
+    user.signedImg = null;
+    const updatedUser = await user.save();
+
+    res
+      .status(200)
+      .set(createNoCacheHeaders())
+      .json({ updatedUser });
+
+  } catch (error) {
+    console.error("Signature delete error:", error);
+    res
+      .status(500)
+      .set(createNoCacheHeaders())
+      .json({ error: "Server error" });
+  }
+};
 
 // DELETE /api/users/:id
 export const deleteUser = async (req: Request, res: Response) => {

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User as UserType } from "../../types/User.js";
 import User from "../models/User.js";
+import type { RequestHandler } from "express";
 
 interface JwtPayload {
   id: string;
@@ -46,4 +47,14 @@ export const protect = async (
     res.status(401).json({ message: "Invalid or expired token" });
     return;
   }
+};
+export const requireAdmin: RequestHandler = (req, res, next) => {
+  const authReq = req as AuthRequest;
+
+  if (!authReq.user || authReq.user.role !== "admin") {
+    res.status(403).json({ message: "Admin access only" });
+    return; // <- returns void, not Response
+  }
+
+  next();
 };

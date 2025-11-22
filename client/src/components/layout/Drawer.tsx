@@ -40,8 +40,8 @@ export function Drawer() {
         {/* Top Section */}
         <div>
             <SheetHeader>
-            <SheetTitle 
-                className="text-center mt-5 text-2xl" style={{ fontWeight: 800 }}>
+            <SheetTitle onClick={() => navigate("/purchase-orders")}
+                className="text-center mt-5 text-2xl cursor-pointer" style={{ fontWeight: 800 }}>
                 Greyrock Purchase Order Platform
             </SheetTitle>
             </SheetHeader>

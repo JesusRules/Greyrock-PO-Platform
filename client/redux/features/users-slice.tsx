@@ -98,6 +98,11 @@ const usersSlice = createSlice({
           user._id === action.payload._id ? action.payload : user
         );
       })
+      .addCase(deleteUserSignature.fulfilled, (state, action: PayloadAction<User>) => {
+        state.users = state.users.map((user) =>
+          user._id === action.payload._id ? action.payload : user
+        );
+      })
   },
 });
 
@@ -165,6 +170,19 @@ export const updateUserSignature = createAsyncThunk<
     return rejectWithValue(
       error.response?.data?.message || "Failed to update signature"
     );
+  }
+});
+
+export const deleteUserSignature = createAsyncThunk<
+  User,
+  { _id: string },
+  { rejectValue: string }
+>("users/deleteUserSignature", async ({ _id }, { rejectWithValue }) => {
+  try {
+    const response = await api.delete(`/api/auth/${_id}/signature`);
+    return response.data.updatedUser;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || "Failed to delete signature");
   }
 });
 
