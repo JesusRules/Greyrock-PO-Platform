@@ -11,7 +11,7 @@ import { protect, requireAdmin } from "../middleware/auth.js";
 
 const userRouter = express.Router()
 
-userRouter.post("/", requireAdmin, createUser)
+userRouter.post("/", protect, requireAdmin, createUser)
 
 userRouter.post('/:id/signature', protect, requireAdmin, updateUserSignature); // Used in auth route
 userRouter.delete("/:id/signature", protect, requireAdmin, deleteUserSignature); // Used in auth route

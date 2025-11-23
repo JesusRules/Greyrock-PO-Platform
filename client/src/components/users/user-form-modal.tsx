@@ -163,9 +163,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
         ...data,
         // avatar: avatarPreview, // If applicable
       };
-
-      console.log('user', user)
-      console.log('initialData', initialData)
+      // console.log('user', user)
+      // console.log('initialData', initialData)
 
       if (isEditMode && initialData) {
         const updatedPayload = { ...userPayload };
@@ -265,13 +264,15 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                 <FormItem>
                   <FormLabel>Email *</FormLabel>
                   <FormControl>
-                    <Input className="" placeholder="Jake Paul" {...field} />
+                    <Input className="" placeholder="johndoe@email.com" {...field} />
                   </FormControl>
-                  {/* <FormDescription>This will be used for logging in.</FormDescription> */}
                   <FormMessage />
                 </FormItem>
               )}
             />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             <FormField
                 control={form.control}
                 name="permissionRole"
@@ -285,17 +286,58 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <Tooltip withArrow label="Can create PO from any department, can access admin settings.">
+                        <Tooltip openDelay={500} withArrow label="Can create PO from any department, can access admin settings.">
                         <SelectItem className="cursor-pointer" value="admin">Admin</SelectItem>
                         </Tooltip>
 
-                        <Tooltip withArrow label="Can create PO from any department.">
+                        <Tooltip openDelay={500} withArrow label="Can create PO from any department.">
                           <SelectItem className="cursor-pointer" value="poweruser">Power User</SelectItem>
                         </Tooltip>
 
-                        <Tooltip withArrow label="Can only create PO from selected departments.">
+                        <Tooltip openDelay={500} withArrow label="Can only create PO from selected departments.">
                           <SelectItem className="cursor-pointer" value="user">User</SelectItem>
                         </Tooltip>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            <FormField
+                control={form.control}
+                name="signatureRole"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Signature Role *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full cursor-pointer py-0">
+                          <SelectValue placeholder="Select a permission role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <Tooltip openDelay={500} withArrow label="Can only create purchase orders using themselves as 'Submitter'.">
+                        <SelectItem className="cursor-pointer" value="submitter">Submitter</SelectItem>
+                        </Tooltip>
+
+                        <Tooltip openDelay={500} withArrow label="Can sign under 'Manager' signature box.">
+                          <SelectItem className="cursor-pointer" value="manager">Manager</SelectItem>
+                        </Tooltip>
+
+                        <Tooltip openDelay={500} withArrow label="Can sign under 'General Manager' signature box.">
+                          <SelectItem className="cursor-pointer" value="generalManager">General Manager</SelectItem>
+                        </Tooltip>
+                        
+                        <Tooltip openDelay={500} withArrow label="Can sign under 'Finance Department' signature box.">
+                          <SelectItem className="cursor-pointer" value="financeDepartment">Finance Department</SelectItem>
+                        </Tooltip>
+                        
+                        {(permissionRole === 'admin') && (
+                          <Tooltip openDelay={500} withArrow label="Can sign any signature box - only admins can be this role.">
+                            <SelectItem className="cursor-pointer" value="overrideSigner">Override Signer</SelectItem>
+                          </Tooltip>
+                        )}
+
                       </SelectContent>
                     </Select>
                     <FormMessage />

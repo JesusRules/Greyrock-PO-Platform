@@ -73,7 +73,8 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
+              <TableHead>Permission Role</TableHead>
+              <TableHead>Signature Role</TableHead>
               <TableHead>Email</TableHead>
               {/* <TableHead>Phone Number</TableHead> */}
               <TableHead className="w-[100px]">Actions</TableHead>
@@ -113,7 +114,15 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="capitalize">{user.permissionRole}</div>
+                  <div className="capitalize">
+                    {user.permissionRole === 'admin' ? 'Admin' : user.permissionRole === 'poweruser' ? 'Power User' : user.permissionRole}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="capitalize">
+                    {user.signatureRole === 'generalManager' ? 'General Manager' : user.signatureRole === 'financeDepartment' ? 'Finance Department' 
+                    : user.signatureRole === 'overrideSigner' ? 'Override Signer' : user.signatureRole}
+                  </div>
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 {/* <TableCell>{user.phoneNumber}</TableCell> */}

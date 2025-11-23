@@ -152,8 +152,17 @@ export const updateUser = async (req: Request, res: Response) => {
     user.phoneNumber =
       "phoneNumber" in updates ? updates.phoneNumber : user.phoneNumber;
 
+
+    // Update permissionRole
+    if (updates.permissionRole) {
+      user.permissionRole = updates.permissionRole;
+      // 🔥 Clear departments if not a normal 'user'
+      if (updates.permissionRole !== "user") {
+        user.departments = [];
+      }
+    }
+
     if (Array.isArray(updates.departments)) {
-      // Expecting an array of ObjectId strings
       user.departments = updates.departments;
     }
 
