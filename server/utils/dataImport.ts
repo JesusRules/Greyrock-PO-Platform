@@ -17,7 +17,8 @@ async function createUser() {
       lastName: 'Bernard',
       email: 'justin.bernard320@gmail.com',
       password: '321',
-      role: 'Admin',
+      permissionRole: 'admin',
+      signatureRole: 'generalManager',
       phoneNumber: '123-456-7890'
     });
 

@@ -26,7 +26,7 @@ export const getUsers = async (req: Request, res: Response) => {
 // POST /api/users
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, role, password, phoneNumber } = req.body
+    const { firstName, lastName, email, permissionRole, signatureRole, password, phoneNumber } = req.body
 
     if (!email || !password) {
       res.status(400)
@@ -48,7 +48,8 @@ export const createUser = async (req: Request, res: Response) => {
       lastName,
       // login,
       email,
-      role,
+      permissionRole,
+      signatureRole,
       password,
       phoneNumber,
     })
@@ -146,7 +147,8 @@ export const updateUser = async (req: Request, res: Response) => {
     user.lastName = updates.lastName || user.lastName;
     user.email = updates.email || user.email;
 
-    user.role = updates.role || user.role;
+    user.permissionRole = updates.permissionRole || user.permissionRole;
+    user.signatureRole = updates.signatureRole || user.signatureRole;
     user.phoneNumber =
       "phoneNumber" in updates ? updates.phoneNumber : user.phoneNumber;
 
@@ -173,48 +175,6 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-// export const updateUser = async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params
-//     const updates = req.body
-
-//     const user = await User.findById(id)
-//     if (!user) {
-//         res
-//         .set(createNoCacheHeaders())
-//         .status(404).json({ message: "User not found" });
-//         return;
-//     }
-
-//     // Update fields
-//     // user.firstName   = updates.firstName   ?? user.firstName;
-//     // user.lastName    = updates.lastName    ?? user.lastName;
-//     // user.email       = updates.email       ?? user.email;
-//     // user.role        = updates.role        ?? user.role;
-//     // user.phoneNumber = updates.phoneNumber ?? user.phoneNumber;
-//     user.firstName = updates.firstName || user.firstName
-//     user.lastName = updates.lastName || user.lastName
-//     user.email = updates.email || user.email
-//     user.role = updates.role || user.role
-//     user.phoneNumber = updates.phoneNumber || user.phoneNumber
-//     if ('phoneNumber' in updates) {
-//       user.phoneNumber = updates.phoneNumber; // can be ""
-//     }
-
-//     if (updates.password) {
-//       user.password = updates.password 
-//     }
-
-//     const updated = await user.save()
-//     res
-//     .set(createNoCacheHeaders())
-//     .json({ updatedUser: updated })
-//   } catch (err) {
-//     res
-//     .set(createNoCacheHeaders())
-//     .status(500).json({ message: "Failed to update user" })
-//   }
-// }
 
 export const deleteUserSignature = async (req: Request, res: Response) => {
   try {

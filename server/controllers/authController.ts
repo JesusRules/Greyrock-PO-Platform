@@ -38,7 +38,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
     // 3. Create JWT
     const token = jwt.sign(
-        { id: user._id, role: user.role },
+        { id: user._id, permissionRole: user.permissionRole, signatureRole: user.signatureRole },
         process.env.JWT_SECRET!, // ✅ non-null assertion - ! gonna happen
         { expiresIn: "1h" }
     );
@@ -80,7 +80,8 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         lastName: user.lastName,
         email: user.email,
         // login: user.login,
-        role: user.role,
+        permissionRole: user.permissionRole,
+        signatureRole: user.signatureRole,
         phoneNumber: user.phoneNumber,
       },
     });
@@ -115,7 +116,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response, next: Next
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, password, phoneNumber, role } = req.body;
+    const { firstName, lastName, email, password, phoneNumber, permissionRole, signatureRole } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -131,7 +132,8 @@ export const createUser = async (req: Request, res: Response) => {
       email,
       password,
       phoneNumber,
-      role,
+      permissionRole,
+      signatureRole,
     });
 
     await user.save();

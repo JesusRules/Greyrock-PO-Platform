@@ -53,11 +53,11 @@ const PurchaseOrderSchema = new mongoose.Schema({
   taxAmount: { type: Number, required: true },
   total: { type: Number, required: true },
   // Created (Denis/Admin can create for them)
-  submitter: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
+  // submitter: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "User",
+  //   required: true,
+  // },
   status: {
     type: String,
     enum: ['Pending', 'Signed', 'Rejected', 'Approved'],

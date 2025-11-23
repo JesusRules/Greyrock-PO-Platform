@@ -20,7 +20,7 @@ import { User } from "../../../../types/User"
 import { createUserSchema, updateUserSchema } from '../../../types/userFormSchema'
 import { toast } from "../../../hooks/use-toast"
 import { fetchDepartments } from "../../../redux/features/departments-slice"
-import { Modal, Chip, Group, Text, Button as MantineButton, useMantineColorScheme } from "@mantine/core"
+import { Modal, Chip, Group, Text, Button as MantineButton, useMantineColorScheme, Tooltip } from "@mantine/core"
 
 type UserFormValues = z.infer<typeof createUserSchema> | z.infer<typeof updateUserSchema>
 
@@ -68,7 +68,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
           firstName: "",
           lastName: "",
           email: "",
-          role: "user",
+          permissionRole: "user",
+          signatureRole: "submitter",
           phoneNumber: "",
           password: "",
           departments: [], // 🔹 important
@@ -90,7 +91,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
   //         },
   //   })
 
-  const role = form.watch("role");
+  const permissionRole = form.watch("permissionRole");
+  const signatureRole = form.watch("signatureRole");
 
   // Reset form when modal opens/closes or initialData changes
   useEffect(() => {
@@ -110,7 +112,8 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
           firstName: "",
           lastName: "",
           email: "",
-          role: "user",
+          permissionRole: "user",
+          signatureRole: "submitter",
           phoneNumber: "",
           password: "",
           departments: [],
@@ -162,7 +165,6 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
       };
 
       console.log('user', user)
-
       console.log('initialData', initialData)
 
       if (isEditMode && initialData) {
@@ -272,20 +274,28 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
             />
             <FormField
                 control={form.control}
-                name="role"
+                name="permissionRole"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role *</FormLabel>
+                    <FormLabel>Permission Role *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full cursor-pointer py-0">
-                          <SelectValue placeholder="Select a role" />
+                          <SelectValue placeholder="Select a permission role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <Tooltip withArrow label="Can create PO from any department, can access admin settings.">
                         <SelectItem className="cursor-pointer" value="admin">Admin</SelectItem>
-                        {/* <SelectItem className="cursor-pointer" value="manager">Manager</SelectItem> */}
-                        <SelectItem className="cursor-pointer" value="user">User</SelectItem>
+                        </Tooltip>
+
+                        <Tooltip withArrow label="Can create PO from any department.">
+                          <SelectItem className="cursor-pointer" value="poweruser">Power User</SelectItem>
+                        </Tooltip>
+
+                        <Tooltip withArrow label="Can only create PO from selected departments.">
+                          <SelectItem className="cursor-pointer" value="user">User</SelectItem>
+                        </Tooltip>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -294,7 +304,7 @@ export function UserFormModal({ open, onOpenChange, initialData }: UserFormModal
               />
             </div>
 
-            {role === "user" && (
+            {permissionRole === "user" && (
             <FormField
               control={form.control}
               name="departments"

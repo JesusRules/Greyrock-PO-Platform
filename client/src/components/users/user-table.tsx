@@ -113,7 +113,7 @@ export function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="capitalize">{user.role}</div>
+                  <div className="capitalize">{user.permissionRole}</div>
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
                 {/* <TableCell>{user.phoneNumber}</TableCell> */}

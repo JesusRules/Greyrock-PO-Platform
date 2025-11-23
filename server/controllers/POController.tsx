@@ -22,15 +22,21 @@ export const getAllPurchaseOrders = async (req: Request, res: Response) => {
     const orders = await PurchaseOrder.find()
       .sort({ createdAt: -1 })
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User })
-      .populate({ path: 'signedBy', model: User });
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
     res
     .status(200)
     .set(createNoCacheHeaders())
     .json({ purchaseOrders: orders });
   } catch (err) {
+    console.error('Fetching purchase orders error:', err)
     res
     .status(500)
     .set(createNoCacheHeaders())
@@ -46,9 +52,14 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
 
     const populatedOrder = await PurchaseOrder.findById(savedOrder._id)
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User })
-      .populate({ path: 'signedBy', model: User });
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
     res
     .status(201)
@@ -72,9 +83,14 @@ export const updatePurchaseOrder = async (req: Request, res: Response) => {
       { new: true }
     )
     .populate({ path: 'department', model: Department })
-    .populate({ path: 'vendor', model: Vendor })
-    .populate({ path: 'submitter', model: User })
-    .populate({ path: 'signedBy', model: User });
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
     if (!updated) {
       res
@@ -138,10 +154,15 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
     await order.save();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
-      .populate({ path: "department", model: Department })
-      .populate({ path: "vendor", model: Vendor })
-      .populate({ path: "submitter", model: User })
-      .populate({ path: "signedBy", model: User });
+      .populate({ path: 'department', model: Department })
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
     res
       .set(createNoCacheHeaders())
@@ -194,9 +215,14 @@ export const purchaseOrderSign = async (req: Request, res: Response): Promise<vo
 
     const populatedOrder = await PurchaseOrder.findById(purchaseOrder._id)
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User })
-      .populate({ path: 'signedBy', model: User });
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
     res.status(201).set(createNoCacheHeaders()).json({
       message: "Signature saved",
@@ -240,9 +266,14 @@ export const revertPurchaseOrderSignature = async (req: Request, res: Response) 
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor })
-      .populate({ path: 'submitter', model: User })
-      .populate({ path: 'signedBy', model: User });
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
     res
     .set(createNoCacheHeaders())
@@ -267,7 +298,7 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
   //     .lean<POType>()
     const purchaseOrder = await PurchaseOrder.findById(req.params.id)
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'submitter', model: User })
       .populate({ path: 'signatures.submitter.signedBy', model: User })
       .populate({ path: 'signatures.manager.signedBy', model: User })
       .populate({ path: 'signatures.generalManager.signedBy', model: User })

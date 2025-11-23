@@ -4,24 +4,23 @@ import bcrypt from 'bcryptjs';
 export const userSchema = new mongoose.Schema({ 
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    // login: { type: String, required: true, unique: true, lowercase: true },
     email: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
     },
-    role: { type: String, default: 'admin' }, // Gonna need more
+    permissionRole: { type: String, default: 'admin' }, // admin, powerUser, user // Permission roles
     password: { type: String, required: true, default: '000000' },
     // phoneNumber: { type: String, default: '' },
     signedImg: { type: String, default: null, required: false }, // Stores Base64
-    // 🔹 New: departments user is associated with (for role === "user")
     departments: [
       {
         type: Schema.Types.ObjectId,
         ref: "Department",
       },
     ],
+    signatureRole: { type: String, default: 'submitter' }, // submitter, manager, generalManager, financeDepartment
  }, {
     timestamps: true,
     //Hide password

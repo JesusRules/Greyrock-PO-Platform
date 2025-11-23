@@ -49,7 +49,7 @@ export function Drawer() {
 
             <p className="text-center text-sm font-bold mt-5">Logged In: {user?.firstName} {user?.lastName}</p>
             <p className="text-center text-sm font-bold mb-10">
-              Role: {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
+              Permission Role: {user?.permissionRole ? user.permissionRole.charAt(0).toUpperCase() + user.permissionRole.slice(1) : ""}
             </p>
 
             <nav className="mt-8 space-y-4 px-2">
@@ -68,7 +68,7 @@ export function Drawer() {
             Manage <br/>Purchase Orders
             </Button>
             
-            {(user && user.role === 'admin') && (
+            {(user && user.permissionRole === 'admin') && (
               <Button onClick={() => navigate("/users")}
               variant="ghost"
               className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
@@ -77,7 +77,7 @@ export function Drawer() {
               </Button>
             )}
             
-            {(user && user.role === 'admin') && (
+            {(user && user.permissionRole === 'admin') && (
               <Button onClick={() => navigate("/departments")}
               variant="ghost"
               className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"

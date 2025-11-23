@@ -6,7 +6,7 @@ import type { RequestHandler } from "express";
 
 interface JwtPayload {
   id: string;
-  role: string;
+  permissionRole: string;
   iat: number;
   exp: number;
 }
@@ -53,7 +53,7 @@ export const requireAdmin: RequestHandler = (req, res, next) => {
 
   console.log('authReq', authReq)
 
-  if (!authReq.user || authReq.user.role !== "admin") {
+  if (!authReq.user || authReq.user.permissionRole !== "admin") {
     res.status(403).json({ message: "Admin access only" });
     return; // <- returns void, not Response
   }

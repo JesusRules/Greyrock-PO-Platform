@@ -9,5 +9,6 @@ export type User = {
     password?: string;
     signedImg?: string;
     departments?: string[];
-    role: string;
+    permissionRole?: string;
+    signatureRole?: string;
 };

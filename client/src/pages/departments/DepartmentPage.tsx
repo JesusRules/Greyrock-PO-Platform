@@ -120,7 +120,7 @@ export default function DepartmentsPage() {
     }
   }
 
-  if (user && user.role !== 'admin') {
+  if (user && user.permissionRole !== 'admin') {
     return(
       <div className="absolute left-0 right-0 top-0 bottom-0 w-full flex justify-center items-center">
         You do not have access to this page.
