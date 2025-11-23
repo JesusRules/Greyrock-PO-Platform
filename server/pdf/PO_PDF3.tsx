@@ -3,15 +3,6 @@ import  React from "react"
 import { convertISODateToReadableEnglish } from "./PO_PDF.js"
 import { truncateWithSmartDots } from "../utils/general.js"
 
-// interface PODocProps {
-//   purchaseOrder: PurchaseOrder
-//   Document: typeof import("@react-pdf/renderer").Document
-//   Page: typeof import("@react-pdf/renderer").Page
-//   Text: typeof import("@react-pdf/renderer").Text
-//   View: typeof import("@react-pdf/renderer").View
-//   Image: typeof import("@react-pdf/renderer").Image
-//   StyleSheet: typeof import("@react-pdf/renderer").StyleSheet
-// }
 interface PODocProps {
   purchaseOrder: PurchaseOrder;
   Document: any;
@@ -162,15 +153,24 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
       borderTopColor: "#000",
       paddingTop: 3,
     },
-    signatureBox: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: 80 * 1.1,
-      width: 200 * 1.1,
+    // signatureBox: {
+    //   display: 'flex',
+    //   justifyContent: 'center',
+    //   alignItems: 'center',
+    //   height: 80 * 1.1,
+    //   width: 200 * 1.1,
+    //   border: "1px solid #000",
+    //   marginBottom: 6, // Increased spacing
+    //   marginTop: 37, // Added spacing above signature box
+    // },
+     signatureBox: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: 60,
+      width: 200,
       border: "1px solid #000",
-      marginBottom: 6, // Increased spacing
-      marginTop: 37, // Added spacing above signature box
+      marginBottom: 4,
     },
     dateInfoContainer: {
       position: "absolute",
@@ -261,6 +261,40 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
   const descriptionWidth = "48%" // Adjusted to maintain total width
   const unitPriceWidth = "15%"
   const lineTotalWidth = "15%"
+
+  const renderSignatureRow = (label: string, signature: any ) => {
+    const hasImage = signature && signature.signedImg;
+
+    // signedBy may be populated User object or an ID string
+    const signerName =
+      signature && signature.signedBy && typeof signature.signedBy === "object"
+        ? `${signature.signedBy.firstName} ${signature.signedBy.lastName}`
+        : "";
+
+    return (
+      <View style={styles.signatureRow}>
+        <Text style={styles.signatureLabel}>{label}</Text>
+
+        <View style={styles.signatureBox}>
+          {hasImage ? (
+            <Image
+              src={signature.signedImg}
+              style={{ width: "100%", height: "100%" }}
+            />
+          ) : (
+            <Text style={{ fontSize: 8, textAlign: "center" }}>
+              No signature
+            </Text>
+          )}
+        </View>
+
+        {signerName ? (
+          <Text style={styles.signerName}>{signerName}</Text>
+        ) : null}
+        <Text style={styles.signerRole}>{label}</Text>
+      </View>
+    );
+  };
 
   return (
     <Document>
@@ -370,10 +404,51 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
 
         {/* Summary Section */}
         <View style={styles.summaryContainer} wrap={false}>
-          
-          {/* Approval Section - Moved down with more spacing */}
+        {/* Left: Signature grid */}
+        <View style={styles.approvalSection}>
+          {renderSignatureRow(
+            "Submitter",
+            purchaseOrder.signatures?.submitter || {}
+          )}
+          {renderSignatureRow(
+            "Manager",
+            purchaseOrder.signatures?.manager || {}
+          )}
+          {renderSignatureRow(
+            "General Manager",
+            purchaseOrder.signatures?.generalManager || {}
+          )}
+          {renderSignatureRow(
+            "Finance Department",
+            purchaseOrder.signatures?.financeDepartment || {}
+          )}
+        </View>
+
+        {/* Right: Totals */}
+        <View style={styles.totalsSection}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Subtotal</Text>
+            <Text>${subtotal.toFixed(2)}</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Tax ({taxRatePercent}%)</Text>
+            <Text>${salesTax.toFixed(2)}</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Shipping</Text>
+            <Text>${shipping.toFixed(2)}</Text>
+          </View>
+
+          <View style={[styles.totalRow, styles.grandTotal]}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
+          </View>
+        </View>
+      </View>
+        {/* <View style={styles.summaryContainer} wrap={false}>
           <View style={styles.approvalSection}>
-            {/* Signature Box */}
             <View style={styles.signatureBox}>
             {purchaseOrder.signedImg ? (
                 <Image
@@ -391,7 +466,6 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
             </View>
           </View>
 
-          {/* Totals Section */}
           <View style={styles.totalsSection}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal</Text>
@@ -413,30 +487,7 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
               <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
             </View>
           </View>
-
-          {/* <View style={styles.totalsSection}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text>${subtotal.toFixed(2)}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Tax Rate</Text>
-              <Text>{(taxRate * 100).toFixed(0)}%</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Sales Tax</Text>
-              <Text>${salesTax.toFixed(2)}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Shipping</Text>
-              <Text>${shipping.toFixed(2)}</Text>
-            </View>
-            <View style={[styles.totalRow, styles.grandTotal]}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
-            </View>
-          </View> */}
-        </View>
+        </View> */}
 
         {/* Footer */}
         <Text

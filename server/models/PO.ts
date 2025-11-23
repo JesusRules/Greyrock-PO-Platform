@@ -1,6 +1,16 @@
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
+const SignatureSchema = new mongoose.Schema({
+  signedImg: { type: String, default: null },  // Cloudinary URL
+  signedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  signedAt: { type: Date, default: null }, // optional but recommended
+}, { _id: false });
+
 const LineItemSchema = new mongoose.Schema({
   uuid: { type: String, default: uuidv4 },
   quantity: { type: Number, required: false },
@@ -53,12 +63,18 @@ const PurchaseOrderSchema = new mongoose.Schema({
     enum: ['Pending', 'Signed', 'Rejected', 'Approved'],
     default: 'Pending',
   },
-  // manager: { type: String, required: true },
-  signedImg: { type: String, default: null, required: false }, // Stores Base64
-  signedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: false,
+  // signedImg: { type: String, default: null, required: false }, // Stores Base64
+  // signedBy: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "User",
+  //   required: false,
+  // },
+    // OLD signedImg removed and replaced with structured roles ↓↓↓
+  signatures: {
+    submitter: { type: SignatureSchema, default: () => ({}) },
+    manager: { type: SignatureSchema, default: () => ({}) },
+    generalManager: { type: SignatureSchema, default: () => ({}) },
+    financeDepartment: { type: SignatureSchema, default: () => ({}) },
   },
   pdfUrl: { type: String },
 }, {

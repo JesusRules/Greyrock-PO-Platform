@@ -260,12 +260,20 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
   try {
     const isDownload = req.query.download === 'true';
 
-   const purchaseOrder = await PurchaseOrder.findById(req.params.id)
+  //  const purchaseOrder = await PurchaseOrder.findById(req.params.id)
+  //     .populate({ path: 'department', model: Department })
+  //     .populate({ path: 'vendor', model: Vendor })
+  //     .populate({ path: 'submitter', model: User })
+  //     .populate({ path: 'signedBy', model: User })
+  //     .lean<POType>()
+    const purchaseOrder = await PurchaseOrder.findById(req.params.id)
       .populate({ path: 'department', model: Department })
-      .populate({ path: 'vendor', model: Vendor })
       .populate({ path: 'submitter', model: User })
-      .populate({ path: 'signedBy', model: User })
-      .lean<POType>()
+      .populate({ path: 'signatures.submitter.signedBy', model: User })
+      .populate({ path: 'signatures.manager.signedBy', model: User })
+      .populate({ path: 'signatures.generalManager.signedBy', model: User })
+      .populate({ path: 'signatures.financeDepartment.signedBy', model: User })
+    .lean<POType>();
     
       if (!purchaseOrder) {
         res
@@ -273,7 +281,6 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
         .status(404).json({ message: "Purchase order not found" });
         return;
       }
-
       // @ts-ignore
       // const { generatePdfStream } = await import("../pdf/generatePdf.mjs");
       // const { generatePdfStream } =
