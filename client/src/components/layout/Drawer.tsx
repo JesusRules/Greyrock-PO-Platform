@@ -47,9 +47,13 @@ export function Drawer() {
             </SheetTitle>
             </SheetHeader>
 
-            <p className="text-center text-sm font-bold mt-5">Logged In: {user?.firstName} {user?.lastName}</p>
-            <p className="text-center text-sm font-bold mb-10">
-              Permission Role: {user?.permissionRole ? user.permissionRole.charAt(0).toUpperCase() + user.permissionRole.slice(1) : ""}
+            <p className="text-center text-sm mt-5">Logged In: <strong>{user?.firstName} {user?.lastName}</strong></p>
+            <p className="text-left text-sm mt-2 ml-5">
+              Permission Role: <strong>&nbsp;{user?.permissionRole === 'admin' ? 'Admin' : user?.permissionRole === 'poweruser' ? 'Power User' : user?.permissionRole}</strong>
+            </p>
+            <p className="text-left text-sm mb-10 ml-5">
+              Signature Role: <strong>&nbsp;&nbsp;{user?.signatureRole === 'generalManager' ? 'General Manager' : user?.signatureRole === 'financeDepartment' ? 'Finance Department' 
+                    : user?.signatureRole === 'overrideSigner' ? 'Override Signer' : user?.signatureRole}</strong>
             </p>
 
             <nav className="mt-8 space-y-4 px-2">
