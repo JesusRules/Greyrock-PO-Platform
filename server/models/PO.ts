@@ -76,7 +76,8 @@ const PurchaseOrderSchema = new mongoose.Schema({
     generalManager: { type: SignatureSchema, default: () => ({}) },
     financeDepartment: { type: SignatureSchema, default: () => ({}) },
   },
-  pdfUrl: { type: String },
+  comments: { type: String },
+  // pdfUrl: { type: String },
 }, {
   timestamps: true,
 });
