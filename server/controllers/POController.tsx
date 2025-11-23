@@ -8,7 +8,6 @@ import { v2 as cloudinary } from "cloudinary";
 import React from 'react';
 import { PurchaseOrder as POType } from "../../types/PurchaseOrder.js";
 import { PO_PDF } from '../pdf/PO_PDF.js'
-import { PO_PDF2 } from "../pdf/PO_PDF2.js";
 import { PO_PDF3 } from "../pdf/PO_PDF3.js";
 
 cloudinary.config({
