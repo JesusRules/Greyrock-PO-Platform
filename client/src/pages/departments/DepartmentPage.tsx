@@ -43,6 +43,7 @@ export default function DepartmentsPage() {
   //Redux
   const dispatch = useDispatch<AppDispatch>();
   const departments = useAppSelector(state => state.departmentsReducer.departments);
+  const user = useAppSelector(state => state.authReducer.user);
 
   useEffect(() => {
     dispatch(fetchDepartments());
@@ -117,6 +118,14 @@ export default function DepartmentsPage() {
           variant: 'destructive',
       });
     }
+  }
+
+  if (user && user.role !== 'admin') {
+    return(
+      <div className="absolute left-0 right-0 top-0 bottom-0 w-full flex justify-center items-center">
+        You do not have access to this page.
+      </div>
+    )
   }
 
   return (

@@ -15,6 +15,7 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   //Redux
   const dispatch = useDispatch<AppDispatch>();
+  const user = useAppSelector(state => state.authReducer.user);
   const users = useAppSelector(state => state.usersReducer.users);
   const initLoad = useAppSelector(state => state.usersReducer.initLoad);
 
@@ -29,6 +30,15 @@ export function UserManagement() {
       </div>
     )
   }
+
+  if (user && user.role !== 'admin') {
+    return(
+      <div className="absolute left-0 right-0 top-0 bottom-0 w-full flex justify-center items-center">
+        You do not have access to this page.
+      </div>
+    )
+  }
+
 
   return (
     <>

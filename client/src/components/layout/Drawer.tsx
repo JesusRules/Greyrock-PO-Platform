@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 
 export function Drawer() {
     const dispatch = useDispatch<AppDispatch>();
+    
     const user = useAppSelector(state => state.authReducer.user);
     const navigate = useNavigate();
 
@@ -46,7 +47,10 @@ export function Drawer() {
             </SheetTitle>
             </SheetHeader>
 
-            <p className="text-center text-sm font-bold mt-5 mb-10">Logged In: {user?.firstName} {user?.lastName}</p>
+            <p className="text-center text-sm font-bold mt-5">Logged In: {user?.firstName} {user?.lastName}</p>
+            <p className="text-center text-sm font-bold mb-10">
+              Role: {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
+            </p>
 
             <nav className="mt-8 space-y-4 px-2">
 
@@ -63,24 +67,32 @@ export function Drawer() {
             >
             Manage <br/>Purchase Orders
             </Button>
-            <Button onClick={() => navigate("/users")}
-            variant="ghost"
-            className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
-            >
-            Manage Users
-            </Button>
-             <Button onClick={() => navigate("/departments")}
-            variant="ghost"
-            className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
-            >
-            Manage Departments
-            </Button>
+            
+            {(user && user.role === 'admin') && (
+              <Button onClick={() => navigate("/users")}
+              variant="ghost"
+              className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
+              >
+              Manage Users
+              </Button>
+            )}
+            
+            {(user && user.role === 'admin') && (
+              <Button onClick={() => navigate("/departments")}
+              variant="ghost"
+              className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
+              >
+              Manage Departments
+              </Button>
+            )}
+            
             <Button onClick={() => navigate("/vendors")}
             variant="ghost"
             className="border-gray-500 border cursor-pointer w-full justify-center text-base bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 py-5"
             >
             Manage Vendors
             </Button>
+
             </nav>
         </div>
 
