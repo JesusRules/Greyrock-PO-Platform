@@ -12,6 +12,7 @@ const purchaseOrderSchema = z.object({
   payableTo: z.string().min(1, "Payable To is required"),
   paymentMethod: z.string().min(1, "Payment method is required"),
   submitter: z.string().min(1, "Submitter is required"),
+  comments: z.string().max(1000).optional().or(z.literal("")),
 });
 
 export default purchaseOrderSchema

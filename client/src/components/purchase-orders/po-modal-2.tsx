@@ -98,6 +98,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       payableTo: "",
       paymentMethod: "Cheque",
       submitter: "",
+      comments: "",
     },
   });
 
@@ -182,6 +183,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           typeof purchaseOrder.submitter === "string"
             ? purchaseOrder.submitter
             : purchaseOrder.submitter?._id || "",
+        comments: purchaseOrder.comments || "",
       });
 
       const existingPo = purchaseOrder.poNumber || "";
@@ -203,6 +205,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         payableTo: "",
         paymentMethod: "Cheque",
         submitter: "",
+        comments: ""
       });
 
       setPoNumber("");
@@ -415,6 +418,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         total,
         status: purchaseOrder?.status,
         submitter: form.getValues("submitter"),
+        comments: form.getValues("comments")
       };
       if (!isEditing) {
         const result = await dispatch(createPurchaseOrder(poData)).unwrap();
@@ -767,6 +771,25 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                   <FormLabel>Payable To</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="comments"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel>Comments</FormLabel>
+                  <FormControl>
+                    <textarea
+                      {...field}
+                      rows={3}
+                      className="border-gray-500 w-full px-3 py-2 text-sm border rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-y bg-transparent"
+                      placeholder="Optional notes or comments for this purchase order"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -60,6 +60,7 @@ export interface PurchaseOrder {
 
   status: "Pending" | "Signed" | "Rejected" | "Approved";
   pdfUrl?: string;
+  comments?: string;
   createdAt: string;
   updatedAt: string;
 }

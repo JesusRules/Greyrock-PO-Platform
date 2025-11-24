@@ -531,7 +531,7 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
 
           <View style={styles.signatureGridRow}>
             {renderSignatureCell(
-              "General Manager",
+              "Denis Raymond, General Manager, ",
               purchaseOrder.signatures?.generalManager || {}
             )}
             {renderSignatureCell(
