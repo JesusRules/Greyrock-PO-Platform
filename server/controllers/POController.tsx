@@ -9,12 +9,16 @@ import React from 'react';
 import { PurchaseOrder as POType } from "../../types/PurchaseOrder.js";
 import { PO_PDF } from '../pdf/PO_PDF.js'
 import { PO_PDF3 } from "../pdf/PO_PDF3.js";
+import { Resend } from "resend";
+import { EmailTemplateNewPORequiresSignature } from "../emails/EmailTemplateNewPORequiresSignature.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
   api_key: process.env.CLOUDINARY_API_KEY!,
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // GET all
 export const getAllPurchaseOrders = async (req: Request, res: Response) => {
@@ -355,5 +359,103 @@ export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// POST: Send email notifying required signers
+export const sendPurchaseOrderSignatureEmails = async (req: Request, res: Response) => {
+  try {
+    if (process.env.DISABLE_ALL_EMAILS === "true") {
+      res
+        .set(createNoCacheHeaders())
+        .status(200)
+        .json({ message: "Email sending disabled." });
+      return;
+    }
+
+    const { purchaseOrderId } = req.body;
+
+    if (!purchaseOrderId) {
+      res
+        .set(createNoCacheHeaders())
+        .status(400)
+        .json({ message: "purchaseOrderId is required." });
+      return;
+    }
+
+    // Load PO
+    const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId)
+      .populate({ path: 'department', model: Department })
+      // .populate({ path: 'vendor', model: Vendor })
+      // .populate({ path: 'submitter', model: User })
+      // .populate({ path: 'signedBy', model: User });
+      // Signatures: populate the user in each role
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+    if (!purchaseOrder) {
+      res
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: "Purchase Order not found." });
+      return;
+    }
+
+    // Allowed roles that must sign
+    const allowedRoles = [
+      "generalManager",
+      "manager",
+      "financeDepartment",
+      "overrideSigner",
+    ];
+
+    const testMode = process.env.TEST_MODE === "true";
+
+    // Query users
+    const signers = await User.find({
+      signatureRole: { $in: allowedRoles },
+      ...(testMode ? { testMode: true } : {}),
+    });
+
+    if (signers.length === 0) {
+      res
+        .set(createNoCacheHeaders())
+        .status(200)
+        .json({ message: "No signers found for this PO." });
+      return;
+    }
+
+    // Bulk send
+    const emailPromises = signers.map((signer: any) => {
+      resend.emails.send({
+        from: "notifications@po-greyrock.com",
+        to: signer.email,
+        subject: `Signature Required — Purchase Order #${purchaseOrder.poNumber}`,
+        react: EmailTemplateNewPORequiresSignature({
+          purchaseOrder,
+          signer,
+        }),
+      });
+      return;
+    });
+
+    const results = await Promise.all(emailPromises);
+
+    res
+      .set(createNoCacheHeaders())
+      .status(200)
+      .json({ message: "Signature request emails sent.", results });
+    return;
+
+  } catch (error: any) {
+    console.error("Email send error:", error);
+
+    res
+      .set(createNoCacheHeaders())
+      .status(400)
+      .json({ message: error.message || "Unexpected error sending emails." });
+    return;
   }
 };

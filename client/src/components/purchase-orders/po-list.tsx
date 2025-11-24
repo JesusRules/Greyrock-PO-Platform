@@ -158,7 +158,8 @@ export function PurchaseOrderList() {
       toast({
         title: "Deleted",
         description: `PO #${poToDelete.poNumber} has been deleted.`,
-        variant: "destructive",
+        variant: "success",
+        // variant: "destructive",
       });
     } catch (err) {
       console.error("Failed to delete:", err);

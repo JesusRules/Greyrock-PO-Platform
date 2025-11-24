@@ -425,9 +425,9 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
           <View style={styles.dateInfoRow}>
             <Text style={styles.dateInfoLabel}>Submitter</Text>
             <Text>
-              {typeof purchaseOrder.submitter === "object"
-              ? `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`
-              : purchaseOrder.submitter}
+              {typeof purchaseOrder.signatures.submitter.signedBy === "object"
+              ? `${purchaseOrder.signatures.submitter.signedBy?.firstName} ${purchaseOrder.signatures.submitter.signedBy?.lastName}`
+              : purchaseOrder.signatures.submitter}
             </Text>
           </View>
         </View>

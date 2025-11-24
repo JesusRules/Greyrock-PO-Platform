@@ -83,7 +83,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const [originalDepartment, setOriginalDepartment] = useState<string | null>(null);
   const [originalPoNumber, setOriginalPoNumber] = useState<string | null>(null);
 
-
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(purchaseOrderSchema),
     defaultValues: {
@@ -104,6 +103,10 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
   const { watch } = form;
   const department = watch("department");
+
+  const submitterId = watch("submitter");
+  const selectedSubmitter = users.find((u) => u._id === submitterId);
+  const submitterSignatureUrl = selectedSubmitter?.signedImg;
 
   // CHANGE? EDITING MODAL EFFECTS PO NUMBER
   useEffect(() => {
@@ -179,10 +182,14 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         payableTo: purchaseOrder.vendor.payableTo || "",
         address: purchaseOrder.vendor.address || "",
         paymentMethod: purchaseOrder.paymentMethod || "Cheque",
+        // submitter:
+        //   typeof purchaseOrder.submitter === "string"
+        //     ? purchaseOrder.submitter
+        //     : purchaseOrder.submitter?._id || "",
         submitter:
-          typeof purchaseOrder.submitter === "string"
-            ? purchaseOrder.submitter
-            : purchaseOrder.submitter?._id || "",
+          typeof purchaseOrder.signatures.submitter.signedBy === "string"
+            ? purchaseOrder.signatures.submitter.signedBy
+            : purchaseOrder.signatures.submitter.signedBy?._id || "",
         comments: purchaseOrder.comments || "",
       });
 
@@ -333,9 +340,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   const handleSubmit = async () => {
     try {
       const isValid = await form.trigger();
-
       if (!isValid) {
-
         console.log(form.formState.errors); // 👈 shows which fields failed
         toast({
             title: 'Error',
@@ -344,7 +349,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         });
         return
       }
-
       // I DO NOT KNOW // CHANGE PO NUMBER WHEN IN EDIT MODE!!!!!!!!!!
       setIsLoading(true);
 
@@ -385,7 +389,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
       const vendorName = form.getValues("vendor");
       const selectedVendor = vendors.find(v => v.companyName === vendorName);
-      // const vendorId = selectedVendor;
+      
       const vendorFromForm = {
         companyName: vendorName,
         contactName: form.getValues("contactName"),
@@ -395,16 +399,18 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         address: selectedVendor?.address || "", // fallback from original if not in form
         _id: selectedVendor?._id, // include ID for update if needed
       };
-      // const vendorFromForm = {
-      //   companyName: 'asdasd',
-      //   contactName: 'asdasd',
-      //   email: 'asdas@email.com',
-      //   phoneNumber: '1231231',
-      //   payableTo: 'asdasdasd',
-      //   address: 'asdasasd', // fallback from original if not in form
-      //   _id: selectedVendor?._id, // include ID for update if needed
-      // };
-      const poData = {
+
+       // 🔹 Build submitter signature payload
+      const submitterIdVal = form.getValues("submitter");
+      const submitterUser = users.find((u) => u._id === submitterIdVal);
+
+      const submitterSignature = {
+        signedImg: submitterUser?.signedImg || null,
+        signedBy: submitterUser?._id || null,
+        signedAt: submitterUser?.signedImg ? new Date() : null,
+      };
+
+      const basePoData: any = {
         department: selectedDepartment,
         poNumber: finalPoNumber,
         date,
@@ -417,9 +423,38 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         taxAmount: taxRate,
         total,
         status: purchaseOrder?.status,
-        submitter: form.getValues("submitter"),
-        comments: form.getValues("comments")
+        // submitter: submitterIdVal,
+        comments: form.getValues("comments"),
       };
+
+      // Only set signatures on CREATE so we don't nuke existing ones on edit
+      if (!isEditing) {
+        basePoData.signatures = {
+          submitter: submitterSignature,
+          manager: {},
+          generalManager: {},
+          financeDepartment: {},
+        };
+      }
+
+      const poData = basePoData;
+
+      // const poData = {
+      //   department: selectedDepartment,
+      //   poNumber: finalPoNumber,
+      //   date,
+      //   vendor: vendorFromForm,
+      //   paymentMethod: form.getValues("paymentMethod"),
+      //   lineItems,
+      //   shipping,
+      //   taxRate,
+      //   subtotal,
+      //   taxAmount: taxRate,
+      //   total,
+      //   status: purchaseOrder?.status,
+      //   submitter: form.getValues("submitter"),
+      //   comments: form.getValues("comments")
+      // };
       if (!isEditing) {
         const result = await dispatch(createPurchaseOrder(poData)).unwrap();
         toast({
@@ -452,6 +487,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     }
   };
 
+  const isSelectedSubmitterCurrentUser =
+  submitterId && user?._id && submitterId === user._id;
+
   return (
   <Dialog open={isOpen} onOpenChange={onClose}>
     <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
@@ -479,10 +517,14 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                   payableTo: purchaseOrder.vendor.payableTo || "",
                   address: purchaseOrder.vendor.address || "",
                   paymentMethod: purchaseOrder.paymentMethod || "Cheque",
+                  // submitter:
+                  //   typeof purchaseOrder.submitter === "string"
+                  //     ? purchaseOrder.submitter
+                  //     : purchaseOrder.submitter?._id || "",
                   submitter:
-                    typeof purchaseOrder.submitter === "string"
-                      ? purchaseOrder.submitter
-                      : purchaseOrder.submitter?._id || "",
+                  typeof purchaseOrder.signatures.submitter.signedBy === "string"
+                    ? purchaseOrder.signatures.submitter.signedBy
+                    : purchaseOrder.signatures.submitter.signedBy?._id || "",
                 });
 
                 setPoNumber(purchaseOrder.poNumber || "");
@@ -539,38 +581,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           >
             {isEditing ? 'Reset' : 'Clear'}
           </Button>
-          {/* <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={() => {
-              form.reset({
-                department: "",
-                // poNumber: "",
-                // date: new Date(),
-                vendor: "",
-                contactName: "",
-                phone: "",
-                email: "",
-                payableTo: "",
-                paymentMethod: "Cheque",
-              });
-              setPoNumber("");
-              setLineItems([{
-                uuid: crypto.randomUUID(),
-                quantity: 1,
-                itemId: "",
-                description: "",
-                unitPrice: 0,
-                lineTotal: 0,
-              }]);
-              setShipping(0);
-              setTaxRate(13);
-            }}
-            className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:text-white"
-          >
-            Clear
-          </Button> */}
         </div>
       </DialogHeader>
 
@@ -578,7 +588,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
           {/* Top Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-            <FormField
+            {/* <FormField
                 control={form.control}
                 name="submitter"
                 render={({ field }) => (
@@ -601,7 +611,68 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                     <FormMessage />
                   </FormItem>
                 )}
+              /> */}
+              {/* Submitter select (left) */}
+              <FormField
+                control={form.control}
+                name="submitter"
+                render={({ field }) => (
+                  <FormItem className="w-full pr-3">
+                    <FormLabel>Submitter</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select submitter" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {users.map((u) => (
+                          <SelectItem key={u._id} value={u._id}>
+                            {u.firstName} {u.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
+
+              {/* Submitter signature preview (right) */}
+              <div className="flex flex-col justify-end">
+                <Label className="mb-1">Submitter Signature</Label>
+
+                {submitterSignatureUrl ? (
+                  <div className="inline-flex items-center justify-center border border-gray-400 rounded-md bg-white p-1">
+                    <img
+                      src={submitterSignatureUrl}
+                      alt="Submitter signature"
+                      className="h-16 w-auto object-contain"
+                    />
+                  </div>
+                ) : submitterId ? (
+                  <p className="text-xs text-muted-foreground">
+                    No signature on file.
+                    {isSelectedSubmitterCurrentUser && (
+                      <>
+                        {" "}
+                        <a
+                          href="/profile"
+                          className="underline text-blue-600 dark:text-blue-400"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Click here to add one.
+                        </a>
+                      </>
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Select a submitter to preview their signature.
+                  </p>
+                )}
+              </div>
             
             <FormField
               control={form.control}

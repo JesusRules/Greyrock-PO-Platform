@@ -1,9 +1,12 @@
 import express from "express";
-import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getPurchaseOrderPDF, purchaseOrderSign, revertPurchaseOrderSignature, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController.js";
+import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getPurchaseOrderPDF, purchaseOrderSign, revertPurchaseOrderSignature, sendPurchaseOrderSignatureEmails, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController.js";
 
 const PORouter = express.Router();
 
 PORouter.post("/", createPurchaseOrder);
+// Emails
+PORouter.post("/send-signature-emails", sendPurchaseOrderSignatureEmails);
+// Others
 PORouter.put("/:id", updatePurchaseOrder);
 PORouter.put("/:id/sign", purchaseOrderSign);
 PORouter.put("/:id/revert-signature", revertPurchaseOrderSignature);

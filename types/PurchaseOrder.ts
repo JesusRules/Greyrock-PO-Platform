@@ -48,16 +48,13 @@ export interface PurchaseOrder {
   total: number;
 
   // User who created/submitted the PO
-  submitter: User | string;
-
+  // submitter: User | string;
   // 🔥 New signatures block
   signatures: PurchaseOrderSignatures;
-
   // (Optional) keep these only if you still use them somewhere,
   // otherwise you can safely delete them from this interface.
   // signedBy?: User | string;
   // signedImg?: string | null;
-
   status: "Pending" | "Signed" | "Rejected" | "Approved";
   pdfUrl?: string;
   comments?: string;

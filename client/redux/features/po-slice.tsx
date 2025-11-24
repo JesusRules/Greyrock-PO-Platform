@@ -67,7 +67,7 @@ const purchaseOrdersSlice = createSlice({
       const updatedPO = action.payload;
       const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
       if (index !== -1) {
-        state.purchaseOrders[index].signedImg = null;
+        // state.purchaseOrders[index].signedImg = null;
         state.purchaseOrders[index] = updatedPO;
       }
     })
@@ -93,6 +93,11 @@ export const createPurchaseOrder = createAsyncThunk(
   async (newOrder: Partial<PurchaseOrder>, thunkAPI) => {
     try {
       const res = await api.post("/api/purchase-orders", newOrder);
+      const purchaseOrder = res.data.purchaseOrder;
+
+      await api.post("/api/purchase-orders/send-signature-emails", {
+        purchaseOrderId: purchaseOrder._id
+      });
       return res.data.purchaseOrder;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to create");

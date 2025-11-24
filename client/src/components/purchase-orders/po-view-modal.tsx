@@ -164,12 +164,29 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
               <p className="text-sm">Payable To:&nbsp;&nbsp;<span className="font-semibold">{purchaseOrder.vendor.payableTo}</span></p>
               <div className="mt-6">
                 <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">Approval</h3>
-                <p className="text-sm">
+                {/* <p className="text-sm">
                   Submitter:&nbsp;&nbsp;&nbsp;<span className="font-semibold">
                   {typeof purchaseOrder.submitter === "string"
                     ? purchaseOrder.submitter // fallback if not populated
                     : `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`}
                     </span>
+                </p> */}
+                <p className="text-sm">
+                  Submitter:&nbsp;&nbsp;&nbsp;
+                  <span className="font-semibold">
+                    {(() => {
+                      const sb = purchaseOrder.signatures.submitter.signedBy;
+
+                      if (!sb) return "N/A";
+
+                      // If it's a populated user object
+                      if (typeof sb === "object")
+                        return `${sb.firstName} ${sb.lastName}`;
+
+                      // Otherwise it's an ObjectId string
+                      return sb;
+                    })()}
+                  </span>
                 </p>
                 {/* <p>Manager: {purchaseOrder.manager}</p> */}
               </div>
@@ -265,7 +282,7 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
 
           <div className="mt-8 border-t pt-6">
             <div className="flex justify-between items-center">
-              {purchaseOrder.signedImg ? (
+              {purchaseOrder?.signatures?.submitter?.signedImg ? (
                 <>
                   <div className="">
                     <p className="font-semibold">Signed by: {typeof purchaseOrder?.signedBy === "string"
@@ -277,9 +294,6 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
                       className="w-[253px] p-2 h-[83px] object-contain mt-2 bg-white border border-gray-500"
                     />
                   </div>
-                 {/* <Button className="dark:bg-red-500" variant="destructive" onClick={handleRevertSignature}>
-                  Revert Signature
-                </Button> */}
                 <Button
                   className="dark:bg-red-500"
                   variant="destructive"

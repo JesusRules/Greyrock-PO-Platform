@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.2",
     "react": "^19.1.0",
+    "resend": "^6.5.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
