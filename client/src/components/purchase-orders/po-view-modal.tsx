@@ -7,15 +7,73 @@ import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import api from "../../../axiosSetup"
 import { useToast } from "../../../hooks/use-toast"
 import { useGlobalContext } from "../../../context/global-context"
-import { revertSignature } from "../../../redux/features/po-slice"
+// import { revertSignature } from "../../../redux/features/po-slice"
 import { useDispatch } from "react-redux"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useState } from "react"
 import { Modal, Text, Group, Button as MantineButton } from "@mantine/core";
+import { signPurchaseOrderRole } from "../../../redux/features/po-slice"
 
-// interface PurchaseOrderViewModalProps {
-//   purchaseOrder: PurchaseOrder
-// }
+type SignatureRoleKey =
+  | "submitter"
+  | "manager"
+  | "generalManager"
+  | "financeDepartment";
+
+type HandleRoleSignFn = (role: SignatureRoleKey) => Promise<void> | void;
+
+function renderSignatureBox(
+  roleKey: SignatureRoleKey,
+  label: string,
+  purchaseOrder: PurchaseOrder,
+  user: any,
+  handleRoleSign: (role: SignatureRoleKey) => void
+) {
+  const sig = purchaseOrder.signatures?.[roleKey];
+  const signedBy = sig?.signedBy;
+  const isSigned = Boolean(sig?.signedImg);
+
+  const isCurrentUserRole = user?.signatureRole === roleKey;
+  const canCurrentUserSign = isCurrentUserRole && user?.signedImg && !isSigned;
+
+  const displayName = (() => {
+    if (!signedBy) return "N/A";
+    if (typeof signedBy === "string") return signedBy;
+    return `${signedBy.firstName} ${signedBy.lastName}`;
+  })();
+
+  return (
+    <div className="flex flex-col">
+      <p className="font-semibold mb-1">{label}</p>
+
+      {isSigned ? (
+        <>
+          <p className="text-sm mb-1">
+            Signed by: <span className="font-semibold">{displayName}</span>
+          </p>
+          <img
+            src={sig!.signedImg!}
+            alt={`${label} signature`}
+            className="w-[253px] h-[83px] p-2 object-contain bg-white border border-gray-500"
+          />
+        </>
+      ) : canCurrentUserSign ? (
+        <Button
+          size="sm"
+          className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={() => handleRoleSign(roleKey)}
+        >
+          Click to sign as {label}
+        </Button>
+      ) : (
+        <p className="text-sm italic text-muted-foreground">
+          No signature.
+        </p>
+      )}
+    </div>
+  );
+}
+
 interface PurchaseOrderViewModalProps {
   purchaseOrderId: string;
 }
@@ -26,20 +84,15 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
   const { toast } = useToast();
   //Redux
   const dispatch = useDispatch<AppDispatch>();
+  const user = useAppSelector((state) => state.authReducer.user);
   //States
   const [PDFLoader, setPDFLoader] = useState(false);
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
 
   // const handleRevertSignature = async () => {
-  //   const confirmed = window.confirm(
-  //     "Are you sure you want to revert the signature and set the status back to Pending?"
-  //   );
-  //   if (!confirmed) return;
-
   //   try {
   //     await dispatch(revertSignature(purchaseOrderId)).unwrap();
 
-  //     // setOpenViewPO(false);
   //     toast({
   //       title: "Signature Reverted",
   //       description: "Signature was cleared and status set to Pending.",
@@ -51,25 +104,60 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
   //       description: "Failed to revert signature.",
   //       variant: "destructive",
   //     });
+  //   } finally {
+  //     setRevertConfirmOpen(false);
   //   }
   // };
-  const handleRevertSignature = async () => {
+
+  const handleRoleSign: HandleRoleSignFn = async (role) => {
+    // We never expect to sign as submitter from here,
+    // but this keeps the type happy.
+    if (role === "submitter") return;
+
+    if (!user?._id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to sign.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user.signedImg) {
+      toast({
+        title: "No Signature on File",
+        description: "Please add a signature on your Profile page first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (user.signatureRole !== role) {
+      toast({
+        title: "Not Authorized",
+        description: "You are not allowed to sign for this role.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      await dispatch(revertSignature(purchaseOrderId)).unwrap();
+      await dispatch(
+        signPurchaseOrderRole({ poId: purchaseOrder?._id!, role })
+      ).unwrap();
 
       toast({
-        title: "Signature Reverted",
-        description: "Signature was cleared and status set to Pending.",
+        title: "Signature Applied",
+        description: `Your ${role} signature has been added to this PO.`,
         variant: "success",
       });
     } catch (err) {
+      console.error(err);
       toast({
         title: "Error",
-        description: "Failed to revert signature.",
+        description: "Failed to sign purchase order.",
         variant: "destructive",
       });
-    } finally {
-      setRevertConfirmOpen(false);
     }
   };
 
@@ -216,26 +304,6 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
                 ))}
               </tbody>
             </table>
-            {/* <table className="w-full text-sm border border-black border-collapse">
-              <thead className="border border-black border-black border-[1px]">
-                <tr className="bg-muted border-black border-[1px]">
-                  <th className="border p-2 text-left">Description</th>
-                  <th className="border p-2 text-right">Quantity</th>
-                  <th className="border p-2 text-right">Unit Price</th>
-                  <th className="border p-2 text-right">Line Total</th>
-                </tr>
-              </thead>
-              <tbody>
-              {(purchaseOrder.lineItems)?.map((item: any, index: number) => (
-                  <tr key={index} className="">
-                    <td className="border-x p-2">{item.description}</td>
-                    <td className="border-x p-2 text-right">{item.quantity}</td>
-                    <td className="border-x p-2 text-right">{formatCurrency(Number(item.unitPrice))}</td>
-                    <td className="border-x p-2 text-right">{formatCurrency(Number(item.lineTotal))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table> */}
           </div>
 
           <div className="mt-6 flex justify-end">
@@ -280,7 +348,62 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
             )}
           </div>
 
+          {/* signatures section */}
           <div className="mt-8 border-t pt-6">
+            <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-4">
+              Signatures
+            </h3>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Submitter (already auto-signed at creation) */}
+              {renderSignatureBox(
+                "submitter",
+                "Submitter",
+                purchaseOrder,
+                user,
+                handleRoleSign
+              )}
+
+              {renderSignatureBox(
+                "manager",
+                "Manager",
+                purchaseOrder,
+                user,
+                handleRoleSign
+              )}
+
+              {renderSignatureBox(
+                "generalManager",
+                "General Manager",
+                purchaseOrder,
+                user,
+                handleRoleSign
+              )}
+
+              {renderSignatureBox(
+                "financeDepartment",
+                "Finance Department",
+                purchaseOrder,
+                user,
+                handleRoleSign
+              )}
+            </div>
+
+            {/* optional global revert button (keeps your existing behavior) */}
+            {purchaseOrder.status !== "Pending" && (
+              <div className="mt-6 flex justify-end">
+                <Button
+                  className="dark:bg-red-500"
+                  variant="destructive"
+                  onClick={() => setRevertConfirmOpen(true)}
+                >
+                  Revert All Signatures
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* <div className="mt-8 border-t pt-6">
             <div className="flex justify-between items-center">
               {purchaseOrder?.signatures?.submitter?.signedImg ? (
                 <>
@@ -313,14 +436,14 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
                 </Button>
               )}
             </div>
-          </div>
+          </div> */}
 
         </div>
       </DialogContent>
     </Dialog>
 
   {/* Revert signature modal */}
-    <Modal
+    {/* <Modal
       opened={revertConfirmOpen}
       onClose={() => setRevertConfirmOpen(false)}
       title="Revert Signature"
@@ -339,7 +462,7 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
           Revert Signature
         </MantineButton>
       </Group>
-    </Modal>
+    </Modal> */}
 
     </>
   )

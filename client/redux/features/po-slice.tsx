@@ -54,23 +54,26 @@ const purchaseOrdersSlice = createSlice({
           state.purchaseOrders[index] = action.payload;
         }
       })
-      // signPurchaseOrder
-      .addCase(signPurchaseOrder.fulfilled, (state, action) => {
-      const updatedPO = action.payload;
-      const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
-      if (index !== -1) {
-        state.purchaseOrders[index] = updatedPO;
-      }
-    })
-    // revert signature
-    .addCase(revertSignature.fulfilled, (state, action) => {
-      const updatedPO = action.payload;
-      const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
-      if (index !== -1) {
-        // state.purchaseOrders[index].signedImg = null;
-        state.purchaseOrders[index] = updatedPO;
-      }
-    })
+      .addCase(signPurchaseOrderRole.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const idx = state.purchaseOrders.findIndex((po) => po._id === updated._id);
+        if (idx !== -1) state.purchaseOrders[idx] = updated;
+      });
+    // Old single submitter
+    // .addCase(signPurchaseOrder.fulfilled, (state, action) => {
+    //   const updatedPO = action.payload;
+    //   const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
+    //   if (index !== -1) {
+    //     state.purchaseOrders[index] = updatedPO;
+    //   }
+    // })
+    // .addCase(revertSignature.fulfilled, (state, action) => {
+    //   const updatedPO = action.payload;
+    //   const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
+    //   if (index !== -1) {
+    //     state.purchaseOrders[index] = updatedPO;
+    //   }
+    // })
   },
 });
 
@@ -141,30 +144,47 @@ export const togglePurchaseOrderStatus = createAsyncThunk(
   }
 );
 
-export const signPurchaseOrder = createAsyncThunk<
+// export const signPurchaseOrder = createAsyncThunk<
+//   PurchaseOrder,
+//   { id: string; signature: string, signedBy: string },
+//   { rejectValue: string }
+// >("purchaseOrders/sign", async ({ id, signature, signedBy }, thunkAPI) => {
+//   try {
+//     const res = await api.put(`/api/purchase-orders/${id}/sign`, { signature, signedBy });
+//     return res.data.purchaseOrder;
+//   } catch (err: any) {
+//     return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to sign purchase order");
+//   }
+// });
+
+export const signPurchaseOrderRole = createAsyncThunk<
   PurchaseOrder,
-  { id: string; signature: string, signedBy: string },
+  { poId: string; role: "manager" | "generalManager" | "financeDepartment" },
   { rejectValue: string }
->("purchaseOrders/sign", async ({ id, signature, signedBy }, thunkAPI) => {
+>("purchaseOrders/signRole", async ({ poId, role }, thunkAPI) => {
   try {
-    const res = await api.put(`/api/purchase-orders/${id}/sign`, { signature, signedBy });
-    return res.data.purchaseOrder;
+    const res = await api.patch(`/api/purchase-orders/${poId}/sign-role`, {
+      role,
+    });
+    return res.data.purchaseOrder as PurchaseOrder;
   } catch (err: any) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to sign purchase order");
+    return thunkAPI.rejectWithValue(
+      err?.response?.data?.message || "Failed to sign purchase order"
+    );
   }
 });
 
-export const revertSignature = createAsyncThunk<
-  PurchaseOrder,
-  string,
-  { rejectValue: string }
->("purchaseOrders/revertSignature", async (_id, thunkAPI) => {
-  try {
-    const res = await api.put(`/api/purchase-orders/${_id}/revert-signature`);
-    return res.data.purchaseOrder;
-  } catch (err: any) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to revert signature");
-  }
-});
+// export const revertSignature = createAsyncThunk<
+//   PurchaseOrder,
+//   string,
+//   { rejectValue: string }
+// >("purchaseOrders/revertSignature", async (_id, thunkAPI) => {
+//   try {
+//     const res = await api.put(`/api/purchase-orders/${_id}/revert-signature`);
+//     return res.data.purchaseOrder;
+//   } catch (err: any) {
+//     return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to revert signature");
+//   }
+// });
 
 export default purchaseOrdersSlice.reducer;
