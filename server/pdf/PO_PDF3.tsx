@@ -242,7 +242,20 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
     submitterName: {
       marginLeft: 0, // Reduced spacing to move name closer to label
     },
-    //FOOTER
+    // COMMENTS
+    commentsBox: {
+      marginBottom: 16, //8
+      padding: 6,
+      border: "1px solid #767676",
+      minHeight: 40,
+      fontSize: 9,
+    },
+    commentsLabel: {
+      fontSize: 9,
+      fontWeight: "bold",
+      marginBottom: 2,
+    },
+    // FOOTER
     pageNumbers: {
         position: 'absolute',
         bottom: 15,
@@ -543,6 +556,17 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
 
         {/* Right: totals */}
         <View style={styles.totalsSection}>
+          {/* COMMENTS ABOVE TOTALS */}
+          {purchaseOrder.comments && (
+            <View style={{ marginBottom: 10 }}>
+              <Text style={styles.commentsLabel}>Comments</Text>
+              <View style={styles.commentsBox}>
+                <Text>{purchaseOrder.comments}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* TOTALS */}
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Subtotal</Text>
             <Text>${subtotal.toFixed(2)}</Text>
@@ -562,7 +586,29 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
           </View>
+
         </View>
+        {/* <View style={styles.totalsSection}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Subtotal</Text>
+            <Text>${subtotal.toFixed(2)}</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Tax ({taxRatePercent}%)</Text>
+            <Text>${salesTax.toFixed(2)}</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Shipping</Text>
+            <Text>${shipping.toFixed(2)}</Text>
+          </View>
+
+          <View style={[styles.totalRow, styles.grandTotal]}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
+          </View>
+        </View> */}
       </View>
 
         {/* Footer */}

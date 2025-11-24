@@ -401,7 +401,7 @@ export default function ProfilePage() {
 
         {/* Profile Overview Card */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 flex items-center gap-[3.3rem]">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
                 <AvatarImage src="/placeholder.svg" />
@@ -413,6 +413,11 @@ export default function ProfilePage() {
                 </h2>
                 <p className="text-muted-foreground">{user?.email}</p>
               </div>
+            </div>
+            <div>
+              <p>Permission Role: <strong>{user?.permissionRole === 'admin' ? 'Admin' : user?.permissionRole === 'poweruser' ? 'Power User' : user?.permissionRole}</strong></p>
+              <p>Signature Role: <strong>{user?.signatureRole === 'generalManager' ? 'General Manager' : user?.signatureRole === 'financeDepartment' ? 'Finance Department' 
+                    : user?.signatureRole === 'overrideSigner' ? 'Override Signer' : user?.signatureRole}</strong></p>
             </div>
           </CardContent>
         </Card>

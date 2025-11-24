@@ -245,17 +245,24 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
               </div>
             </div>
           </div>
-          {/* {purchaseOrder.status === "Signed" && (
-            <div className="mt-8 border-t pt-4">
-              <div className="flex justify-between">
-                <div>
-                  <p className="font-semibold">Signed by: {purchaseOrder.signedBy || purchaseOrder.manager}</p>
-                  <p>Date: {purchaseOrder.signedDate || purchaseOrder.date}</p>
-                </div>
-                <div className="italic text-muted-foreground">Digital Signature</div>
-              </div>
-            </div>
-          )} */}
+      
+          {/* Comments section */}
+          <div className="mt-6 border-t border-b pb-5 border-gray-500 pt-4">
+            <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-2">
+              Comments
+            </h3>
+
+            {purchaseOrder.comments && purchaseOrder.comments.trim() !== "" ? (
+              <p className="text-sm whitespace-pre-wrap">
+                {purchaseOrder.comments}
+              </p>
+            ) : (
+              <p className="text-sm italic text-muted-foreground">
+                No comments.
+              </p>
+            )}
+          </div>
+
           <div className="mt-8 border-t pt-6">
             <div className="flex justify-between items-center">
               {purchaseOrder.signedImg ? (
