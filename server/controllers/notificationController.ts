@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createNoCacheHeaders } from 'server/utils/noCacheResponse.js';
+import { createNoCacheHeaders } from '../utils/noCacheResponse.js';
 
 export const getNotifications = async (req: Request, res: Response) => {
   try {

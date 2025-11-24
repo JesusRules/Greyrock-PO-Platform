@@ -1,6 +1,6 @@
 import express from "express";
 import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getPurchaseOrderPDF, sendPurchaseOrderSignatureEmails, signPurchaseOrderRoleController, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController.js";
-import { protect } from "server/middleware/auth.js";
+import { protect } from "../middleware/auth.js";
 
 const PORouter = express.Router();
 

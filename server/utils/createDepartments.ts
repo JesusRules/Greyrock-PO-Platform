@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import dotenv from 'dotenv';
-import User from 'server/models/User.js';
-import connectMongo from 'server/libs/connectMongo.js';
-import Department from "server/models/Department.js";
+import User from '../models/User.js';
+import connectMongo from '../libs/connectMongo.js';
+import Department from "../models/Department.js";
 
 dotenv.config(); // Loads MONGODB_URI from .env
 
