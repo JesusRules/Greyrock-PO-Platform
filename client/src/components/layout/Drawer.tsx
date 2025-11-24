@@ -36,7 +36,7 @@ export function Drawer() {
 
         <SheetContent
         side="left"
-        className="w-[250px] px-0 flex flex-col justify-between bg-background bg-white text-foreground dark:bg-zinc-900 dark:text-white"
+        className="w-[260px] px-0 flex flex-col justify-between bg-background bg-white text-foreground dark:bg-zinc-900 dark:text-white"
         >
         {/* Top Section */}
         <div>
@@ -48,10 +48,10 @@ export function Drawer() {
             </SheetHeader>
 
             <p className="text-center text-sm mt-5">Logged In: <strong>{user?.firstName} {user?.lastName}</strong></p>
-            <p className="text-left text-sm mt-2 ml-5">
-              Permission Role: <strong>&nbsp;{user?.permissionRole === 'admin' ? 'Admin' : user?.permissionRole === 'poweruser' ? 'Power User' : user?.permissionRole}</strong>
+            <p className="text-left text-sm mt-2 ml-4">
+              Permission Role: <strong>&nbsp;{user?.permissionRole === 'admin' ? 'Admin' : user?.permissionRole === 'poweruser' ? 'Power User' : user?.permissionRole === 'user' ? 'User' : user?.permissionRole}</strong>
             </p>
-            <p className="text-left text-sm mb-10 ml-5">
+            <p className="text-left text-sm mb-10 ml-4">
               Signature Role: <strong>&nbsp;&nbsp;{user?.signatureRole === 'generalManager' ? 'General Manager' : user?.signatureRole === 'financeDepartment' ? 'Finance Department' 
                     : user?.signatureRole === 'overrideSigner' ? 'Override Signer' : user?.signatureRole}</strong>
             </p>

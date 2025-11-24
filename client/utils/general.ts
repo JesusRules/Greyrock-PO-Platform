@@ -52,3 +52,27 @@ export const getFormattedDateTime = (dateTimeString: string) => {
   // return dateTime.format("YYYY-MM-DD [at] h:mm:ss A") // Example: 2025-05-20 at 9:07:42 PM
     return dateTime.format("MMMM Do YYYY [at] h:mm:ss A")
 }
+
+// Convert any image file into PNG dataURL
+export const convertImageToPng = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject("No canvas context");
+
+      ctx.drawImage(img, 0, 0);
+
+      // Convert to PNG (works 100% with React-PDF)
+      const pngDataUrl = canvas.toDataURL("image/png", 1.0);
+      resolve(pngDataUrl);
+    };
+
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+};

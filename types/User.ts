@@ -11,4 +11,5 @@ export type User = {
     departments?: string[];
     permissionRole?: string;
     signatureRole?: string;
+    createdAt?: string;
 };

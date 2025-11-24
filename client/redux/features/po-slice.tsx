@@ -77,7 +77,6 @@ const purchaseOrdersSlice = createSlice({
   },
 });
 
-
 // Async thunks
 export const fetchPurchaseOrders = createAsyncThunk(
   "purchaseOrders/fetchAll",
@@ -144,28 +143,26 @@ export const togglePurchaseOrderStatus = createAsyncThunk(
   }
 );
 
-// export const signPurchaseOrder = createAsyncThunk<
-//   PurchaseOrder,
-//   { id: string; signature: string, signedBy: string },
-//   { rejectValue: string }
-// >("purchaseOrders/sign", async ({ id, signature, signedBy }, thunkAPI) => {
-//   try {
-//     const res = await api.put(`/api/purchase-orders/${id}/sign`, { signature, signedBy });
-//     return res.data.purchaseOrder;
-//   } catch (err: any) {
-//     return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to sign purchase order");
-//   }
-// });
+// limit to the 3 approver roles
+type ApproverRole = "manager" | "generalManager" | "financeDepartment";
+
+interface SignRolePayload {
+  poId: string;
+  role: ApproverRole;
+  revert?: boolean; // 👈 NEW
+}
 
 export const signPurchaseOrderRole = createAsyncThunk<
   PurchaseOrder,
-  { poId: string; role: "manager" | "generalManager" | "financeDepartment" },
+  SignRolePayload,
   { rejectValue: string }
->("purchaseOrders/signRole", async ({ poId, role }, thunkAPI) => {
+>("purchaseOrders/signRole", async ({ poId, role, revert }, thunkAPI) => {
   try {
     const res = await api.patch(`/api/purchase-orders/${poId}/sign-role`, {
       role,
+      revert: !!revert, // send boolean
     });
+
     return res.data.purchaseOrder as PurchaseOrder;
   } catch (err: any) {
     return thunkAPI.rejectWithValue(
@@ -173,18 +170,5 @@ export const signPurchaseOrderRole = createAsyncThunk<
     );
   }
 });
-
-// export const revertSignature = createAsyncThunk<
-//   PurchaseOrder,
-//   string,
-//   { rejectValue: string }
-// >("purchaseOrders/revertSignature", async (_id, thunkAPI) => {
-//   try {
-//     const res = await api.put(`/api/purchase-orders/${_id}/revert-signature`);
-//     return res.data.purchaseOrder;
-//   } catch (err: any) {
-//     return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to revert signature");
-//   }
-// });
 
 export default purchaseOrdersSlice.reducer;

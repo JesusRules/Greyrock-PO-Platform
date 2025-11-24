@@ -182,10 +182,11 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      height: 74,           // ⬅️ was 75
+      height: 74,
       width: "100%",
-      border: "1px solid #000",
-      marginBottom: 2,      // ⬅️ a bit tighter
+      border: "1px solid #989898",
+      // border: "1px solid #000",
+      marginBottom: 2,
     },
     // NEW: 2×2 grid for signatures
     signatureGridRow: {
@@ -246,7 +247,7 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
     commentsBox: {
       marginBottom: 16, //8
       padding: 6,
-      border: "1px solid #767676",
+      border: "1px solid #989898",
       minHeight: 40,
       fontSize: 9,
     },
@@ -479,55 +480,6 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
           ))}
         </View>
 
-        {/* Submitter Row - Adjusted to move name closer to label */}
-        {/* <View style={styles.submitterRow}>
-          <Text style={styles.submitterLabel}>Submitter</Text>
-          <Text style={styles.submitterName}>John Doe</Text>
-        </View> */}
-
-        {/* Summary Section */}
-        {/* <View style={styles.summaryContainer} wrap={false}>
-        <View style={styles.approvalSection}>
-          {renderSignatureRow(
-            "Submitter",
-            purchaseOrder.signatures?.submitter || {}
-          )}
-          {renderSignatureRow(
-            "Manager",
-            purchaseOrder.signatures?.manager || {}
-          )}
-          {renderSignatureRow(
-            "General Manager",
-            purchaseOrder.signatures?.generalManager || {}
-          )}
-          {renderSignatureRow(
-            "Finance Department",
-            purchaseOrder.signatures?.financeDepartment || {}
-          )}
-        </View>
-
-        <View style={styles.totalsSection}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text>${subtotal.toFixed(2)}</Text>
-          </View>
-
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Tax ({taxRatePercent}%)</Text>
-            <Text>${salesTax.toFixed(2)}</Text>
-          </View>
-
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Shipping</Text>
-            <Text>${shipping.toFixed(2)}</Text>
-          </View>
-
-          <View style={[styles.totalRow, styles.grandTotal]}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
-          </View>
-        </View>
-      </View> */}
       <View style={styles.summaryContainer} wrap={false}>
         {/* Left: 2×2 signature grid */}
         <View style={styles.approvalSection}>
@@ -544,9 +496,13 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
 
           <View style={styles.signatureGridRow}>
             {renderSignatureCell(
-              "Denis Raymond, General Manager, ",
+              "General Manager",
               purchaseOrder.signatures?.generalManager || {}
             )}
+            {/* {renderSignatureCell(
+              "Denis Raymond, General Manager, ",
+              purchaseOrder.signatures?.generalManager || {}
+            )} */}
             {renderSignatureCell(
               "Finance Department",
               purchaseOrder.signatures?.financeDepartment || {}
@@ -588,27 +544,6 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
           </View>
 
         </View>
-        {/* <View style={styles.totalsSection}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text>${subtotal.toFixed(2)}</Text>
-          </View>
-
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Tax ({taxRatePercent}%)</Text>
-            <Text>${salesTax.toFixed(2)}</Text>
-          </View>
-
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Shipping</Text>
-            <Text>${shipping.toFixed(2)}</Text>
-          </View>
-
-          <View style={[styles.totalRow, styles.grandTotal]}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalLabel}>${total.toFixed(2)}</Text>
-          </View>
-        </View> */}
       </View>
 
         {/* Footer */}

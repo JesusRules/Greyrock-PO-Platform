@@ -183,9 +183,9 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
 // controllers/purchaseOrderController.ts
 export const signPurchaseOrderRoleController = async (req: Request, res: Response) => {
   try {
-    const { role } = req.body;
+    const { role, revert } = req.body;
     const poId = req.params.id;
-    const userId = (req as any).user?._id; // from your auth middleware
+    const userId = (req as any).user?._id; // from auth middleware
 
     const allowedRoles = ["manager", "generalManager", "financeDepartment"];
     if (!allowedRoles.includes(role)) {
@@ -197,7 +197,75 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
     }
 
     const user = await User.findById(userId);
-    if (!user || !user.signedImg) {
+    if (!user) {
+      res
+        .set(createNoCacheHeaders())
+        .status(400)
+        .json({ message: "User not found." });
+      return;
+    }
+
+    // 🔁 REVERT FLOW
+    if (revert) {
+      const po = await PurchaseOrder.findById(poId)
+        .populate({ path: "department", model: Department })
+        .populate({ path: "signatures.submitter.signedBy", model: User })
+        .populate({ path: "signatures.manager.signedBy", model: User })
+        .populate({ path: "signatures.generalManager.signedBy", model: User })
+        .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+      if (!po) {
+        res
+          .set(createNoCacheHeaders())
+          .status(404)
+          .json({ message: "Purchase Order not found." });
+        return;
+      }
+
+      const sig: any = po.signatures?.[role];
+      if (!sig?.signedImg) {
+        res
+          .set(createNoCacheHeaders())
+          .status(400)
+          .json({ message: "No signature to revert for this role." });
+        return;
+      }
+
+      const signedBy = sig.signedBy;
+      const signedById =
+        typeof signedBy === "object" ? signedBy._id?.toString() : signedBy?.toString();
+
+      const isAdmin = user.permissionRole === "admin";
+      const isSignedByCurrentUser =
+        !!signedById && signedById === user._id.toString();
+
+      if (!isAdmin && !isSignedByCurrentUser) {
+        res
+          .set(createNoCacheHeaders())
+          .status(403)
+          .json({ message: "You are not authorized to revert this signature." });
+        return;
+      }
+
+      // clear fields
+      sig.signedImg = null;
+      sig.signedBy = null;
+      sig.signedAt = null;
+
+      // business rule: revert -> status back to Pending
+      po.status = "Pending";
+
+      await po.save();
+
+      res
+        .set(createNoCacheHeaders())
+        .status(200)
+        .json({ purchaseOrder: po });
+      return;
+    }
+
+    // ✍️ SIGN FLOW (existing logic)
+    if (!user.signedImg) {
       res
         .set(createNoCacheHeaders())
         .status(400)
@@ -205,7 +273,7 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
       return;
     }
 
-    // Optional: ensure user.signatureRole matches the role they’re trying to sign for
+    // ensure user.signatureRole matches the role
     if (user.signatureRole !== role) {
       res
         .set(createNoCacheHeaders())
@@ -223,7 +291,7 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
           [`signatures.${role}.signedImg`]: user.signedImg,
           [`signatures.${role}.signedBy`]: user._id,
           [`signatures.${role}.signedAt`]: now,
-          status: "Signed", // or some smarter status logic if you want
+          status: "Signed",
         },
       },
       { new: true }

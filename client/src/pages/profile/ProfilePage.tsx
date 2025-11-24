@@ -21,6 +21,7 @@ import { User } from "../../../../types/User"
 import { changeAuthUserPassword, deleteAuthUserSignature, updateAuthUser, updateAuthUserSignature } from "../../../redux/features/auth-slice"
 import { useGlobalContext } from "../../../context/global-context"
 import { Modal, Text, Group, Button as MantineButton } from "@mantine/core";
+import { convertImageToPng } from "../../../utils/general"
 
 export default function ProfilePage() {
   const { toast } = useToast()
@@ -47,6 +48,11 @@ export default function ProfilePage() {
   const user = useAppSelector(state => state.authReducer.user);
   // Delete signature modal
   const [deleteSignatureOpen, setDeleteSignatureOpen] = useState(false);
+  // Delete signature modal pending
+  // Overwrite signature confirmation
+  const [overwriteSignatureOpen, setOverwriteSignatureOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<null | "draw" | "upload">(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -233,73 +239,87 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSignatureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const processSignatureFile = async (file: File) => {
+    setIsSaving(true);
+    setGlobalLoading(true);
 
-    // Check file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Error",
-        description: "Please upload an image file.",
-        variant: "destructive",
-      })
-      return
-    }
+    try {
+      let finalDataUrl: string;
 
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "Error",
-        description: "Image size should be less than 2MB.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onloadend = async () => {
-      const dataUrl = reader.result as string;
-
-      if (!user?._id) return;
-
-      try {
-        setIsSaving(true);
-        setGlobalLoading(true);
-
-        const resultAction = await dispatch(
-          updateAuthUserSignature({ _id: user._id, signature: dataUrl })
-        );
-
-        if (updateAuthUserSignature.rejected.match(resultAction)) {
-          toast({
-            title: "Error",
-            description: resultAction.payload || "Failed to upload signature.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const updatedUser = resultAction.payload as User;
-        setSignatureUrl(updatedUser.signedImg || null);
-        setSignatureType("upload");
-
-        toast({
-          title: "Success",
-          description: "Signature image uploaded successfully.",
-          variant: "success",
+      if (file.type === "image/webp") {
+        // 🔥 Convert WebP → PNG before sending to backend
+        finalDataUrl = await convertImageToPng(file);
+      } else {
+        // For jpeg/png, just read normally
+        finalDataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
         });
-      } finally {
-        setIsSaving(false);
-        setGlobalLoading(false);
       }
-    };
-    reader.readAsDataURL(file)
-  }
+
+      const resultAction = await dispatch(
+        updateAuthUserSignature({ _id: user?._id!, signature: finalDataUrl })
+      );
+
+      if (updateAuthUserSignature.rejected.match(resultAction)) {
+        toast({
+          title: "Error",
+          description: resultAction.payload || "Failed to upload signature.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updatedUser = resultAction.payload as User;
+      setSignatureUrl(updatedUser.signedImg || null);
+      setSignatureType("upload");
+
+      toast({
+        title: "Success",
+        description: "Signature uploaded successfully!",
+        variant: "success",
+      });
+    } finally {
+      setIsSaving(false);
+      setGlobalLoading(false);
+    }
+  };
+
+  const handleSignatureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Error", description: "Please upload an image file.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Error", description: "Image size should be less than 2MB.", variant: "destructive" });
+      return;
+    }
+
+    // If there's already a signature, ask for confirmation first
+    if (signatureUrl) {
+      setPendingFile(file);
+      setPendingAction("upload");
+      setOverwriteSignatureOpen(true);
+      return;
+    }
+
+    // No previous signature → just process it
+    await processSignatureFile(file);
+  };
 
   const handleDrawSignature = () => {
-    setOpenSignatureModal(true)
-  }
+  if (signatureUrl) {
+      setPendingAction("draw");
+      setOverwriteSignatureOpen(true);
+    } else {
+      setOpenSignatureModal(true);
+    }
+  };
 
   // const handleSaveDrawnSignature = (dataUrl: string) => {
   //   setSignatureUrl(dataUrl)
@@ -384,6 +404,36 @@ export default function ProfilePage() {
     }
   };
 
+  const handleConfirmOverwrite = async () => {
+    // Close modal first
+    setOverwriteSignatureOpen(false);
+
+    if (pendingAction === "draw") {
+      // Let them draw a new one
+      setPendingAction(null);
+      setOpenSignatureModal(true);
+      return;
+    }
+
+    if (pendingAction === "upload" && pendingFile) {
+      const fileToUpload = pendingFile;
+      setPendingAction(null);
+      setPendingFile(null);
+      await processSignatureFile(fileToUpload);
+      return;
+    }
+
+    // Fallback cleanup
+    setPendingAction(null);
+    setPendingFile(null);
+  };
+
+  const handleCancelOverwrite = () => {
+    setOverwriteSignatureOpen(false);
+    setPendingAction(null);
+    setPendingFile(null);
+  };
+
   const getInitials = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
   }
@@ -415,7 +465,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <p>Permission Role: <strong>{user?.permissionRole === 'admin' ? 'Admin' : user?.permissionRole === 'poweruser' ? 'Power User' : user?.permissionRole}</strong></p>
+              <p>Permission Role: <strong>{user?.permissionRole === 'admin' ? 'Admin' : user?.permissionRole === 'poweruser' ? 'Power User' : user?.permissionRole === 'user' ? 'User' : user?.permissionRole}</strong></p>
               <p>Signature Role: <strong>{user?.signatureRole === 'generalManager' ? 'General Manager' : user?.signatureRole === 'financeDepartment' ? 'Finance Department' 
                     : user?.signatureRole === 'overrideSigner' ? 'Override Signer' : user?.signatureRole}</strong></p>
             </div>
@@ -686,6 +736,49 @@ export default function ProfilePage() {
         </Group>
       </Modal>
     </div>
+
+    {/* Overwrite Signature Modal */}
+      <Modal
+        opened={overwriteSignatureOpen}
+        onClose={handleCancelOverwrite}
+        // title="Replace Existing Signature"
+        title={
+            <div
+              style={{
+                fontSize: '17px',
+                position: 'absolute',
+                top: 10,
+                right: 0,
+                left: 0,
+                textAlign: 'center',
+                display: 'block',
+                margin: 0,
+                padding: '10px',
+              }}
+            >
+              Replace Existing Signature
+            </div>
+        }
+        centered
+      >
+        <Text mb="md" ta='center'>
+          You already have a saved signature.{" "}
+          <strong>Uploading or drawing a new one will permanently replace the current signature</strong>{" "}
+          on all future documents.
+          <br />
+          <br />
+          Do you want to update your signature?
+        </Text>
+
+        <Group justify="center" mt="md">
+          <MantineButton variant="default" onClick={handleCancelOverwrite}>
+            Cancel
+          </MantineButton>
+          <MantineButton color="blue" onClick={handleConfirmOverwrite}>
+            Yes, update signature
+          </MantineButton>
+        </Group>
+      </Modal>
     </>
   )
 }

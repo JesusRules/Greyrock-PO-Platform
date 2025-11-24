@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import User from "../models/User.js"
 import { createNoCacheHeaders } from "../utils/noCacheResponse.js"
 import { v2 as cloudinary } from "cloudinary";
+import Department from "../models/Department.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -9,19 +10,39 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-// GET /api/users
+// // GET /api/users
+// export const getUsers = async (req: Request, res: Response) => {
+//   try {
+//     const users = await User.find().sort({ createdAt: -1 })
+//     res
+//     .set(createNoCacheHeaders())
+//     .json({users})
+//   } catch (err) {
+//     res
+//     .set(createNoCacheHeaders())
+//     .status(500).json({ message: "Failed to fetch users" })
+//   }
+// }
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 })
+    const users = await User.find()
+      .populate({
+        path: "departments",
+        model: Department,
+      })
+      .sort({ createdAt: -1 });
+
     res
-    .set(createNoCacheHeaders())
-    .json({users})
+      .set(createNoCacheHeaders())
+      .json({ users });
   } catch (err) {
+    console.error("getUsers error:", err);
     res
-    .set(createNoCacheHeaders())
-    .status(500).json({ message: "Failed to fetch users" })
+      .set(createNoCacheHeaders())
+      .status(500)
+      .json({ message: "Failed to fetch users" });
   }
-}
+};
 
 // POST /api/users
 export const createUser = async (req: Request, res: Response) => {

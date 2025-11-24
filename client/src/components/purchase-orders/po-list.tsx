@@ -15,7 +15,7 @@ import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
 import { deletePurchaseOrder, togglePurchaseOrderStatus } from "../../../redux/features/po-slice"
 import { useToast } from "../../../hooks/use-toast"
-import SignatureModal from "@components/signature/SignatureModal"
+// import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import { Tooltip, Modal, Text, Group, Button as MantineButton } from "@mantine/core"
@@ -426,12 +426,11 @@ export function PurchaseOrderList() {
         </>
       )}
       
-      {currentPO && (
+      {/* {currentPO && (
         <>
         <SignatureModal selectedPurchaseOrder={currentPO}   />
-        {/* <div className="fixed w-full h-full bg-red-500 top-0 z-[100] bg-[#0000006b]"/> */}
         </>
-      )}
+      )} */}
 
       <Modal
         opened={poToDelete !== null}

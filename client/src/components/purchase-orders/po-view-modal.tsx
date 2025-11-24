@@ -21,20 +21,43 @@ type SignatureRoleKey =
   | "financeDepartment";
 
 type HandleRoleSignFn = (role: SignatureRoleKey) => Promise<void> | void;
+type HandleRoleRevertFn = (role: SignatureRoleKey) => Promise<void> | void;
 
 function renderSignatureBox(
   roleKey: SignatureRoleKey,
   label: string,
   purchaseOrder: PurchaseOrder,
   user: any,
-  handleRoleSign: (role: SignatureRoleKey) => void
+  handleRoleSign: HandleRoleSignFn,
+  handleRoleRevert: HandleRoleRevertFn
 ) {
   const sig = purchaseOrder.signatures?.[roleKey];
   const signedBy = sig?.signedBy;
   const isSigned = Boolean(sig?.signedImg);
 
-  const isCurrentUserRole = user?.signatureRole === roleKey;
-  const canCurrentUserSign = isCurrentUserRole && user?.signedImg && !isSigned;
+  const isOverrideSigner = user?.signatureRole === "overrideSigner";
+  const isAdmin = user?.permissionRole === "admin";
+
+  const hasUserSignature = Boolean(user?.signedImg);
+
+  const signedById =
+    typeof signedBy === "object" ? signedBy?._id : signedBy ?? null;
+  const isSignedByCurrentUser =
+    !!signedById && !!user?._id && signedById === user._id;
+
+  // Direct mapping (e.g. signatureRole === "financeDepartment")
+  const isDirectRole = user?.signatureRole === roleKey;
+
+  // Can this user sign THIS box?
+  const canSignThisRole =
+    !isAdmin && (isDirectRole || isOverrideSigner); // admins never sign
+
+  const canCurrentUserSign = canSignThisRole && hasUserSignature && !isSigned;
+
+  // Who can revert?
+  const canRevert =
+    !!sig?.signedImg &&
+    (isSignedByCurrentUser || isAdmin || isOverrideSigner);
 
   const displayName = (() => {
     if (!signedBy) return "N/A";
@@ -42,20 +65,32 @@ function renderSignatureBox(
     return `${signedBy.firstName} ${signedBy.lastName}`;
   })();
 
+  const labelText = canSignThisRole ? `${label} (YOU)` : label;
+
   return (
-    <div className="flex flex-col">
-      <p className="font-semibold mb-1">{label}</p>
+    <div className="flex flex-col gap-2">
+      <p className="font-semibold mb-1">{labelText}</p>
 
       {isSigned ? (
         <>
-          <p className="text-sm mb-1">
+          <p className="text-sm">
             Signed by: <span className="font-semibold">{displayName}</span>
           </p>
           <img
             src={sig!.signedImg!}
             alt={`${label} signature`}
-            className="w-[253px] h-[83px] p-2 object-contain bg-white border border-gray-500"
+            className="w-full max-w-[260px] h-[90px] p-2 object-contain bg-white border border-gray-400"
           />
+          {canRevert && (
+            <Button
+              size="sm"
+              variant="destructive"
+              className="mt-2 w-fit"
+              onClick={() => handleRoleRevert(roleKey)}
+            >
+              Revert
+            </Button>
+          )}
         </>
       ) : canCurrentUserSign ? (
         <Button
@@ -63,12 +98,22 @@ function renderSignatureBox(
           className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
           onClick={() => handleRoleSign(roleKey)}
         >
-          Click to sign as {label}
+          Click to sign as {labelText}
         </Button>
-      ) : (
-        <p className="text-sm italic text-muted-foreground">
-          No signature.
+      ) : canSignThisRole && !hasUserSignature ? (
+        <p className="text-xs text-muted-foreground">
+          No signature on file.{" "}
+          <a
+            href="/profile"
+            className="underline text-blue-600 dark:text-blue-400"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Click here to add one.
+          </a>
         </p>
+      ) : (
+        <p className="text-sm italic text-muted-foreground">No signature.</p>
       )}
     </div>
   );
@@ -88,6 +133,10 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
   //States
   const [PDFLoader, setPDFLoader] = useState(false);
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
+  
+  const purchaseOrder = useAppSelector((state) =>
+    state.purchaseOrdersRouter.purchaseOrders.find((po) => po._id === purchaseOrderId)
+  );
 
   // const handleRevertSignature = async () => {
   //   try {
@@ -110,14 +159,28 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
   // };
 
   const handleRoleSign: HandleRoleSignFn = async (role) => {
-    // We never expect to sign as submitter from here,
-    // but this keeps the type happy.
+    // Submitter is usually auto-signed; keep or remove this guard if
+    // you *do* want overrideSigner to be able to sign submitter.
+    // If you want overrideSigner to sign submitter too, delete this block.
     if (role === "submitter") return;
 
     if (!user?._id) {
       toast({
         title: "Error",
         description: "You must be logged in to sign.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const isAdmin = user.permissionRole === "admin";
+    const isOverrideSigner = user.signatureRole === "overrideSigner";
+
+    // Admins are not allowed to sign at all
+    if (isAdmin && !isOverrideSigner) {
+      toast({
+        title: "Not Allowed",
+        description: "Admins cannot sign purchase orders. Use an override signer account.",
         variant: "destructive",
       });
       return;
@@ -132,7 +195,10 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
       return;
     }
 
-    if (user.signatureRole !== role) {
+    const isDirectRole = user.signatureRole === role;
+    const canSignThisRole = isDirectRole || isOverrideSigner;
+
+    if (!canSignThisRole) {
       toast({
         title: "Not Authorized",
         description: "You are not allowed to sign for this role.",
@@ -143,7 +209,7 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
 
     try {
       await dispatch(
-        signPurchaseOrderRole({ poId: purchaseOrder?._id!, role })
+        signPurchaseOrderRole({ poId: purchaseOrder!._id, role })
       ).unwrap();
 
       toast({
@@ -178,9 +244,71 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
     }
   }
 
-  const purchaseOrder = useAppSelector((state) =>
-    state.purchaseOrdersRouter.purchaseOrders.find((po) => po._id === purchaseOrderId)
-  );
+  const handleRoleRevert: HandleRoleRevertFn = async (role) => {
+    const sig = purchaseOrder?.signatures?.[role];
+    if (!sig?.signedImg) return;
+
+    const isAdmin = user?.permissionRole === "admin";
+    const isOverrideSigner = user?.signatureRole === "overrideSigner";
+
+    // Who originally signed this?
+    const signedBy = sig.signedBy;
+    const signedById =
+      typeof signedBy === "object" ? signedBy?._id?.toString() : signedBy?.toString();
+
+    const isSignedByCurrentUser =
+      !!signedById && !!user?._id && signedById === user._id;
+
+    // If it's the submitter signature, only admin/overrideSigner can revert
+    if (role === "submitter" && !isAdmin && !isOverrideSigner) {
+      toast({
+        title: "Not Allowed",
+        description: "The submitter signature can only be reverted by an admin or override signer.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For all roles, you must be: the signer, an admin, or overrideSigner
+    if (!isSignedByCurrentUser && !isAdmin && !isOverrideSigner) {
+      toast({
+        title: "Not Authorized",
+        description: "You are not allowed to revert this signature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const ok = window.confirm(
+      "Are you sure you want to revert this signature and set the status back to Pending?"
+    );
+    if (!ok) return;
+
+    try {
+      await dispatch(
+        signPurchaseOrderRole({
+          poId: purchaseOrder!._id,
+          role: role as "manager" | "generalManager" | "financeDepartment" | "submitter", // adjust typing if needed
+          // assuming you've already extended your thunk/route to accept this
+          revert: true,
+        } as any)
+      ).unwrap();
+
+      toast({
+        title: "Signature Reverted",
+        description: "Signature was reverted and status set to Pending.",
+        variant: "success",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "Failed to revert signature.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   if (!purchaseOrder) return null;
 
@@ -349,94 +477,57 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
           </div>
 
           {/* signatures section */}
-          <div className="mt-8 border-t pt-6">
-            <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-4">
-              Signatures
-            </h3>
+            <div className="mt-8 border-t pt-6">
+              <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-4">
+                Signatures
+              </h3>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Submitter (already auto-signed at creation) */}
-              {renderSignatureBox(
-                "submitter",
-                "Submitter",
-                purchaseOrder,
-                user,
-                handleRoleSign
-              )}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="border border-gray-500 rounded-md p-4 bg-slate-50 dark:bg-slate-900/40">
+                  {renderSignatureBox(
+                    "submitter",
+                    "Submitter",
+                    purchaseOrder,
+                    user,
+                    handleRoleSign,
+                    handleRoleRevert
+                  )}
+                </div>
 
-              {renderSignatureBox(
-                "manager",
-                "Manager",
-                purchaseOrder,
-                user,
-                handleRoleSign
-              )}
+                <div className="border border-gray-500 rounded-md p-4 bg-slate-50 dark:bg-slate-900/40">
+                  {renderSignatureBox(
+                    "manager",
+                    "Manager",
+                    purchaseOrder,
+                    user,
+                    handleRoleSign,
+                    handleRoleRevert
+                  )}
+                </div>
 
-              {renderSignatureBox(
-                "generalManager",
-                "General Manager",
-                purchaseOrder,
-                user,
-                handleRoleSign
-              )}
+                <div className="border border-gray-500 rounded-md p-4 bg-slate-50 dark:bg-slate-900/40">
+                  {renderSignatureBox(
+                    "generalManager",
+                    "General Manager",
+                    purchaseOrder,
+                    user,
+                    handleRoleSign,
+                    handleRoleRevert
+                  )}
+                </div>
 
-              {renderSignatureBox(
-                "financeDepartment",
-                "Finance Department",
-                purchaseOrder,
-                user,
-                handleRoleSign
-              )}
-            </div>
-
-            {/* optional global revert button (keeps your existing behavior) */}
-            {purchaseOrder.status !== "Pending" && (
-              <div className="mt-6 flex justify-end">
-                <Button
-                  className="dark:bg-red-500"
-                  variant="destructive"
-                  onClick={() => setRevertConfirmOpen(true)}
-                >
-                  Revert All Signatures
-                </Button>
+                <div className="border border-gray-500 rounded-md p-4 bg-slate-50 dark:bg-slate-900/40">
+                  {renderSignatureBox(
+                    "financeDepartment",
+                    "Finance Department",
+                    purchaseOrder,
+                    user,
+                    handleRoleSign,
+                    handleRoleRevert
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* <div className="mt-8 border-t pt-6">
-            <div className="flex justify-between items-center">
-              {purchaseOrder?.signatures?.submitter?.signedImg ? (
-                <>
-                  <div className="">
-                    <p className="font-semibold">Signed by: {typeof purchaseOrder?.signatures?.submitter?.signedBy === "string"
-                    ? purchaseOrder?.signatures?.submitter?.signedBy
-                    : `${purchaseOrder?.signatures?.submitter?.signedBy?.firstName} ${purchaseOrder?.signatures?.submitter?.signedBy?.lastName}`}</p>
-                    <img
-                      src={purchaseOrder?.signatures?.submitter?.signedImg}
-                      alt="Signature"
-                      className="w-[253px] p-2 h-[83px] object-contain mt-2 bg-white border border-gray-500"
-                    />
-                  </div>
-                <Button
-                  className="dark:bg-red-500"
-                  variant="destructive"
-                  onClick={() => setRevertConfirmOpen(true)} >
-                  Revert Signature
-                </Button>
-                </>
-              ) : (
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  variant="default"
-                  onClick={() => {
-                    setOpenSignModal(true);
-                  }}
-                >
-                  Sign Purchase Order
-                </Button>
-              )}
             </div>
-          </div> */}
 
         </div>
       </DialogContent>
