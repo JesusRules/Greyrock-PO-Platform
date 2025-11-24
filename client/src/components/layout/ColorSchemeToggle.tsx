@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useMantineColorScheme, Image, Button } from '@mantine/core';
+import NotificationsDropdown from './NotificationsDropdown';
 
 function ColorSchemeToggle() {
     const { setColorScheme } = useMantineColorScheme();
@@ -33,7 +34,8 @@ function ColorSchemeToggle() {
     }
 
   return (
-    <div className='fixed top-0 right-0 z-[2000]'>
+    <div className='fixed top-1 right-0 z-[2000] flex gap-[11px] items-center'>
+        <NotificationsDropdown />
         <Button h={42} w={50} p={0} radius='md' onClick={toggleColorScheme}>
             {colorScheme === 'dark' ? (
                 <Image 

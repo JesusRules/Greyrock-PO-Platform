@@ -9,6 +9,7 @@ import { toast } from "../../../hooks/use-toast"
 import { fetchDepartments } from "../../../redux/features/departments-slice";
 import { fetchPurchaseOrders } from "../../../redux/features/po-slice";
 import { fetchUsers } from "../../../redux/features/users-slice";
+import ColorSchemeToggle from "@components/layout/ColorSchemeToggle";
 
 export default function POPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -50,6 +51,7 @@ export default function POPage() {
 
   return (
     <>
+    <ColorSchemeToggle />
     <Drawer />
     <div className="mx-auto py-10 mt-5 max-w-[1200px] px-3">
       <h1 className="text-3xl font-bold mb-6">Purchase Order Management</h1>

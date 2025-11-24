@@ -29,7 +29,7 @@ createRoot(document.getElementById('root')!).render(
       <GlobalContextProvider>
       <PurchaseOrderProvider>
       <MantineProvider theme={theme}>
-      <ColorSchemeToggle />
+      {/* <ColorSchemeToggle /> */}
       <GlobalLoader />
       <Toaster />
 
