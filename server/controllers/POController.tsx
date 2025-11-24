@@ -428,9 +428,21 @@ export const sendPurchaseOrderSignatureEmails = async (req: Request, res: Respon
     }
 
     // Bulk send
+    // const emailPromises = signers.map((signer: any) => {
+    //   resend.emails.send({
+    //     from: "notifications@po-greyrock.com",
+    //     to: signer.email,
+    //     subject: `Signature Required — Purchase Order #${purchaseOrder.poNumber}`,
+    //     react: EmailTemplateNewPORequiresSignature({
+    //       purchaseOrder,
+    //       signer,
+    //     }),
+    //   });
+    //   return;
+    // });
     const emailPromises = signers.map((signer: any) => {
       resend.emails.send({
-        from: "notifications@po-greyrock.com",
+        from: "Grey Rock Purchase Orders <notifications@po-greyrock.com>",
         to: signer.email,
         subject: `Signature Required — Purchase Order #${purchaseOrder.poNumber}`,
         react: EmailTemplateNewPORequiresSignature({

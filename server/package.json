@@ -15,6 +15,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@react-email/render": "^2.0.0",
     "@react-pdf/renderer": "^4.3.0",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.1",

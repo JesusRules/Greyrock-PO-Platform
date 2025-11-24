@@ -108,14 +108,14 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
             <span>Purchase Order #{purchaseOrder.poNumber}</span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mr-5">
               {/* <Button className="border border-gray-500" variant="outline" size="sm" onClick={() => downloadPdf(purchaseOrder._id)}> */}
               <Button className="border border-gray-500" variant="outline" size="sm" onClick={() => viewPO_PDF(purchaseOrder)}>
                 <FileDown className="h-4 w-4 mr-1" /> Download PDF
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpenViewPO(false)}>
+              {/* <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpenViewPO(false)}>
                 <X className="h-4 w-4" />
-              </Button>
+              </Button> */}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -285,11 +285,11 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
               {purchaseOrder?.signatures?.submitter?.signedImg ? (
                 <>
                   <div className="">
-                    <p className="font-semibold">Signed by: {typeof purchaseOrder?.signedBy === "string"
-                    ? purchaseOrder?.signedBy // fallback if not populated
-                    : `${purchaseOrder?.signedBy?.firstName} ${purchaseOrder?.signedBy?.lastName}`}</p>
+                    <p className="font-semibold">Signed by: {typeof purchaseOrder?.signatures?.submitter?.signedBy === "string"
+                    ? purchaseOrder?.signatures?.submitter?.signedBy
+                    : `${purchaseOrder?.signatures?.submitter?.signedBy?.firstName} ${purchaseOrder?.signatures?.submitter?.signedBy?.lastName}`}</p>
                     <img
-                      src={purchaseOrder?.signedImg}
+                      src={purchaseOrder?.signatures?.submitter?.signedImg}
                       alt="Signature"
                       className="w-[253px] p-2 h-[83px] object-contain mt-2 bg-white border border-gray-500"
                     />

@@ -22,7 +22,9 @@ export function EmailTemplateNewPORequiresSignature({
 
       <p>
         You are receiving this email because you are assigned the signature role:{" "}
-        <b>{signer.signatureRole}</b>.
+        <b>{signer.signatureRole === 'generalManager' ? 'General Manager' : signer.signatureRole === 'financeDepartment' ? 'Finance Department' 
+          : signer.signatureRole === 'overrideSigner' ? 'Override Signer' : signer.signatureRole}</b>.
+        {/* <b>{signer.signatureRole}</b>. */}
       </p>
 
       <p>Your signature is required to continue the approval process.</p>
@@ -32,11 +34,17 @@ export function EmailTemplateNewPORequiresSignature({
       <p><b>Date:</b> {readableDate}</p>
       <p><b>Department:</b> {purchaseOrder.department?.name}</p>
 
-      <p>
+      {/* <p>
         <b>Submitter:</b>{" "}
         {typeof purchaseOrder.submitter === "object"
           ? `${purchaseOrder.submitter.firstName} ${purchaseOrder.submitter.lastName}`
           : purchaseOrder.submitter}
+      </p> */}
+      <p>
+        <b>Submitter:</b>{" "}
+        {typeof purchaseOrder.signatures.submitter.signedBy === "object"
+          ? `${purchaseOrder.signatures.submitter.signedBy.firstName} ${purchaseOrder.signatures.submitter.signedBy.lastName}`
+          : purchaseOrder.signatures.submitter.signedBy}
       </p>
 
       <p><b>Total:</b> ${purchaseOrder.total?.toFixed(2)}</p>

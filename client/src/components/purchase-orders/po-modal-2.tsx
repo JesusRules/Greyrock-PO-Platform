@@ -492,7 +492,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
   return (
   <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
+    <DialogContent onInteractOutside={(e) => e.preventDefault()} className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-darkModal">
       <DialogHeader>
         <div className="flex justify-between items-start mr-3">
           <div>
@@ -577,7 +577,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
                 setOriginalPoNumber(null);
               }
             }}
-            className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:text-white"
+            className="bg-blue-500 dark:bg-blue-700 hover:bg-blue-600 dark:text-white mr-2"
           >
             {isEditing ? 'Reset' : 'Clear'}
           </Button>
@@ -1023,72 +1023,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
           <span>Total:</span>
           <span>${total.toFixed(2)}</span>
         </div>
-
         </div>
-
-        {/* <div className="space-y-2">
-            <div className="flex justify-between text-md">
-            <span>Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between items-center text-md gap-4">
-                <span>Shipping:</span>
-                <div className="w-[6rem]">
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                      $
-                    </span>
-                    <ShippingInput
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={shipping}
-                      className="pl-6 text-right"   // 👈 padding so text doesn’t overlap the $
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        if (raw === "") {
-                          setShipping(0);
-                          return;
-                        }
-                        const num = parseFloat(raw);
-                        if (!Number.isNaN(num)) setShipping(num);
-                      }}
-                      onBlur={(e) => {
-                        const num = parseFloat(e.target.value);
-                        setShipping(Number.isNaN(num) ? 0 : num);
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-            <div className="flex justify-between items-center gap-4">
-            <span className="text-md">Tax Rate:</span>
-            <div className="w-[6rem]">
-                <Select value={taxRate.toString()} onValueChange={(val) => setTaxRate(parseFloat(val))}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Tax %" />
-                </SelectTrigger>
-                <SelectContent>
-                    {[0, 5, 13, 15].map((rate) => (
-                    <SelectItem key={rate} value={rate.toString()}>
-                        {rate}%
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-            </div>
-            </div>
-            
-            <div className="pt-1"/>
-            <Separator className="border-gray-400 dark:border-gray-500 border" />
-
-            <div className="text-lg flex justify-between font-semibold pt-3">
-            <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
-            </div>
-        </div> */}
         </div>
 
           <DialogFooter className="mt-10">
