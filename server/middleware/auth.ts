@@ -32,9 +32,13 @@ export const protect = async (
       process.env.JWT_SECRET!
     ) as JwtPayload;
 
-    const user = await User.findById(decoded.id).select(
-      "-password"
-    ).lean<UserType>();
+    // const user = await User.findById(decoded.id).select(
+    //   "-password"
+    // ).lean<UserType>();
+    const user = await User.findById(decoded.id)
+    .select("-password")
+    .populate("departments")          // ⬅️ important
+    .lean<UserType>();
 
     if (!user) {
       res.status(401).json({ message: "User not found" });

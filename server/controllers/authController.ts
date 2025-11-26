@@ -14,12 +14,18 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
     const identifier = (email || login)?.toLowerCase();
 
-    // const user = await User.findOne({ email });
-    const user = await User.findOne({
-      $or: [{ email: identifier }, 
-            // { login: identifier }
-      ],
-    });
+    // const user = await User.findOne({
+    //   $or: [{ email: identifier }, 
+    //   ],
+    // });
+     const user = await User.findOne({
+      $or: [{ email: identifier }],
+      })
+      .populate({
+        path: "departments",
+        select: "name departmentCode", // whatever fields you need
+      });
+      
     if (!user) {
       res
       .set(createNoCacheHeaders())
@@ -91,6 +97,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         permissionRole: user.permissionRole,
         signatureRole: user.signatureRole,
         phoneNumber: user.phoneNumber,
+        departments: user.departments
       },
     });
   } catch (err) {

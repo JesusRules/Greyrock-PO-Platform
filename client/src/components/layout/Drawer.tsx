@@ -53,7 +53,7 @@ export function Drawer() {
             </p>
             <p className="text-left text-sm mb-10 ml-4">
               Signature Role: <strong>&nbsp;&nbsp;{user?.signatureRole === 'generalManager' ? 'General Manager' : user?.signatureRole === 'financeDepartment' ? 'Finance Department' 
-                    : user?.signatureRole === 'overrideSigner' ? 'Override Signer' : user?.signatureRole}</strong>
+                    : user?.signatureRole === 'overrideSigner' ? 'Override Signer' : user?.signatureRole === 'submitter' ? 'Submitter' : user?.signatureRole}</strong>
             </p>
 
             <nav className="mt-8 space-y-4 px-2">
