@@ -119,12 +119,17 @@ function renderSignatureBox(
   );
 }
 
-interface PurchaseOrderViewModalProps {
-  purchaseOrderId: string;
-}
+// interface PurchaseOrderViewModalProps {
+//   purchaseOrderId: string;
+// }
+// interface PurchaseOrderViewModalProps {
+//   purchaseOrderId: string;
+//   open?: boolean;
+//   onOpenChange?: (open: boolean) => void;
+// }
 
-export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewModalProps) {
-  const { openSignModal, setOpenSignModal, openViewPO, setOpenViewPO } = useGlobalContext();
+export function PurchaseOrderViewModal() {
+  const { openSignModal, setOpenSignModal, openViewPO, setOpenViewPO, currentPO } = useGlobalContext();
   const { downloadPdf } = usePurchaseOrders()
   const { toast } = useToast();
   //Redux
@@ -135,8 +140,10 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
   const [revertConfirmOpen, setRevertConfirmOpen] = useState(false);
   
   const purchaseOrder = useAppSelector((state) =>
-    state.purchaseOrdersRouter.purchaseOrders.find((po) => po._id === purchaseOrderId)
+    state.purchaseOrdersRouter.purchaseOrders.find((po) => po._id === currentPO)
   );
+
+  const isOpen = open ?? true; // fallback: if not controlled, always open
 
   // const handleRevertSignature = async () => {
   //   try {
@@ -320,6 +327,16 @@ export function PurchaseOrderViewModal({ purchaseOrderId }: PurchaseOrderViewMod
         setOpenViewPO(false);
       }
     }}>
+    {/* <Dialog
+      open={isOpen}
+      onOpenChange={(next) => {
+        if (onOpenChange) {
+          onOpenChange(next);
+        }
+        // if you still use global context elsewhere, you can sync it here:
+        // if (!openSignModal) setOpenViewPO(next);
+      }}
+    > */}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">

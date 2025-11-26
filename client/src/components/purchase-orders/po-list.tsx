@@ -22,13 +22,13 @@ import { Tooltip, Modal, Text, Group, Button as MantineButton } from "@mantine/c
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 export function PurchaseOrderList() {
-  const { setOpenSignModal, setOpenViewPO } = useGlobalContext();
+  const { setOpenSignModal, setOpenViewPO, setCurrentPO, currentPO } = useGlobalContext();
   const { downloadPdf } = usePurchaseOrders()
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   // const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [currentPO, setCurrentPO] = useState<any>(null)
+  // const [currentPO, setCurrentPO] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -45,14 +45,14 @@ export function PurchaseOrderList() {
   // Fiscal year filter (2025-2026, 2026-2027, etc.)
   const [fiscalYearFilter, setFiscalYearFilter] = useState("all");
 
-  useEffect(() => { //Instead of storing currentPO in redux, we do this
-    if (!currentPO) return;
+  // useEffect(() => { //Instead of storing currentPO in redux, we do this
+  //   if (!currentPO) return;
 
-    const updatedPO = purchaseOrders.find(po => po._id === currentPO._id);
-    if (updatedPO && JSON.stringify(updatedPO) !== JSON.stringify(currentPO)) {
-      setCurrentPO(updatedPO);
-    }
-  }, [purchaseOrders, currentPO]);
+  //   const updatedPO = purchaseOrders.find(po => po._id === currentPO);
+  //   if (updatedPO && JSON.stringify(updatedPO) !== JSON.stringify(currentPO)) {
+  //     setCurrentPO(updatedPO);
+  //   }
+  // }, [purchaseOrders, currentPO]);
 
    const getFiscalYearLabel = (dateInput: string | Date | undefined): string | null => {
       if (!dateInput) return null;
@@ -122,13 +122,14 @@ export function PurchaseOrderList() {
   });
 
   const handleView = (po: any) => {
-    setCurrentPO(po)
-    setOpenViewPO(true)
+    setCurrentPO(po._id);
+    setOpenViewPO(true);
   }
 
   const handleEdit = (po: any) => {
-    setCurrentPO(po)
-    setIsEditModalOpen(true)
+    setCurrentPO(po._id)
+    console.log('po', po._id)
+    setIsEditModalOpen(true);
   }
 
   // Open confirm modal
@@ -332,7 +333,7 @@ export function PurchaseOrderList() {
                   <span
                     onClick={() => { 
                       (po.status === 'Pending' || po.status === 'Signed') && setOpenSignModal(true)
-                      setCurrentPO(po)}
+                      setCurrentPO(po._id)}
                     }
                     className={`cursor-pointer px-2 py-1 rounded-full text-xs font-medium ${
                       po.status === "Signed"
@@ -412,19 +413,13 @@ export function PurchaseOrderList() {
       
       <PurchaseOrderModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
 
-      {currentPO && (
-        <>
-          <PurchaseOrderModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            mode="edit"
-            purchaseOrder={currentPO}
-          />
-          <PurchaseOrderViewModal
-            purchaseOrderId={currentPO._id}
-          />
-        </>
-      )}
+      <PurchaseOrderModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        mode="edit"
+        // purchaseOrderId={currentPO}
+      />
+      <PurchaseOrderViewModal />
       
       {/* {currentPO && (
         <>

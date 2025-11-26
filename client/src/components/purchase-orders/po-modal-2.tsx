@@ -27,6 +27,7 @@ import { useDispatch } from "react-redux"
 import { useToast } from "../../../hooks/use-toast"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import { ShippingInput } from "@components/ui/ShippingInput"
+import { useGlobalContext } from "../../../context/global-context"
 
 type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
 
@@ -44,14 +45,19 @@ interface PurchaseOrderModalProps {
   isOpen: boolean
   onClose: () => void
   mode: "create" | "edit"
-  purchaseOrder?: PurchaseOrder
+  // purchaseOrderId?: string | null
+  // purchaseOrder?: PurchaseOrder
 }
 
 const PAYMENT_METHODS = ["Cheque", "Credit Card", "Electronic Funds Transfer"]
 // const PAYMENT_METHODS = ["Cheque", "Credit Card", "Wire Transfer", "Cash"]
 
-export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: PurchaseOrderModalProps) {
+export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModalProps) {
+  const { currentPO } = useGlobalContext();
+// export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: PurchaseOrderModalProps) {
   const isEditing = mode === "edit"
+  //Main
+  const [purchaseOrder, setPurchaseOrder] = useState<PurchaseOrder | null>(null);
   //Redux
   const dispatch = useDispatch<AppDispatch>();
   const vendors = useAppSelector(state => state.vendorsReducer.vendors);
@@ -82,6 +88,44 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
   // NEW - Change PO number in edit mode?????
   const [originalDepartment, setOriginalDepartment] = useState<string | null>(null);
   const [originalPoNumber, setOriginalPoNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Only fetch when modal is open AND we're editing AND we have an ID
+    if (!isOpen || !isEditing || !currentPO) {
+      if (!isEditing) {
+        setPurchaseOrder(null);
+      }
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchPurchaseOrder = async () => {
+      try {
+        setIsLoading(true);
+        const res = await api.get(`/api/purchase-orders/${currentPO}`);
+        if (!cancelled) {
+          console.log('res.data.purchaseOrder', res.data.purchaseOrder);
+          setPurchaseOrder(res.data.purchaseOrder);
+        }
+      } catch (err) {
+        console.error("Failed to fetch purchase order", err);
+        if (!cancelled) {
+          setPurchaseOrder(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchPurchaseOrder();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isEditing, currentPO]);
 
   const form = useForm<PurchaseOrderFormValues>({
     resolver: zodResolver(purchaseOrderSchema),
@@ -149,60 +193,39 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
     fetchPoNumber();
   }, [department, isEditing, originalDepartment, originalPoNumber]);
 
-  // I DO NOT KNOW!!!!!!!!!!!!!!!!!!
-  // useEffect(() => {
-  //   const fetchPoNumber = async () => {
-  //     if (mode === "create" && department) {
-  //       try {
-  //         const res = await api.post("/api/departments/po-number", {
-  //           departmentName: department,
-  //           preview: true,
-  //         });
-  //         setPoNumber(res.data.poNumber);
-  //       } catch (err) {
-  //         console.error("Failed to preview PO number", err);
-  //       }
-  //     }
-  //   };
-
-  //   fetchPoNumber();
-  // }, [department, mode]);
-
-  // CHANGE? EDITING MODAL EFFECTS PO NUMBER
   useEffect(() => {
     if (!isOpen) return;
 
     if (isEditing && purchaseOrder) {
-      form.reset({
-        department: purchaseOrder.department.name || "",
-        vendor: purchaseOrder.vendor?.companyName || "",
-        contactName: purchaseOrder.vendor.contactName || "",
-        phone: purchaseOrder.vendor.phoneNumber || "",
-        email: purchaseOrder.vendor.email || "",
-        payableTo: purchaseOrder.vendor.payableTo || "",
-        address: purchaseOrder.vendor.address || "",
-        paymentMethod: purchaseOrder.paymentMethod || "Cheque",
-        // submitter:
-        //   typeof purchaseOrder.submitter === "string"
-        //     ? purchaseOrder.submitter
-        //     : purchaseOrder.submitter?._id || "",
-        submitter:
-          typeof purchaseOrder.signatures.submitter.signedBy === "string"
-            ? purchaseOrder.signatures.submitter.signedBy
-            : purchaseOrder.signatures.submitter.signedBy?._id || "",
-        comments: purchaseOrder.comments || "",
-      });
-
-      const existingPo = purchaseOrder.poNumber || "";
-
-      setPoNumber(existingPo);
-      setOriginalPoNumber(existingPo);          // 👈 remember the original
-      setDate(purchaseOrder.date || new Date());
-      setLineItems(purchaseOrder.lineItems || []);
-      setShipping(purchaseOrder.shipping || 0);
-      setTaxRate(purchaseOrder.taxRate || 13);
-      setOriginalDepartment(purchaseOrder.department.name || "");
-    } else {
+      setTimeout(() => {
+        form.reset({
+          department: purchaseOrder.department.name || "",
+          vendor: purchaseOrder.vendor?.companyName || "",
+          contactName: purchaseOrder.vendor.contactName || "",
+          phone: purchaseOrder.vendor.phoneNumber || "",
+          email: purchaseOrder.vendor.email || "",
+          payableTo: purchaseOrder.vendor.payableTo || "",
+          address: purchaseOrder.vendor.address || "",
+          paymentMethod: purchaseOrder.paymentMethod || "Cheque",
+          submitter:
+            typeof purchaseOrder.signatures.submitter.signedBy === "string"
+              ? purchaseOrder.signatures.submitter.signedBy
+              : purchaseOrder.signatures.submitter.signedBy?._id || "",
+          comments: purchaseOrder.comments || "",
+        });
+  
+        const existingPo = purchaseOrder.poNumber || "";
+  
+        setPoNumber(existingPo);
+        setOriginalPoNumber(existingPo);
+        setDate(purchaseOrder.date || new Date());
+        setLineItems(purchaseOrder.lineItems || []);
+        setShipping(purchaseOrder.shipping || 0);
+        setTaxRate(purchaseOrder.taxRate || 13);
+        setOriginalDepartment(purchaseOrder.department.name || "");
+      }, 100)
+    } else if (!isEditing) {
+      // create mode reset
       form.reset({
         department: "",
         vendor: "",
@@ -216,7 +239,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       });
 
       setPoNumber("");
-      setOriginalPoNumber(null);               // 👈 reset
+      setOriginalPoNumber(null);
       setLineItems([
         {
           uuid: "1",
@@ -232,65 +255,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       setOriginalDepartment(null);
     }
   }, [isOpen, isEditing, purchaseOrder, form]);
-
-  // I DO NOT KNOW?!?!
-  // useEffect(() => {
-  //   if (!isOpen) return;
-
-  //   console.log('purchaseOrder', purchaseOrder);
-  //   console.log('isEditing', isEditing);
-    
-  //   if (isEditing && purchaseOrder) {
-  //     form.reset({
-  //       department: purchaseOrder.department.name || "",
-  //       // poNumber: purchaseOrder.poNumber || "",
-  //       // date: purchaseOrder.date || new Date(),
-  //       vendor: purchaseOrder.vendor?.companyName || "",
-  //       contactName: purchaseOrder.vendor.contactName || "",
-  //       phone: purchaseOrder.vendor.phoneNumber || "",
-  //       email: purchaseOrder.vendor.email || "",
-  //       payableTo: purchaseOrder.vendor.payableTo || "",
-  //       address: purchaseOrder.vendor.address || "",   // 👈 add this
-  //       paymentMethod: purchaseOrder.paymentMethod || "Cheque",
-  //       submitter: typeof purchaseOrder.submitter === "string"
-  //       ? purchaseOrder.submitter
-  //       : purchaseOrder.submitter?._id || "",
-  //     });
-  //     setPoNumber(purchaseOrder.poNumber || "");
-  //     setDate(purchaseOrder.date || new Date());
-
-  //     setLineItems(purchaseOrder.lineItems || []);
-  //     setShipping(purchaseOrder.shipping || 0);
-  //     setTaxRate(purchaseOrder.taxRate || 13);
-  //   } else {
-  //     form.reset({
-  //       department: "",
-  //       // poNumber: "",
-  //       // date: new Date(),
-  //       vendor: "",
-  //       contactName: "",
-  //       phone: "",
-  //       email: "",
-  //       payableTo: "",
-  //       paymentMethod: "Cheque",
-  //       submitter: ""
-  //     });
-
-  //     setPoNumber("");
-  //     setLineItems([
-  //       {
-  //         uuid: "1",
-  //         quantity: 1,
-  //         itemId: "",
-  //         description: "",
-  //         unitPrice: 0,
-  //         lineTotal: 0,
-  //       },
-  //     ]);
-  //     setShipping(0); // THIS IS WHERE TO ADJUST SHIPPING FOR TESTING
-  //     setTaxRate(13);
-  //   }
-  // }, [isOpen]);
 
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
     setLineItems((prev) =>
@@ -420,10 +384,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
         shipping,
         taxRate,
         subtotal,
-        taxAmount: taxRate,
+        taxAmount,
         total,
-        status: purchaseOrder?.status,
-        // submitter: submitterIdVal,
+        status: purchaseOrder?.status, // keep existing status on edit
         comments: form.getValues("comments"),
       };
 
@@ -456,21 +419,21 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
       //   comments: form.getValues("comments")
       // };
       if (!isEditing) {
-        const result = await dispatch(createPurchaseOrder(poData)).unwrap();
+        await dispatch(createPurchaseOrder(poData)).unwrap();
         toast({
-            title: 'Success',
-            description: 'Purchase Order created.',
-            variant: 'success',
+          title: 'Success',
+          description: 'Purchase Order created.',
+          variant: 'success',
         });
       } else {
-        const result = await dispatch(updatePurchaseOrder({
+        await dispatch(updatePurchaseOrder({
           _id: purchaseOrder?._id || '',
           updatedData: poData
         })).unwrap();
         toast({
-            title: 'Success',
-            description: `Purchase Order ${purchaseOrder?.poNumber} updated.`,
-            variant: 'success',
+          title: 'Success',
+          description: `Purchase Order ${purchaseOrder?.poNumber} updated.`,
+          variant: 'success',
         });
       }
 
@@ -489,6 +452,21 @@ export function PurchaseOrderModal({ isOpen, onClose, mode, purchaseOrder }: Pur
 
   const isSelectedSubmitterCurrentUser =
   submitterId && user?._id && submitterId === user._id;
+
+  if (isEditing && isOpen && !purchaseOrder && isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl bg-white dark:bg-darkModal">
+          <DialogHeader>
+            <DialogTitle>Loading Purchase Order...</DialogTitle>
+          </DialogHeader>
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            Please wait while we load the purchase order.
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
   <Dialog open={isOpen} onOpenChange={onClose}>

@@ -16,6 +16,9 @@ interface GlobalContextType {
 	
 	openViewPO: boolean;
 	setOpenViewPO: React.Dispatch<React.SetStateAction<boolean>>;
+	
+	currentPO: string | null;
+	setCurrentPO: React.Dispatch<React.SetStateAction<string | null>>;
 
 	globalLoading: boolean;
 	setGlobalLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -27,10 +30,13 @@ function GlobalContextProvider({ children }: GlobalContextProps) {
     //States
 	const [openCreateVendor, setOpenCreateVendor] = useState(false);
 	const [openEditVendor, setOpenEditVendor] = useState(false);
-	const [openSignModal, setOpenSignModal] = useState(false);
-	const [openViewPO, setOpenViewPO] = useState(false)
 	// 🔥 NEW: loader state
 	const [globalLoading, setGlobalLoading] = useState(false);
+	// Open Pending status thing, 
+	const [openSignModal, setOpenSignModal] = useState(false); // Pending status thing 
+	// Open View Modal (Signs)
+	const [currentPO, setCurrentPO] = useState<string | null>(null)
+	const [openViewPO, setOpenViewPO] = useState(false)
 
     return (
 		<GlobalContext.Provider value={{ 
@@ -39,6 +45,7 @@ function GlobalContextProvider({ children }: GlobalContextProps) {
 			openSignModal, setOpenSignModal,
 			openViewPO, setOpenViewPO,
 			globalLoading, setGlobalLoading,
+			currentPO, setCurrentPO
 		}}  
 		> 
 			{children}

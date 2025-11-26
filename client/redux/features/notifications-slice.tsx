@@ -39,15 +39,19 @@ const notificationsSlice = createSlice({
 
 
 export const fetchNotifications = createAsyncThunk(
-    "notifications/fetch",
-    async (_, { rejectWithValue }) => {
-      try {
-        const response = await api.get("/api/notifications");
-        return response.data.notifications;
-      } catch (err: any) {
-        return rejectWithValue(err.response?.data?.message || "Failed to load notifications");
-      }
+  "notifications/fetch",
+  async (_, thunkAPI) => {
+    try {
+      const { data } = await api.get(
+        "/api/purchase-orders/pending-signatures/me"
+      ); // adjust base path to match your server
+      return data.purchaseOrders; // array of POs needing this user's signature
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(
+        err?.response?.data?.message || "Failed to load notifications"
+      );
     }
+  }
 );
 
 export const { 

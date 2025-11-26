@@ -48,6 +48,43 @@ export const getAllPurchaseOrders = async (req: Request, res: Response) => {
   }
 };
 
+// controllers/POController.ts
+
+// controllers/POController.ts
+export const getPurchaseOrderById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const order = await PurchaseOrder.findById(id)
+      .populate({ path: "department", model: Department })
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+    if (!order) {
+      res
+        .status(404)
+        .set(createNoCacheHeaders())
+        .json({ message: "Purchase order not found" });
+      return;
+    }
+
+    res
+      .status(200)
+      .set(createNoCacheHeaders())
+      .json({ purchaseOrder: order }); // 👈 singular
+      return;
+  } catch (err) {
+    console.error("Fetching purchase order by id error:", err);
+    res
+      .status(500)
+      .set(createNoCacheHeaders())
+      .json({ message: "Failed to fetch purchase order" });
+    return;
+  }
+};
+
 // POST create
 export const createPurchaseOrder = async (req: Request, res: Response) => {
   try {
@@ -323,128 +360,96 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
   }
 };
 
-// OLD Submitter way (created Cloudinary)
-// export const purchaseOrderSign = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { signature, signedBy } = req.body;
-//     const id = req.params.id;
+export const getMyPendingSignaturePurchaseOrders = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const authUser = (req as any).user; // from protect middleware
 
-//     const purchaseOrder = await PurchaseOrder.findById(id);
-//     if (!purchaseOrder) {
-//       res
-//       .set(createNoCacheHeaders())
-//       .status(404).json({ message: "Purchase order not found" });
-//       return;
-//     }
+    if (!authUser?._id) {
+      res
+        .set(createNoCacheHeaders())
+        .status(401)
+        .json({ message: "Not authenticated." });
+      return;
+    }
 
-//     // Delete old signature if exists
-//     if (purchaseOrder.signedImg !== null && purchaseOrder.signedImg !== undefined) {
-//       const urlParts = purchaseOrder.signedImg.split("/");
-//       const fileName = urlParts[urlParts.length - 1];
-//       const publicId = `po_signed/${fileName.split(".")[0]}`;
+    const user = await User.findById(authUser._id);
 
-//       try {
-//         await cloudinary.uploader.destroy(publicId);
-//         console.log(`🗑️ Deleted previous signature: ${publicId}`);
-//       } catch (deleteErr) {
-//         console.warn("⚠️ Failed to delete old signature:", deleteErr);
-//       }
-//     }
+    if (!user) {
+      res
+        .set(createNoCacheHeaders())
+        .status(404)
+        .json({ message: "User not found." });
+      return;
+    }
 
-//     // Upload new signature to Cloudinary
-//     const cloudinaryRes = await cloudinary.uploader.upload(signature, {
-//       folder: "po_signed",
-//     });
+    const role = user.signatureRole; // submitter | manager | generalManager | financeDepartment | overrideSigner?
 
-//     purchaseOrder.signedImg = cloudinaryRes.secure_url;
-//     purchaseOrder.status = 'Signed';
-//     purchaseOrder.signedBy = signedBy;
-//     await purchaseOrder.save();
+    const allowedRoles = [
+      "submitter",
+      "manager",
+      "generalManager",
+      "financeDepartment",
+      // "overrideSigner", // Turn back on if you want overrideSigner
+    ];
 
-//     const populatedOrder = await PurchaseOrder.findById(purchaseOrder._id)
-//       .populate({ path: 'department', model: Department })
-//       // .populate({ path: 'vendor', model: Vendor })
-//       // .populate({ path: 'submitter', model: User })
-//       // .populate({ path: 'signedBy', model: User });
-//       // Signatures: populate the user in each role
-//       .populate({ path: "signatures.submitter.signedBy", model: User })
-//       .populate({ path: "signatures.manager.signedBy", model: User })
-//       .populate({ path: "signatures.generalManager.signedBy", model: User })
-//       .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+    if (!allowedRoles.includes(role)) {
+      // User has no signing responsibility → no notifications
+      res
+        .set(createNoCacheHeaders())
+        .status(200)
+        .json({ purchaseOrders: [], count: 0 });
+      return;
+    }
 
-//     res.status(201).set(createNoCacheHeaders()).json({
-//       message: "Signature saved",
-//       purchaseOrder: populatedOrder,
-//     });
-//   } catch (error) {
-//     console.error("Signature error:", error);
-//     res.status(500).set(createNoCacheHeaders()).json({ error: "Server error" });
-//   }
-// };
+    let query: any = {
+      status: { $in: ["Pending", "Approved"] }, // tweak if you only want Pending
+    };
 
-// OLD Submitter way (destroyed Cloudinary)
-// PUT /api/purchase-orders/:id/revert-signature
-// export const revertPurchaseOrderSignature = async (req: Request, res: Response) => {
-//   try {
-//     const order = await PurchaseOrder.findById(req.params.id);
-//     if (!order) {
-//       res
-//       .set(createNoCacheHeaders())
-//       .status(404).json({ message: "PO not found" });
-//       return;
-//     }
+    if (role === "overrideSigner") {
+      // Override signer sees any PO where any role is still unsigned
+      query.$or = [
+        { "signatures.submitter.signedImg": null },
+        { "signatures.manager.signedImg": null },
+        { "signatures.generalManager.signedImg": null },
+        { "signatures.financeDepartment.signedImg": null },
+      ];
+    } else {
+      // Normal case: only POs where *this* role hasn't signed yet
+      query[`signatures.${role}.signedImg`] = null;
+    }
 
-//     // Delete old signature if exists
-//     if (order.signedImg) {
-//       const urlParts = order.signedImg.split("/");
-//       const fileName = urlParts[urlParts.length - 1];
-//       const publicId = `po_signed/${fileName.split(".")[0]}`;
+    const pos = await PurchaseOrder.find(query)
+      .sort({ createdAt: -1 })
+      .populate({ path: "department", model: Department })
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
-//       try {
-//         await cloudinary.uploader.destroy(publicId);
-//         console.log(`🗑️ Deleted previous signature: ${publicId}`);
-//       } catch (deleteErr) {
-//         console.warn("⚠️ Failed to delete old signature:", deleteErr);
-//       }
-//     }
-
-//     order.signedImg = null;
-//     order.signedBy = null;
-//     order.status = "Pending";
-//     await order.save();
-
-//     const populatedOrder = await PurchaseOrder.findById(order._id)
-//       .populate({ path: 'department', model: Department })
-//       // .populate({ path: 'vendor', model: Vendor })
-//       // .populate({ path: 'submitter', model: User })
-//       // .populate({ path: 'signedBy', model: User });
-//       // Signatures: populate the user in each role
-//       .populate({ path: "signatures.submitter.signedBy", model: User })
-//       .populate({ path: "signatures.manager.signedBy", model: User })
-//       .populate({ path: "signatures.generalManager.signedBy", model: User })
-//       .populate({ path: "signatures.financeDepartment.signedBy", model: User });
-
-//     res
-//     .set(createNoCacheHeaders())
-//     .status(200).json({ message: "Signature reverted", purchaseOrder: populatedOrder });
-//   } catch (err) {
-//     console.error("Error reverting signature:", err);
-//     res
-//     .set(createNoCacheHeaders())
-//     .status(500).json({ message: "Failed to revert signature", error: err });
-//   }
-// };
+    res
+      .set(createNoCacheHeaders())
+      .status(200)
+      .json({
+        purchaseOrders: pos,
+        count: pos.length,
+        role, // the role used to compute these
+      });
+  } catch (err) {
+    console.error("getMyPendingSignaturePurchaseOrders error:", err);
+    res
+      .set(createNoCacheHeaders())
+      .status(500)
+      .json({ message: "Failed to fetch pending signature purchase orders." });
+  }
+};
 
 export const getPurchaseOrderPDF = async (req: Request, res: Response) => {
   try {
     const isDownload = req.query.download === 'true';
 
-  //  const purchaseOrder = await PurchaseOrder.findById(req.params.id)
-  //     .populate({ path: 'department', model: Department })
-  //     .populate({ path: 'vendor', model: Vendor })
-  //     .populate({ path: 'submitter', model: User })
-  //     .populate({ path: 'signedBy', model: User })
-  //     .lean<POType>()
     const purchaseOrder = await PurchaseOrder.findById(req.params.id)
       .populate({ path: 'department', model: Department })
       // .populate({ path: 'submitter', model: User })
