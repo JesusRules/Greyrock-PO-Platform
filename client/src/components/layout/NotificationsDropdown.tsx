@@ -138,9 +138,11 @@ const NotificationsDropdown = () => {
           <Menu.Label>Purchase Orders Signatures Needed</Menu.Label>
 
           {!hasNotifications && (
+            <div className='ml-7'>
             <Text size="xs" c="dimmed" className="px-3 py-2">
               No purchase orders require your signature.
             </Text>
+            </div>
           )}
 
           {hasNotifications &&

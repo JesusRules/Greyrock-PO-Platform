@@ -103,6 +103,14 @@ const usersSlice = createSlice({
           user._id === action.payload._id ? action.payload : user
         );
       })
+      //Archived
+      .addCase(archiveUser.fulfilled, (state, action) => {
+        const updated = action.payload;
+        const index = state.users.findIndex((u) => u._id === updated._id);
+        if (index !== -1) {
+          state.users[index] = updated;
+        }
+      });
   },
 });
 
@@ -201,6 +209,19 @@ export const deleteUser = createAsyncThunk<
   }
 );
 
+export const archiveUser = createAsyncThunk<
+  User,
+  { id: string; isArchived: boolean },
+  { rejectValue: string }
+>("users/archiveUser", async ({ id, isArchived }, { rejectWithValue }) => {
+  try {
+    const res = await api.patch(`/api/users/${id}/archive`, { isArchived });
+    return res.data.updatedUser as User;
+  } catch (err: any) {
+    console.error(err);
+    return rejectWithValue("Failed to archive user");
+  }
+});
 
 export const { setUsers, addUser, removeUser, setUserMutable } = usersSlice.actions;
 export default usersSlice.reducer;

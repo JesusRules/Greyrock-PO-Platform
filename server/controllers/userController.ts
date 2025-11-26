@@ -47,45 +47,99 @@ export const getUsers = async (req: Request, res: Response) => {
 // POST /api/users
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, email, permissionRole, signatureRole, password, phoneNumber } = req.body
-
-    if (!email || !password) {
-      res.status(400)
-      .set(createNoCacheHeaders())
-      .json({ message: "Email and password are required" });
-      return;
-    }
-
-    const existingUser = await User.findOne({ email })
-    if (existingUser) {
-      res
-      .set(createNoCacheHeaders())
-      .status(400).json({ message: "User with this email already exists" });
-      return;
-    }
-
-    const newUser = new User({
+    const {
       firstName,
       lastName,
-      // login,
       email,
       permissionRole,
       signatureRole,
       password,
       phoneNumber,
-    })
+      departments, // 👈 grab from body
+    } = req.body;
 
-    const savedUser = await newUser.save()
+    if (!email || !password) {
+      res
+        .status(400)
+        .set(createNoCacheHeaders())
+        .json({ message: "Email and password are required" });
+      return;
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res
+        .set(createNoCacheHeaders())
+        .status(400)
+        .json({ message: "User with this email already exists" });
+      return;
+    }
+
+    // 🔹 Only allow departments if permissionRole === "user"
+    let departmentsToSet: any[] = [];
+    if (permissionRole === "user" && Array.isArray(departments)) {
+      departmentsToSet = departments; // should be array of Department _id's
+    }
+
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      permissionRole,
+      signatureRole,
+      password,
+      phoneNumber,
+      departments: departmentsToSet,
+    });
+
+    const savedUser = await newUser.save();
+    // 🔹 populate departments before returning
+    await savedUser.populate("departments");
+
     res
-    .set(createNoCacheHeaders())
-    .status(201).json({ newUser: savedUser })
+      .set(createNoCacheHeaders())
+      .status(201)
+      .json({ newUser: savedUser });
   } catch (err) {
     console.error(err);
     res
-    .set(createNoCacheHeaders())
-    .status(500).json({ message: "Failed to create user" })
+      .set(createNoCacheHeaders())
+      .status(500)
+      .json({ message: "Failed to create user" });
   }
-}
+};
+
+export const toggleArchiveUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isArchived } = req.body as { isArchived: boolean };
+
+    const user = await User.findById(id);
+    if (!user) {
+      res
+        .status(404)
+        .set(createNoCacheHeaders())
+        .json({ message: "User not found" });
+      return;
+    }
+
+    user.isArchived = !!isArchived;
+    const updated = await user.save();
+    await updated.populate("departments");
+
+    res
+      .status(200)
+      .set(createNoCacheHeaders())
+      .json({ updatedUser: updated });
+    return;
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .set(createNoCacheHeaders())
+      .json({ message: "Failed to archive user" });
+  }
+};
 
 export const updateUserSignature = async (req: Request, res: Response) => {
   try {
@@ -146,7 +200,8 @@ export const updateUser = async (req: Request, res: Response) => {
     if (!user) {
       res
         .set(createNoCacheHeaders())
-        .status(404).json({ message: "User not found" });
+        .status(404)
+        .json({ message: "User not found" });
       return;
     }
 
@@ -163,48 +218,55 @@ export const updateUser = async (req: Request, res: Response) => {
       }
     }
 
-    // Update fields safely
-    user.firstName = updates.firstName || user.firstName;
-    user.lastName = updates.lastName || user.lastName;
-    user.email = updates.email || user.email;
+    // Basic fields
+    user.firstName = updates.firstName ?? user.firstName;
+    user.lastName = updates.lastName ?? user.lastName;
+    user.email = updates.email ?? user.email;
 
-    user.permissionRole = updates.permissionRole || user.permissionRole;
-    user.signatureRole = updates.signatureRole || user.signatureRole;
+    // permissionRole / signatureRole / phone
+    user.signatureRole = updates.signatureRole ?? user.signatureRole;
     user.phoneNumber =
       "phoneNumber" in updates ? updates.phoneNumber : user.phoneNumber;
 
-
-    // Update permissionRole
+    // permissionRole + departments logic
     if (updates.permissionRole) {
       user.permissionRole = updates.permissionRole;
-      // 🔥 Clear departments if not a normal 'user'
+
+      // Clear departments if not a normal 'user'
       if (updates.permissionRole !== "user") {
         user.departments = [];
       }
     }
 
+    // If departments is passed as an array, set it
     if (Array.isArray(updates.departments)) {
+      // assuming these are ObjectIds (or strings) that match Department _id
       user.departments = updates.departments;
     }
 
+    // Password (will be hashed by pre-save hook)
     if (updates.password) {
-      user.password = updates.password; // hashed by pre-save hook
+      user.password = updates.password;
     }
 
-    const updated = await user.save();
+    // Save first
+    const savedUser = await user.save();
+
+    // 🔹 Populate departments before returning
+    await savedUser.populate("departments");
 
     res
       .set(createNoCacheHeaders())
-      .json({ updatedUser: updated });
+      .json({ updatedUser: savedUser });
 
   } catch (err) {
     console.error(err);
     res
       .set(createNoCacheHeaders())
-      .status(500).json({ message: "Failed to update user" });
+      .status(500)
+      .json({ message: "Failed to update user" });
   }
 };
-
 
 export const deleteUserSignature = async (req: Request, res: Response) => {
   try {
@@ -260,6 +322,10 @@ export const deleteUserSignature = async (req: Request, res: Response) => {
 
 // DELETE /api/users/:id
 export const deleteUser = async (req: Request, res: Response) => {
+  //  res
+  //   .set(createNoCacheHeaders())
+  //   .json({ message: "CANNOT DELETE" });
+  // return;
   try {
     const { id } = req.params
     const user = await User.findById(id)

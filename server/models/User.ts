@@ -21,6 +21,8 @@ export const userSchema = new mongoose.Schema({
       },
     ],
     signatureRole: { type: String, default: 'submitter' }, // submitter, manager, generalManager, financeDepartment
+    // 🔹 NEW: soft delete / archive flag
+    isArchived: { type: Boolean, default: false },
  }, {
     timestamps: true,
     //Hide password

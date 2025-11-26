@@ -23,30 +23,33 @@ function Login() {
       try {
         setLoading(true);
         const resultAction = await dispatch(loginUser({ email, password }));
-        // if (isFulfilled(resultAction)) {
+
         if (loginUser.fulfilled.match(resultAction)) {
-            navigate('/purchase-orders');
-            setEmail('');
-            setPassword('');
-          } else {
-            toast({
-              title: 'Error',
-              description: 'Login failed.',
-              variant: 'destructive',
-            });
-            setLoading(false);
-          }
-        } catch (error) {
-          setLoading(false);
-          console.log('Error logging in', error);
+          navigate('/purchase-orders');
+          setEmail('');
+          setPassword('');
+        } else if (loginUser.rejected.match(resultAction)) {
+          const errorMessage =
+            (resultAction.payload as string) || "Login failed.";
+
           toast({
-              title: 'Error',
-              description: 'Something went wrong.',
-              variant: 'destructive',
-          });    
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive",
+          });
         }
-    }
-    
+      } catch (error) {
+        console.log("Error logging in", error);
+        toast({
+          title: "Error",
+          description: "Something went wrong.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
       <section className={`${styles.section} ${colorScheme === 'dark' ? 'dark' : 'light'}`}>
         <div className={styles.container}>

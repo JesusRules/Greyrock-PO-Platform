@@ -479,6 +479,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
             </DialogTitle>
             <DialogDescription>Fill in the details for the purchase order</DialogDescription>
           </div>
+
+          <button onClick={() => console.log('user', user)}>CLICK ME</button>
           <Button
             type="button"
             variant="default"

@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux"
 import { ClipLoader } from "react-spinners"
 import { UserFormModal } from "./user-form-modal"
 import { UserTable } from "./user-table"
-import { deleteUser } from "../../../redux/features/users-slice"
+import { archiveUser, deleteUser } from "../../../redux/features/users-slice"
 import { User } from "../../../../types/User"
 
 export function UserManagement() {
@@ -19,8 +19,13 @@ export function UserManagement() {
   const users = useAppSelector(state => state.usersReducer.users);
   const initLoad = useAppSelector(state => state.usersReducer.initLoad);
 
+  // We HAVE delete, we just dont use it!
   const handleUserDeleted = async (userId: string) => {
     await dispatch(deleteUser(userId));
+  };
+
+  const handleUserArchived = async (userId: string, isArchived: boolean) => {
+    await dispatch(archiveUser({ id: userId, isArchived }));
   };
 
   if (initLoad) {
@@ -62,7 +67,7 @@ export function UserManagement() {
       </div>
 
       {users && users.length > 0 ? (
-        <UserTable users={users} onEdit={setEditingUser} onDelete={handleUserDeleted} />
+        <UserTable users={users} onEdit={setEditingUser} onDelete={handleUserDeleted} onArchive={handleUserArchived} />
       ) : (
         <div className="bg-muted/50 p-12 rounded-lg flex flex-col items-center justify-center text-center">
           <h3 className="text-xl font-medium mb-2">No users yet</h3>

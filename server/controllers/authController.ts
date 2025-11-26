@@ -27,6 +27,14 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       return;
     }
 
+    // 🔹 Block archived users
+    if (user.isArchived) {
+      res
+        .status(403)
+        .json({ message: "This account has been archived and cannot log in." });
+        return;
+    }
+
     // 2. Check password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
