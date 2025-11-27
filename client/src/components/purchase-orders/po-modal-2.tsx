@@ -367,7 +367,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
         finalPoNumber = res.data.poNumber;
         setPoNumber(finalPoNumber);
       }
-
       // I DO NOT KNOW // CHANGE PO NUMBER WHEN IN EDIT MODE!!!!!!!!!!
       // setIsLoading(true);
       // let finalPoNumber;

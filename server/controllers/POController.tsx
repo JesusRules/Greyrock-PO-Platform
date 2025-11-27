@@ -11,6 +11,7 @@ import { PO_PDF } from '../pdf/PO_PDF.js'
 import { PO_PDF3 } from "../pdf/PO_PDF3.js";
 import { Resend } from "resend";
 import { EmailTemplateNewPORequiresSignature } from "../emails/EmailTemplateNewPORequiresSignature.js";
+import { sendApproverSignatureEmails, sendSubmitterNeedsToSignEmail, sendSubmitterRoleSignedEmail } from "../utils/poEmailService.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -88,32 +89,171 @@ export const getPurchaseOrderById = async (req: Request, res: Response) => {
 // POST create
 export const createPurchaseOrder = async (req: Request, res: Response) => {
   try {
-    const newOrder = new PurchaseOrder(req.body);
+    const authUser = (req as any).user;
+    if (!authUser?._id) {
+      res
+        .status(401)
+        .set(createNoCacheHeaders())
+        .json({ message: "Not authenticated." });
+      return;
+    }
+
+    const creator = await User.findById(authUser._id);
+    if (!creator) {
+      res
+        .status(404)
+        .set(createNoCacheHeaders())
+        .json({ message: "Creator user not found." });
+      return;
+    }
+
+    // Extract the submitter id from the incoming body
+    const body = { ...req.body };
+    const submitterSig = body.signatures?.submitter || {};
+    const submitterIdRaw = submitterSig.signedBy || body.submitter; // fallback if you ever pass a separate submitter field
+
+    // If no submitter was provided, just create as-is (no emails)
+    if (!submitterIdRaw) {
+      const newOrder = new PurchaseOrder(body);
+      const savedOrder = await newOrder.save();
+
+      const populatedOrder = await PurchaseOrder.findById(savedOrder._id)
+        .populate({ path: "department", model: Department })
+        .populate({ path: "signatures.submitter.signedBy", model: User })
+        .populate({ path: "signatures.manager.signedBy", model: User })
+        .populate({ path: "signatures.generalManager.signedBy", model: User })
+        .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+      res
+        .status(201)
+        .set(createNoCacheHeaders())
+        .json({ purchaseOrder: populatedOrder });
+      return;
+    }
+
+    const submitterId = submitterIdRaw.toString();
+    const creatorId = creator._id.toString();
+
+    // Load the *actual* submitter user
+    const submitterUser = await User.findById(submitterId);
+    if (!submitterUser) {
+      res
+        .status(400)
+        .set(createNoCacheHeaders())
+        .json({ message: "Submitter user not found." });
+      return;
+    }
+
+    // Is the creator the same person as the submitter?
+    const creatorIsSubmitter = creatorId === submitterId;
+    const creatorIsSubmitterRole = creator.signatureRole === "submitter";
+
+    // We’ll overwrite the submitter signature in the body according to rules
+    body.signatures = body.signatures || {};
+    body.signatures.submitter = body.signatures.submitter || {};
+
+    // ------------- RULES -------------
+    // 1) If the submitter is the creator AND they are a submitter-role user:
+    //    - If they have signedImg -> auto-sign + email approvers.
+    //    - Else -> no signedImg; email them to log in and sign.
+    //
+    // 2) If the creator is NOT the submitter
+    //    (e.g. admin or powerUser setting someone else):
+    //    -> do NOT auto-sign, just email submitter to log in and sign.
+
+    let shouldEmailApprovers = false;
+    let shouldEmailSubmitterToSign = false;
+
+    if (creatorIsSubmitter && creatorIsSubmitterRole) {
+      if (creator.signedImg) {
+        // Creator is the submitter and already has a signature on file
+        body.signatures.submitter = {
+          signedImg: creator.signedImg,
+          signedBy: creator._id,
+          signedAt: new Date(),
+        };
+        shouldEmailApprovers = true;
+      } else {
+        // Creator is submitter but has no signature yet → must log in and sign later
+        body.signatures.submitter = {
+          signedImg: null,
+          signedBy: creator._id,
+          signedAt: null,
+        };
+        shouldEmailSubmitterToSign = true;
+      }
+    } else {
+      // Creator is not the submitter (admin/powerUser/etc.)
+      // -> NEVER auto-sign the submitter. They must log in and sign themselves.
+      body.signatures.submitter = {
+        signedImg: null,
+        signedBy: submitterUser._id,
+        signedAt: null,
+      };
+      shouldEmailSubmitterToSign = true;
+    }
+
+    const newOrder = new PurchaseOrder(body);
     const savedOrder = await newOrder.save();
 
     const populatedOrder = await PurchaseOrder.findById(savedOrder._id)
-      .populate({ path: 'department', model: Department })
-      // .populate({ path: 'vendor', model: Vendor })
-      // .populate({ path: 'submitter', model: User })
-      // .populate({ path: 'signedBy', model: User });
-      // Signatures: populate the user in each role
+      .populate({ path: "department", model: Department })
       .populate({ path: "signatures.submitter.signedBy", model: User })
       .populate({ path: "signatures.manager.signedBy", model: User })
       .populate({ path: "signatures.generalManager.signedBy", model: User })
       .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
+    // 🔹 Send emails according to what actually happened
+    if (populatedOrder) {
+      if (shouldEmailApprovers) {
+        await sendApproverSignatureEmails(populatedOrder);
+      } else if (shouldEmailSubmitterToSign) {
+        await sendSubmitterNeedsToSignEmail(populatedOrder);
+      }
+    }
+
     res
-    .status(201)
-    .set(createNoCacheHeaders())
-    .json({ purchaseOrder: populatedOrder });
+      .status(201)
+      .set(createNoCacheHeaders())
+      .json({ purchaseOrder: populatedOrder });
+    return;
   } catch (err) {
     console.error(err);
     res
-    .status(400)
-    .set(createNoCacheHeaders())
-    .json({ message: "Failed to create purchase order", error: err });
+      .status(400)
+      .set(createNoCacheHeaders())
+      .json({ message: "Failed to create purchase order", error: err });
+    return;
   }
 };
+// export const createPurchaseOrder = async (req: Request, res: Response) => {
+//   try {
+//     const newOrder = new PurchaseOrder(req.body);
+//     const savedOrder = await newOrder.save();
+
+//     const populatedOrder = await PurchaseOrder.findById(savedOrder._id)
+//       .populate({ path: 'department', model: Department })
+//       // .populate({ path: 'vendor', model: Vendor })
+//       // .populate({ path: 'submitter', model: User })
+//       // .populate({ path: 'signedBy', model: User });
+//       // Signatures: populate the user in each role
+//       .populate({ path: "signatures.submitter.signedBy", model: User })
+//       .populate({ path: "signatures.manager.signedBy", model: User })
+//       .populate({ path: "signatures.generalManager.signedBy", model: User })
+//       .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+//     res
+//     .status(201)
+//     .set(createNoCacheHeaders())
+//     .json({ purchaseOrder: populatedOrder });
+//   } catch (err) {
+//     console.error(err);
+//     res
+//     .status(400)
+//     .set(createNoCacheHeaders())
+//     .json({ message: "Failed to create purchase order", error: err });
+//   }
+// };
 
 // PUT update
 export const updatePurchaseOrder = async (req: Request, res: Response) => {
@@ -224,12 +364,17 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
     const poId = req.params.id;
     const userId = (req as any).user?._id; // from auth middleware
 
-    const allowedRoles = ["submitter", "manager", "generalManager", "financeDepartment"];
+    const allowedRoles = [
+      "submitter",
+      "manager",
+      "generalManager",
+      "financeDepartment",
+    ];
 
     if (!allowedRoles.includes(role)) {
       res
-        .set(createNoCacheHeaders())
         .status(400)
+        .set(createNoCacheHeaders())
         .json({ message: "Invalid signature role." });
       return;
     }
@@ -237,103 +382,13 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
     const user = await User.findById(userId);
     if (!user) {
       res
-        .set(createNoCacheHeaders())
         .status(400)
+        .set(createNoCacheHeaders())
         .json({ message: "User not found." });
       return;
     }
 
-    // 🔁 REVERT FLOW
-    if (revert) {
-      const po = await PurchaseOrder.findById(poId)
-        .populate({ path: "department", model: Department })
-        .populate({ path: "signatures.submitter.signedBy", model: User })
-        .populate({ path: "signatures.manager.signedBy", model: User })
-        .populate({ path: "signatures.generalManager.signedBy", model: User })
-        .populate({ path: "signatures.financeDepartment.signedBy", model: User });
-
-      if (!po) {
-        res
-          .set(createNoCacheHeaders())
-          .status(404)
-          .json({ message: "Purchase Order not found." });
-        return;
-      }
-
-      const sig: any = po.signatures?.[role];
-      if (!sig?.signedImg) {
-        res
-          .set(createNoCacheHeaders())
-          .status(400)
-          .json({ message: "No signature to revert for this role." });
-        return;
-      }
-
-      const signedBy = sig.signedBy;
-      const signedById =
-        typeof signedBy === "object" ? signedBy._id?.toString() : signedBy?.toString();
-
-      const isAdmin = user.permissionRole === "admin";
-      const isSignedByCurrentUser =
-        !!signedById && signedById === user._id.toString();
-
-      if (!isAdmin && !isSignedByCurrentUser) {
-        res
-          .set(createNoCacheHeaders())
-          .status(403)
-          .json({ message: "You are not authorized to revert this signature." });
-        return;
-      }
-
-      // clear fields
-      sig.signedImg = null;
-      sig.signedBy = null;
-      sig.signedAt = null;
-
-      // business rule: revert -> status back to Pending
-      po.status = "Pending";
-
-      await po.save();
-
-      res
-        .set(createNoCacheHeaders())
-        .status(200)
-        .json({ purchaseOrder: po });
-      return;
-    }
-
-    // ✍️ SIGN FLOW (existing logic)
-    if (!user.signedImg) {
-      res
-        .set(createNoCacheHeaders())
-        .status(400)
-        .json({ message: "User has no saved signature on file." });
-      return;
-    }
-
-    // ensure user.signatureRole matches the role
-    if (user.signatureRole !== role) {
-      res
-        .set(createNoCacheHeaders())
-        .status(403)
-        .json({ message: "You are not authorized to sign for this role." });
-      return;
-    }
-
-    const now = new Date();
-
-    const po = await PurchaseOrder.findByIdAndUpdate(
-      poId,
-      {
-        $set: {
-          [`signatures.${role}.signedImg`]: user.signedImg,
-          [`signatures.${role}.signedBy`]: user._id,
-          [`signatures.${role}.signedAt`]: now,
-          status: "Signed",
-        },
-      },
-      { new: true }
-    )
+    const po = await PurchaseOrder.findById(poId)
       .populate({ path: "department", model: Department })
       .populate({ path: "signatures.submitter.signedBy", model: User })
       .populate({ path: "signatures.manager.signedBy", model: User })
@@ -342,24 +397,309 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
 
     if (!po) {
       res
-        .set(createNoCacheHeaders())
         .status(404)
+        .set(createNoCacheHeaders())
         .json({ message: "Purchase Order not found." });
       return;
     }
 
+    // Helper references
+    const sig: any = po.signatures?.[role] || {};
+    const isAdmin = user.permissionRole === "admin";
+    const isOverrideSigner = user.signatureRole === "overrideSigner";
+
+    // ---------------- REVERT FLOW ----------------
+    if (revert) {
+      if (!sig.signedImg) {
+        res
+          .status(400)
+          .set(createNoCacheHeaders())
+          .json({ message: "No signature to revert for this role." });
+        return;
+      }
+
+      const signedBy = sig.signedBy;
+      const signedById =
+        typeof signedBy === "object" ? signedBy._id?.toString() : signedBy?.toString();
+      const isSignedByCurrentUser =
+        !!signedById && signedById === user._id.toString();
+
+      // For submitter, only admin or overrideSigner can revert
+      if (role === "submitter" && !isAdmin && !isOverrideSigner) {
+        res
+          .status(403)
+          .set(createNoCacheHeaders())
+          .json({
+            message:
+              "The submitter signature can only be reverted by an admin or override signer.",
+          });
+        return;
+      }
+
+      // Other roles: signer themselves, admin, or overrideSigner
+      if (!isSignedByCurrentUser && !isAdmin && !isOverrideSigner) {
+        res
+          .status(403)
+          .set(createNoCacheHeaders())
+          .json({ message: "You are not authorized to revert this signature." });
+        return;
+      }
+
+      sig.signedImg = null;
+      sig.signedBy = null;
+      sig.signedAt = null;
+
+      po.signatures[role] = sig;
+      po.status = "Pending";
+
+      await po.save();
+
+      res
+        .status(200)
+        .set(createNoCacheHeaders())
+        .json({ purchaseOrder: po });
+      return;
+    }
+
+    // ---------------- SIGN FLOW ----------------
+    if (!user.signedImg) {
+      res
+        .status(400)
+        .set(createNoCacheHeaders())
+        .json({ message: "User has no saved signature on file." });
+      return;
+    }
+
+    // who can sign?
+    const isDirectRole = user.signatureRole === role;
+    if (!isDirectRole && !isOverrideSigner) {
+      res
+        .status(403)
+        .set(createNoCacheHeaders())
+        .json({ message: "You are not authorized to sign for this role." });
+      return;
+    }
+
+    const wasSubmitterSigned = !!po.signatures?.submitter?.signedImg;
+    const wasThisRoleSigned = !!sig.signedImg;
+
+    // Additional safety: for submitter, ensure they are actually the recorded submitter
+    if (role === "submitter") {
+      const submitterSig = po.signatures.submitter;
+      const sb = submitterSig?.signedBy;
+      const sbId = typeof sb === "object" ? sb._id?.toString() : sb?.toString();
+
+      const isOriginalSubmitter =
+        !!sbId && sbId === user._id.toString();
+
+      if (!isOriginalSubmitter && !isOverrideSigner) {
+        res
+          .status(403)
+          .set(createNoCacheHeaders())
+          .json({
+            message:
+              "Only the original submitter or an override signer can sign as submitter.",
+          });
+        return;
+      }
+    }
+
+    // Apply signature
+    sig.signedImg = user.signedImg;
+    sig.signedBy = user._id;
+    sig.signedAt = new Date();
+    po.signatures[role] = sig;
+
+    // You currently set status to "Signed" on any signature;
+    // keep this for now, or adjust to "Partially Signed" if you want.
+    po.status = "Signed";
+
+    await po.save();
+
+    // 🔹 After save, check transitions & send emails:
+
+    // 1) If submitter just transitioned from unsigned -> signed, notify approvers
+    const isSubmitterNowSigned = !!po.signatures?.submitter?.signedImg;
+    if (role === "submitter" && !wasSubmitterSigned && isSubmitterNowSigned) {
+      await sendApproverSignatureEmails(po);
+    }
+
+    // 2) If an approver just signed, notify submitter
+    const APPROVER_ROLES = [
+      "manager",
+      "generalManager",
+      "financeDepartment",
+    ];
+
+    if (
+      APPROVER_ROLES.includes(role) &&
+      !wasThisRoleSigned &&
+      !!sig.signedImg
+    ) {
+      await sendSubmitterRoleSignedEmail({
+        purchaseOrder: po,
+        approverUser: user,
+        role: role,
+      });
+    }
+
     res
-      .set(createNoCacheHeaders())
       .status(200)
+      .set(createNoCacheHeaders())
       .json({ purchaseOrder: po });
+    return;
   } catch (err: any) {
     console.error("signPurchaseOrderRole error:", err);
     res
-      .set(createNoCacheHeaders())
       .status(400)
+      .set(createNoCacheHeaders())
       .json({ message: err.message || "Failed to sign purchase order." });
+    return;
   }
 };
+
+// export const signPurchaseOrderRoleController = async (req: Request, res: Response) => {
+//   try {
+//     const { role, revert } = req.body;
+//     const poId = req.params.id;
+//     const userId = (req as any).user?._id; // from auth middleware
+
+//     const allowedRoles = ["submitter", "manager", "generalManager", "financeDepartment"];
+
+//     if (!allowedRoles.includes(role)) {
+//       res
+//         .set(createNoCacheHeaders())
+//         .status(400)
+//         .json({ message: "Invalid signature role." });
+//       return;
+//     }
+
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       res
+//         .set(createNoCacheHeaders())
+//         .status(400)
+//         .json({ message: "User not found." });
+//       return;
+//     }
+
+//     // 🔁 REVERT FLOW
+//     if (revert) {
+//       const po = await PurchaseOrder.findById(poId)
+//         .populate({ path: "department", model: Department })
+//         .populate({ path: "signatures.submitter.signedBy", model: User })
+//         .populate({ path: "signatures.manager.signedBy", model: User })
+//         .populate({ path: "signatures.generalManager.signedBy", model: User })
+//         .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+//       if (!po) {
+//         res
+//           .set(createNoCacheHeaders())
+//           .status(404)
+//           .json({ message: "Purchase Order not found." });
+//         return;
+//       }
+
+//       const sig: any = po.signatures?.[role];
+//       if (!sig?.signedImg) {
+//         res
+//           .set(createNoCacheHeaders())
+//           .status(400)
+//           .json({ message: "No signature to revert for this role." });
+//         return;
+//       }
+
+//       const signedBy = sig.signedBy;
+//       const signedById =
+//         typeof signedBy === "object" ? signedBy._id?.toString() : signedBy?.toString();
+
+//       const isAdmin = user.permissionRole === "admin";
+//       const isSignedByCurrentUser =
+//         !!signedById && signedById === user._id.toString();
+
+//       if (!isAdmin && !isSignedByCurrentUser) {
+//         res
+//           .set(createNoCacheHeaders())
+//           .status(403)
+//           .json({ message: "You are not authorized to revert this signature." });
+//         return;
+//       }
+
+//       // clear fields
+//       sig.signedImg = null;
+//       sig.signedBy = null;
+//       sig.signedAt = null;
+
+//       // business rule: revert -> status back to Pending
+//       po.status = "Pending";
+
+//       await po.save();
+
+//       res
+//         .set(createNoCacheHeaders())
+//         .status(200)
+//         .json({ purchaseOrder: po });
+//       return;
+//     }
+
+//     // ✍️ SIGN FLOW (existing logic)
+//     if (!user.signedImg) {
+//       res
+//         .set(createNoCacheHeaders())
+//         .status(400)
+//         .json({ message: "User has no saved signature on file." });
+//       return;
+//     }
+
+//     // ensure user.signatureRole matches the role
+//     if (user.signatureRole !== role) {
+//       res
+//         .set(createNoCacheHeaders())
+//         .status(403)
+//         .json({ message: "You are not authorized to sign for this role." });
+//       return;
+//     }
+
+//     const now = new Date();
+
+//     const po = await PurchaseOrder.findByIdAndUpdate(
+//       poId,
+//       {
+//         $set: {
+//           [`signatures.${role}.signedImg`]: user.signedImg,
+//           [`signatures.${role}.signedBy`]: user._id,
+//           [`signatures.${role}.signedAt`]: now,
+//           status: "Signed",
+//         },
+//       },
+//       { new: true }
+//     )
+//       .populate({ path: "department", model: Department })
+//       .populate({ path: "signatures.submitter.signedBy", model: User })
+//       .populate({ path: "signatures.manager.signedBy", model: User })
+//       .populate({ path: "signatures.generalManager.signedBy", model: User })
+//       .populate({ path: "signatures.financeDepartment.signedBy", model: User });
+
+//     if (!po) {
+//       res
+//         .set(createNoCacheHeaders())
+//         .status(404)
+//         .json({ message: "Purchase Order not found." });
+//       return;
+//     }
+
+//     res
+//       .set(createNoCacheHeaders())
+//       .status(200)
+//       .json({ purchaseOrder: po });
+//   } catch (err: any) {
+//     console.error("signPurchaseOrderRole error:", err);
+//     res
+//       .set(createNoCacheHeaders())
+//       .status(400)
+//       .json({ message: err.message || "Failed to sign purchase order." });
+//   }
+// };
 
 export const getMyPendingSignaturePurchaseOrders = async (
   req: Request,

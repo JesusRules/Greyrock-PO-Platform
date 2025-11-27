@@ -94,12 +94,11 @@ export const createPurchaseOrder = createAsyncThunk(
   "purchaseOrders/create",
   async (newOrder: Partial<PurchaseOrder>, thunkAPI) => {
     try {
+      // This sends email if submitter signs automatically!
+      // Means if they created and their signedImg exists, signed.
+      // If they created but signedImg === null, must login to sign.
+      // If powerUser or admin create PO with submitter, must login to sign.
       const res = await api.post("/api/purchase-orders", newOrder);
-      const purchaseOrder = res.data.purchaseOrder;
-
-      await api.post("/api/purchase-orders/send-signature-emails", {
-        purchaseOrderId: purchaseOrder._id
-      });
       return res.data.purchaseOrder;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to create");
