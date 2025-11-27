@@ -702,7 +702,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
                     </FormControl>
                     <SelectContent>
                       {availableDepartments.map((dept) => (
-                      // {departments.map((dept) => (
+                      // {availableDepartments.map((dept) => (
                         <SelectItem key={dept._id} value={dept.name}>
                           {dept.name}
                         </SelectItem>

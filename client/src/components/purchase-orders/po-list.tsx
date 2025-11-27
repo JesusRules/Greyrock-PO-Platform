@@ -46,14 +46,20 @@ export function PurchaseOrderList() {
   // Fiscal year filter (2025-2026, 2026-2027, etc.)
   const [fiscalYearFilter, setFiscalYearFilter] = useState("all");
 
-  // useEffect(() => { //Instead of storing currentPO in redux, we do this
-  //   if (!currentPO) return;
+  const isUserRoleUser = user?.permissionRole === "user";
 
-  //   const updatedPO = purchaseOrders.find(po => po._id === currentPO);
-  //   if (updatedPO && JSON.stringify(updatedPO) !== JSON.stringify(currentPO)) {
-  //     setCurrentPO(updatedPO);
-  //   }
-  // }, [purchaseOrders, currentPO]);
+  // normalize to string ids
+  const userDepartmentIds: string[] = isUserRoleUser
+    ? (user?.departments || []).map((d: any) =>
+        typeof d === "string" ? d : d._id
+      )
+    : [];
+
+  const visibleDepartments = useMemo(() => {
+      if (!isUserRoleUser) return departments;
+      const idSet = new Set(userDepartmentIds);
+      return departments.filter((d) => idSet.has(d._id));
+  }, [departments, isUserRoleUser, userDepartmentIds]);
 
    const getFiscalYearLabel = (dateInput: string | Date | undefined): string | null => {
       if (!dateInput) return null;
@@ -81,45 +87,40 @@ export function PurchaseOrderList() {
       // Sort ascending; you can reverse() if you want newest first
       return Array.from(set).sort();
     }, [purchaseOrders]);
-    
-      // const filteredPOs = purchaseOrders.filter((po) => {
-  // const query = searchQuery.toLowerCase();
+ 
+    const filteredPOs = purchaseOrders.filter((po) => {
+      const query = searchQuery.toLowerCase();
 
-  // const matchesSearch =
-  //     (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
-  //     (po.vendor?.email?.toLowerCase() || "").includes(query) ||
-  //     (po.poNumber?.toLowerCase() || "").includes(query) ||
-  //     po.lineItems?.some(item =>
-  //       item.description.toLowerCase().includes(query)
-  //     );
+      const matchesSearch =
+        (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
+        (po.vendor?.email?.toLowerCase() || "").includes(query) ||
+        (po.poNumber?.toLowerCase() || "").includes(query) ||
+        po.lineItems?.some((item) =>
+          item.description.toLowerCase().includes(query)
+        );
 
-  //   const matchesDepartment = departmentFilter === "all" || po.department.name === departmentFilter;
-  //   const matchesStatus = statusFilter === "all" || po.status === statusFilter;
+      // 🔹 enforce per-user department visibility
+      const poDeptId =
+        typeof po.department === "string"
+          ? po.department
+          : (po.department as any)._id;
 
-  //   return matchesSearch && matchesDepartment && matchesStatus;
-  // });
-  const filteredPOs = purchaseOrders.filter((po) => {
-    const query = searchQuery.toLowerCase();
+      const canSeeThisPO =
+        !isUserRoleUser || userDepartmentIds.includes(poDeptId);
 
-    const matchesSearch =
-      (po.vendor?.companyName?.toLowerCase() || "").includes(query) ||
-      (po.vendor?.email?.toLowerCase() || "").includes(query) ||
-      (po.poNumber?.toLowerCase() || "").includes(query) ||
-      po.lineItems?.some((item) =>
-        item.description.toLowerCase().includes(query)
-      );
+      if (!canSeeThisPO) return false;
 
-    const matchesDepartment =
-      departmentFilter === "all" || po.department.name === departmentFilter;
+      const matchesDepartment =
+        departmentFilter === "all" || po.department.name === departmentFilter;
 
-    const matchesStatus =
-      statusFilter === "all" || po.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" || po.status === statusFilter;
 
-    const poFiscalYear = getFiscalYearLabel(po.createdAt as any);
-    const matchesFiscalYear =
-      fiscalYearFilter === "all" || poFiscalYear === fiscalYearFilter;
+      const poFiscalYear = getFiscalYearLabel(po.createdAt as any);
+      const matchesFiscalYear =
+        fiscalYearFilter === "all" || poFiscalYear === fiscalYearFilter;
 
-    return matchesSearch && matchesDepartment && matchesStatus && matchesFiscalYear;
+      return matchesSearch && matchesDepartment && matchesStatus && matchesFiscalYear;
   });
 
   const handleView = (po: any) => {
@@ -271,9 +272,7 @@ export function PurchaseOrderList() {
             <SelectContent>
               {/* Static "All Departments" option */}
               <SelectItem value="all">All Departments</SelectItem>
-
-              {departments
-                // Optional: skip a real "All Departments" dept if it exists in DB
+              {visibleDepartments // Was departments
                 .filter((dept) => dept.name !== "All Departments")
                 .map((dept) => (
                   <SelectItem key={dept._id} value={dept.name}>
@@ -425,13 +424,7 @@ export function PurchaseOrderList() {
         // purchaseOrderId={currentPO}
       />
       <PurchaseOrderViewModal />
-      
-      {/* {currentPO && (
-        <>
-        <SignatureModal selectedPurchaseOrder={currentPO}   />
-        </>
-      )} */}
-
+    
       <Modal
         opened={poToDelete !== null}
         onClose={cancelDelete}
