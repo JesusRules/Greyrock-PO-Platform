@@ -144,7 +144,11 @@ export const togglePurchaseOrderStatus = createAsyncThunk(
 );
 
 // limit to the 3 approver roles
-type ApproverRole = "manager" | "generalManager" | "financeDepartment";
+export type ApproverRole =
+  | "submitter"
+  | "manager"
+  | "generalManager"
+  | "financeDepartment";
 
 interface SignRolePayload {
   poId: string;

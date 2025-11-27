@@ -224,7 +224,8 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
     const poId = req.params.id;
     const userId = (req as any).user?._id; // from auth middleware
 
-    const allowedRoles = ["manager", "generalManager", "financeDepartment"];
+    const allowedRoles = ["submitter", "manager", "generalManager", "financeDepartment"];
+
     if (!allowedRoles.includes(role)) {
       res
         .set(createNoCacheHeaders())
@@ -558,7 +559,7 @@ export const sendPurchaseOrderSignatureEmails = async (req: Request, res: Respon
       "generalManager",
       "manager",
       "financeDepartment",
-      "overrideSigner",
+      // "overrideSigner",
     ];
 
     const testMode = process.env.TEST_MODE === "true";

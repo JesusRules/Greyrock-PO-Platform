@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { format } from "date-fns"
 import { Button } from "../ui/button"
@@ -28,6 +28,7 @@ import { useToast } from "../../../hooks/use-toast"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import { ShippingInput } from "@components/ui/ShippingInput"
 import { useGlobalContext } from "../../../context/global-context"
+import { fetchNotifications } from "../../../redux/features/notifications-slice"
 
 type PurchaseOrderFormValues = z.infer<typeof purchaseOrderSchema>;
 
@@ -88,6 +89,39 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
   // NEW - Change PO number in edit mode?????
   const [originalDepartment, setOriginalDepartment] = useState<string | null>(null);
   const [originalPoNumber, setOriginalPoNumber] = useState<string | null>(null);
+
+  // 🔒 If the logged-in user is a submitter, the submitter field is locked
+  const isSubmitterLocked = user?.signatureRole === "submitter";
+  const isPermissionUser = user?.permissionRole === "user";
+
+  // 🔹 Collect the department IDs this user is allowed to use
+  const userDepartmentIds: string[] =
+  isPermissionUser && Array.isArray(user?.departments)
+    ? (user!.departments as any[]).map((d) =>
+        typeof d === "string" ? d : d._id
+      )
+    : [];
+
+  // Meant for permissionRole: 'user'
+  // 🔹 Filter the full department list down to only what user is allowed to see
+  const availableDepartments = useMemo(() => {
+    let base = departments;
+
+    if (isPermissionUser && userDepartmentIds.length > 0) {
+      const idSet = new Set(userDepartmentIds.map(String));
+      base = departments.filter((dept) => idSet.has(String(dept._id)));
+    }
+
+    // In edit mode, make sure the existing PO department is still visible
+    if (isEditing && purchaseOrder?.department?._id) {
+      const currentId = String((purchaseOrder.department as any)._id);
+      if (!base.some((d) => String(d._id) === currentId)) {
+        base = [...base, purchaseOrder.department] as any;
+      }
+    }
+
+    return base;
+  }, [departments, isPermissionUser, userDepartmentIds, isEditing, purchaseOrder]);
 
   useEffect(() => {
     // Only fetch when modal is open AND we're editing AND we have an ID
@@ -234,7 +268,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
         email: "",
         payableTo: "",
         paymentMethod: "Cheque",
-        submitter: "",
+        // submitter: "",
+        submitter:
+          isSubmitterLocked && user?._id ? user._id : "",   // ⬅️ HERE
         comments: ""
       });
 
@@ -348,7 +384,23 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
       // }
       // const departmentName = form.getValues("department"); // or use `watch("department")`
 
-      const selectedDepartment = departments.find(dept => dept.name === departmentName);
+      // const selectedDepartment = departments.find(dept => dept.name === departmentName);
+      // Only allow a department the user is allowed to use
+      const selectedDepartment = availableDepartments.find(
+        (dept) => dept.name === departmentName
+      );
+
+      if (!selectedDepartment) {
+        toast({
+          title: "Error",
+          description:
+            "You are not allowed to create a purchase order for this department.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const departmentId = selectedDepartment?._id;
 
       const vendorName = form.getValues("vendor");
@@ -436,6 +488,9 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
           variant: 'success',
         });
       }
+      
+      // 🔁 refresh notifications after revert too
+      await dispatch(fetchNotifications()).unwrap();
 
       onClose();
       setIsLoading(false);
@@ -536,7 +591,10 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
                   payableTo: "",
                   address: "",
                   paymentMethod: "Cheque",
-                  submitter: "",
+                  // submitter: "",
+                  submitter:
+                    isSubmitterLocked && user?._id ? user._id : "",   // ⬅️ keep defaulting to self
+                  comments: "",
                 });
 
                 setPoNumber("");
@@ -568,30 +626,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
           {/* Top Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-            {/* <FormField
-                control={form.control}
-                name="submitter"
-                render={({ field }) => (
-                  <FormItem className="col-span-2 w-1/2 pr-3">
-                    <FormLabel>Submitter</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select submitter" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {users.map((u) => (
-                          <SelectItem key={u._id} value={u._id}>
-                            {u.firstName} {u.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
               {/* Submitter select (left) */}
               <FormField
                 control={form.control}
@@ -599,7 +633,7 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
                 render={({ field }) => (
                   <FormItem className="w-full pr-3">
                     <FormLabel>Submitter</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitterLocked}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select submitter" />
@@ -639,8 +673,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
                         <a
                           href="/profile"
                           className="underline text-blue-600 dark:text-blue-400"
-                          target="_blank"
-                          rel="noreferrer"
+                          // target="_blank" // New tab - not wanted
+                          // rel="noreferrer"
                         >
                           Click here to add one.
                         </a>
@@ -667,7 +701,8 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {departments.map((dept) => (
+                      {availableDepartments.map((dept) => (
+                      // {departments.map((dept) => (
                         <SelectItem key={dept._id} value={dept.name}>
                           {dept.name}
                         </SelectItem>

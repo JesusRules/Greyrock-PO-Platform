@@ -19,6 +19,7 @@ import { useToast } from "../../../hooks/use-toast"
 import { useGlobalContext } from "../../../context/global-context"
 import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import { Tooltip, Modal, Text, Group, Button as MantineButton } from "@mantine/core"
+import { fetchNotifications } from "../../../redux/features/notifications-slice"
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
 
 export function PurchaseOrderList() {
@@ -162,6 +163,10 @@ export function PurchaseOrderList() {
         variant: "success",
         // variant: "destructive",
       });
+      
+      // 🔁 refresh notifications after revert too
+      await dispatch(fetchNotifications()).unwrap();
+
     } catch (err) {
       console.error("Failed to delete:", err);
       toast({

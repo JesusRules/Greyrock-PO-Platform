@@ -13,6 +13,7 @@ import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useState } from "react"
 import { Modal, Text, Group, Button as MantineButton } from "@mantine/core";
 import { signPurchaseOrderRole } from "../../../redux/features/po-slice"
+import { fetchNotifications } from "../../../redux/features/notifications-slice"
 
 type SignatureRoleKey =
   | "submitter"
@@ -45,16 +46,23 @@ function renderSignatureBox(
   const isSignedByCurrentUser =
     !!signedById && !!user?._id && signedById === user._id;
 
-  // Direct mapping (e.g. signatureRole === "financeDepartment")
   const isDirectRole = user?.signatureRole === roleKey;
 
-  // Can this user sign THIS box?
   const canSignThisRole =
     !isAdmin && (isDirectRole || isOverrideSigner); // admins never sign
 
   const canCurrentUserSign = canSignThisRole && hasUserSignature && !isSigned;
 
-  // Who can revert?
+  // 🔹 SPECIAL CASE: submitter has already been recorded (signedBy),
+  // but there is no signedImg yet and the user now has a signature.
+  const canApplySubmitterSignatureNow =
+    roleKey === "submitter" &&
+    !isSigned &&
+    !!sig?.signedBy &&
+    isSignedByCurrentUser &&
+    hasUserSignature;
+
+  // 🔹 Who can revert?
   const canRevert =
     !!sig?.signedImg &&
     (isSignedByCurrentUser || isAdmin || isOverrideSigner);
@@ -92,6 +100,14 @@ function renderSignatureBox(
             </Button>
           )}
         </>
+      ) : canApplySubmitterSignatureNow ? (
+        <Button
+          size="sm"
+          className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={() => handleRoleSign(roleKey)}
+        >
+          Apply signature now
+        </Button>
       ) : canCurrentUserSign ? (
         <Button
           size="sm"
@@ -106,8 +122,8 @@ function renderSignatureBox(
           <a
             href="/profile"
             className="underline text-blue-600 dark:text-blue-400"
-            target="_blank"
-            rel="noreferrer"
+            // target="_blank" // New tab - not wanted
+            // rel="noreferrer"
           >
             Click here to add one.
           </a>
@@ -119,13 +135,100 @@ function renderSignatureBox(
   );
 }
 
-// interface PurchaseOrderViewModalProps {
-//   purchaseOrderId: string;
-// }
-// interface PurchaseOrderViewModalProps {
-//   purchaseOrderId: string;
-//   open?: boolean;
-//   onOpenChange?: (open: boolean) => void;
+// function renderSignatureBox(
+//   roleKey: SignatureRoleKey,
+//   label: string,
+//   purchaseOrder: PurchaseOrder,
+//   user: any,
+//   handleRoleSign: HandleRoleSignFn,
+//   handleRoleRevert: HandleRoleRevertFn
+// ) {
+//   const sig = purchaseOrder.signatures?.[roleKey];
+//   const signedBy = sig?.signedBy;
+//   const isSigned = Boolean(sig?.signedImg);
+
+//   const isOverrideSigner = user?.signatureRole === "overrideSigner";
+//   const isAdmin = user?.permissionRole === "admin";
+
+//   const hasUserSignature = Boolean(user?.signedImg);
+
+//   const signedById =
+//     typeof signedBy === "object" ? signedBy?._id : signedBy ?? null;
+//   const isSignedByCurrentUser =
+//     !!signedById && !!user?._id && signedById === user._id;
+
+//   // Direct mapping (e.g. signatureRole === "financeDepartment")
+//   const isDirectRole = user?.signatureRole === roleKey;
+
+//   // Can this user sign THIS box?
+//   const canSignThisRole =
+//     !isAdmin && (isDirectRole || isOverrideSigner); // admins never sign
+
+//   const canCurrentUserSign = canSignThisRole && hasUserSignature && !isSigned;
+
+//   // Who can revert?
+//   const canRevert =
+//     !!sig?.signedImg &&
+//     (isSignedByCurrentUser || isAdmin || isOverrideSigner);
+
+//   const displayName = (() => {
+//     if (!signedBy) return "N/A";
+//     if (typeof signedBy === "string") return signedBy;
+//     return `${signedBy.firstName} ${signedBy.lastName}`;
+//   })();
+
+//   const labelText = canSignThisRole ? `${label} (YOU)` : label;
+
+//   return (
+//     <div className="flex flex-col gap-2">
+//       <p className="font-semibold mb-1">{labelText}</p>
+
+//       {isSigned ? (
+//         <>
+//           <p className="text-sm">
+//             Signed by: <span className="font-semibold">{displayName}</span>
+//           </p>
+//           <img
+//             src={sig!.signedImg!}
+//             alt={`${label} signature`}
+//             className="w-full max-w-[260px] h-[90px] p-2 object-contain bg-white border border-gray-400"
+//           />
+//           {canRevert && (
+//             <Button
+//               size="sm"
+//               variant="destructive"
+//               className="mt-2 w-fit"
+//               onClick={() => handleRoleRevert(roleKey)}
+//             >
+//               Revert
+//             </Button>
+//           )}
+//         </>
+//       ) : canCurrentUserSign ? (
+//         <Button
+//           size="sm"
+//           className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
+//           onClick={() => handleRoleSign(roleKey)}
+//         >
+//           Click to sign as {labelText}
+//         </Button>
+//       ) : canSignThisRole && !hasUserSignature ? (
+//         <p className="text-xs text-muted-foreground">
+//           No signature on file.{" "}
+//           <a
+//             href="/profile"
+//             className="underline text-blue-600 dark:text-blue-400"
+//             target="_blank"
+//             rel="noreferrer"
+//           >
+//             Click here to add one.
+//           </a>
+//         </p>
+//       ) : (
+//         <p className="text-sm italic text-muted-foreground">No signature.</p>
+//       )}
+//     </div>
+//   );
 // }
 
 export function PurchaseOrderViewModal() {
@@ -166,10 +269,7 @@ export function PurchaseOrderViewModal() {
   // };
 
   const handleRoleSign: HandleRoleSignFn = async (role) => {
-    // Submitter is usually auto-signed; keep or remove this guard if
-    // you *do* want overrideSigner to be able to sign submitter.
-    // If you want overrideSigner to sign submitter too, delete this block.
-    if (role === "submitter") return;
+    if (!purchaseOrder) return;
 
     if (!user?._id) {
       toast({
@@ -187,7 +287,8 @@ export function PurchaseOrderViewModal() {
     if (isAdmin && !isOverrideSigner) {
       toast({
         title: "Not Allowed",
-        description: "Admins cannot sign purchase orders. Use an override signer account.",
+        description:
+          "Admins cannot sign purchase orders. Use an override signer account.",
         variant: "destructive",
       });
       return;
@@ -214,10 +315,34 @@ export function PurchaseOrderViewModal() {
       return;
     }
 
+    // 🔹 Extra safety for submitter:
+    if (role === "submitter") {
+      const sig = purchaseOrder.signatures.submitter;
+      const sb = sig?.signedBy;
+      const signedById =
+        typeof sb === "object" ? sb?._id?.toString() : sb?.toString();
+
+      const isOriginalSubmitter =
+        !!signedById && signedById === user._id.toString();
+
+      if (!isOriginalSubmitter && !isOverrideSigner) {
+        toast({
+          title: "Not Authorized",
+          description:
+            "Only the original submitter or an override signer can apply this signature.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
       await dispatch(
-        signPurchaseOrderRole({ poId: purchaseOrder!._id, role })
+        signPurchaseOrderRole({ poId: purchaseOrder._id, role })
       ).unwrap();
+
+    // 🔁 refresh notifications so the bell count / list updates
+      await dispatch(fetchNotifications()).unwrap();
 
       toast({
         title: "Signature Applied",
@@ -233,6 +358,75 @@ export function PurchaseOrderViewModal() {
       });
     }
   };
+
+  // const handleRoleSign: HandleRoleSignFn = async (role) => {
+  //   // Submitter is usually auto-signed; keep or remove this guard if
+  //   // you *do* want overrideSigner to be able to sign submitter.
+  //   // If you want overrideSigner to sign submitter too, delete this block.
+  //   if (role === "submitter") return;
+
+  //   if (!user?._id) {
+  //     toast({
+  //       title: "Error",
+  //       description: "You must be logged in to sign.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   const isAdmin = user.permissionRole === "admin";
+  //   const isOverrideSigner = user.signatureRole === "overrideSigner";
+
+  //   // Admins are not allowed to sign at all
+  //   if (isAdmin && !isOverrideSigner) {
+  //     toast({
+  //       title: "Not Allowed",
+  //       description: "Admins cannot sign purchase orders. Use an override signer account.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   if (!user.signedImg) {
+  //     toast({
+  //       title: "No Signature on File",
+  //       description: "Please add a signature on your Profile page first.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   const isDirectRole = user.signatureRole === role;
+  //   const canSignThisRole = isDirectRole || isOverrideSigner;
+
+  //   if (!canSignThisRole) {
+  //     toast({
+  //       title: "Not Authorized",
+  //       description: "You are not allowed to sign for this role.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     await dispatch(
+  //       signPurchaseOrderRole({ poId: purchaseOrder!._id, role })
+  //     ).unwrap();
+
+  //     toast({
+  //       title: "Signature Applied",
+  //       description: `Your ${role} signature has been added to this PO.`,
+  //       variant: "success",
+  //     });
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to sign purchase order.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const viewPO_PDF = async (purchaseOrder: PurchaseOrder) => {
     try {
@@ -300,6 +494,9 @@ export function PurchaseOrderViewModal() {
           revert: true,
         } as any)
       ).unwrap();
+      
+      // 🔁 refresh notifications after revert too
+      await dispatch(fetchNotifications()).unwrap();
 
       toast({
         title: "Signature Reverted",
