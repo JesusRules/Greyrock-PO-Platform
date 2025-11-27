@@ -1,4 +1,4 @@
-import { X, FileDown } from "lucide-react"
+import { X, FileDown, CheckCircle2, PenSquare } from "lucide-react"
 import { Button } from "../ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog"
 import { usePurchaseOrders } from "../../../context/po-context"
@@ -11,7 +11,7 @@ import { useGlobalContext } from "../../../context/global-context"
 import { useDispatch } from "react-redux"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useState } from "react"
-import { Modal, Text, Group, Button as MantineButton } from "@mantine/core";
+import { Modal, Text, Group, Button as MantineButton, Tooltip } from "@mantine/core";
 import { signPurchaseOrderRole } from "../../../redux/features/po-slice"
 import { fetchNotifications } from "../../../redux/features/notifications-slice"
 
@@ -53,8 +53,7 @@ function renderSignatureBox(
 
   const canCurrentUserSign = canSignThisRole && hasUserSignature && !isSigned;
 
-  // 🔹 SPECIAL CASE: submitter has already been recorded (signedBy),
-  // but there is no signedImg yet and the user now has a signature.
+  // special submitter case (unchanged from your logic)
   const canApplySubmitterSignatureNow =
     roleKey === "submitter" &&
     !isSigned &&
@@ -62,7 +61,6 @@ function renderSignatureBox(
     isSignedByCurrentUser &&
     hasUserSignature;
 
-  // 🔹 Who can revert?
   const canRevert =
     !!sig?.signedImg &&
     (isSignedByCurrentUser || isAdmin || isOverrideSigner);
@@ -73,17 +71,35 @@ function renderSignatureBox(
     return `${signedBy.firstName} ${signedBy.lastName}`;
   })();
 
-  const labelText = canSignThisRole ? `${label} (YOU)` : label;
+  const headerText = buildSignatureHeader(purchaseOrder, roleKey, label);
+  const subtitleText = buildSignatureSubtitle(purchaseOrder, roleKey);
+
+  // choose icon + color
+  const StatusIcon = isSigned ? CheckCircle2 : PenSquare;
+  const iconClass = isSigned
+    ? "text-green-600"
+    : "text-amber-500 dark:text-amber-300";
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-semibold mb-1">{labelText}</p>
+      {/* HEADER: label + name + status icon */}
+      <div className="flex items-center justify-between mb-1">
+        <p className="font-semibold">{headerText}</p>
+        {isSigned ? (
+        <Tooltip label={`${displayName} has signed.`}>
+          <StatusIcon className={`h-4 w-4 ${iconClass}`} aria-hidden="true" />
+        </Tooltip>
+        ) : (
+        <Tooltip label='Signature waiting.'>
+          <StatusIcon className={`h-4 w-4 ${iconClass}`} aria-hidden="true" />
+        </Tooltip>
+        )}
+      </div>
 
+      {/* SUBTITLE / MAIN CONTENT */}
       {isSigned ? (
         <>
-          <p className="text-sm">
-            Signed by: <span className="font-semibold">{displayName}</span>
-          </p>
+          <p className="text-sm">{subtitleText}</p>
           <img
             src={sig!.signedImg!}
             alt={`${label} signature`}
@@ -114,7 +130,7 @@ function renderSignatureBox(
           className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
           onClick={() => handleRoleSign(roleKey)}
         >
-          Click to sign as {labelText}
+          Click to sign as {label}
         </Button>
       ) : canSignThisRole && !hasUserSignature ? (
         <p className="text-xs text-muted-foreground">
@@ -122,114 +138,68 @@ function renderSignatureBox(
           <a
             href="/profile"
             className="underline text-blue-600 dark:text-blue-400"
-            // target="_blank" // New tab - not wanted
-            // rel="noreferrer"
           >
             Click here to add one.
           </a>
         </p>
       ) : (
-        <p className="text-sm italic text-muted-foreground">No signature.</p>
+        <p className="text-sm italic text-muted-foreground">
+          {subtitleText}
+        </p>
       )}
     </div>
   );
 }
 
-// function renderSignatureBox(
-//   roleKey: SignatureRoleKey,
-//   label: string,
-//   purchaseOrder: PurchaseOrder,
-//   user: any,
-//   handleRoleSign: HandleRoleSignFn,
-//   handleRoleRevert: HandleRoleRevertFn
-// ) {
-//   const sig = purchaseOrder.signatures?.[roleKey];
-//   const signedBy = sig?.signedBy;
-//   const isSigned = Boolean(sig?.signedImg);
 
-//   const isOverrideSigner = user?.signatureRole === "overrideSigner";
-//   const isAdmin = user?.permissionRole === "admin";
+/**
+ * Header text like:
+ *  - "Submitter - Billy Bob"
+ *  - "Manager - Jane Doe"
+ *  - "Finance Department" (if no signedBy yet)
+ */
+function buildSignatureHeader(
+  po: PurchaseOrder,
+  roleKey: SignatureRoleKey,
+  label: string
+) {
+  const sig: any = po.signatures?.[roleKey];
+  if (!sig) return label;
 
-//   const hasUserSignature = Boolean(user?.signedImg);
+  const signer = sig.signedBy;
 
-//   const signedById =
-//     typeof signedBy === "object" ? signedBy?._id : signedBy ?? null;
-//   const isSignedByCurrentUser =
-//     !!signedById && !!user?._id && signedById === user._id;
+  const name =
+    signer && typeof signer === "object"
+      ? `${signer.firstName} ${signer.lastName}`
+      : signer
+      ? String(signer)
+      : null;
 
-//   // Direct mapping (e.g. signatureRole === "financeDepartment")
-//   const isDirectRole = user?.signatureRole === roleKey;
+  if (!name) return label;
+  return `${label} - ${name}`;
+}
 
-//   // Can this user sign THIS box?
-//   const canSignThisRole =
-//     !isAdmin && (isDirectRole || isOverrideSigner); // admins never sign
+function buildSignatureSubtitle(po: PurchaseOrder, roleKey: SignatureRoleKey) {
+  const sig: any = po.signatures?.[roleKey];
+  if (!sig) return "No signature yet.";
 
-//   const canCurrentUserSign = canSignThisRole && hasUserSignature && !isSigned;
+  const signer = sig.signedBy;
+  const name =
+    signer && typeof signer === "object"
+      ? `${signer.firstName} ${signer.lastName}`
+      : signer
+      ? String(signer)
+      : null;
 
-//   // Who can revert?
-//   const canRevert =
-//     !!sig?.signedImg &&
-//     (isSignedByCurrentUser || isAdmin || isOverrideSigner);
+  const hasImg = !!sig.signedImg;
 
-//   const displayName = (() => {
-//     if (!signedBy) return "N/A";
-//     if (typeof signedBy === "string") return signedBy;
-//     return `${signedBy.firstName} ${signedBy.lastName}`;
-//   })();
+  if (!name && !hasImg) return "No signature yet.";
+  if (name && !hasImg) return `${name} has not signed yet.`;
+  if (name && hasImg) return `${name} has signed this purchase order.`;
+  if (!name && hasImg) return "Signed.";
 
-//   const labelText = canSignThisRole ? `${label} (YOU)` : label;
-
-//   return (
-//     <div className="flex flex-col gap-2">
-//       <p className="font-semibold mb-1">{labelText}</p>
-
-//       {isSigned ? (
-//         <>
-//           <p className="text-sm">
-//             Signed by: <span className="font-semibold">{displayName}</span>
-//           </p>
-//           <img
-//             src={sig!.signedImg!}
-//             alt={`${label} signature`}
-//             className="w-full max-w-[260px] h-[90px] p-2 object-contain bg-white border border-gray-400"
-//           />
-//           {canRevert && (
-//             <Button
-//               size="sm"
-//               variant="destructive"
-//               className="mt-2 w-fit"
-//               onClick={() => handleRoleRevert(roleKey)}
-//             >
-//               Revert
-//             </Button>
-//           )}
-//         </>
-//       ) : canCurrentUserSign ? (
-//         <Button
-//           size="sm"
-//           className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
-//           onClick={() => handleRoleSign(roleKey)}
-//         >
-//           Click to sign as {labelText}
-//         </Button>
-//       ) : canSignThisRole && !hasUserSignature ? (
-//         <p className="text-xs text-muted-foreground">
-//           No signature on file.{" "}
-//           <a
-//             href="/profile"
-//             className="underline text-blue-600 dark:text-blue-400"
-//             target="_blank"
-//             rel="noreferrer"
-//           >
-//             Click here to add one.
-//           </a>
-//         </p>
-//       ) : (
-//         <p className="text-sm italic text-muted-foreground">No signature.</p>
-//       )}
-//     </div>
-//   );
-// }
+  return "No signature yet.";
+}
 
 export function PurchaseOrderViewModal() {
   const { openSignModal, setOpenSignModal, openViewPO, setOpenViewPO, currentPO } = useGlobalContext();
@@ -768,7 +738,6 @@ export function PurchaseOrderViewModal() {
         </MantineButton>
       </Group>
     </Modal> */}
-
     </>
   )
 }
