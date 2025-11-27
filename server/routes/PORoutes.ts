@@ -4,7 +4,7 @@ import { protect } from "../middleware/auth.js";
 
 const PORouter = express.Router();
 
-PORouter.post("/", createPurchaseOrder);
+PORouter.post("/", protect, createPurchaseOrder);
 PORouter.patch("/:id/sign-role", protect, signPurchaseOrderRoleController); // Has to be high here
 // 👇 NEW: notifications for current user
 PORouter.get(

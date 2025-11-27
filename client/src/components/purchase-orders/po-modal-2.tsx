@@ -92,23 +92,67 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
 
   // 🔒 If the logged-in user is a submitter, the submitter field is locked
   const isSubmitterLocked = user?.signatureRole === "submitter";
-  const isPermissionUser = user?.permissionRole === "user";
 
-  // 🔹 Collect the department IDs this user is allowed to use
-  const userDepartmentIds: string[] =
-  isPermissionUser && Array.isArray(user?.departments)
-    ? (user!.departments as any[]).map((d) =>
-        typeof d === "string" ? d : d._id
-      )
-    : [];
+  const form = useForm<PurchaseOrderFormValues>({
+    resolver: zodResolver(purchaseOrderSchema),
+    defaultValues: {
+      department: "",
+      address: '',
+      // poNumber: "",
+      // date,
+      vendor: "",
+      contactName: "",
+      phone: "",
+      email: "",
+      payableTo: "",
+      paymentMethod: "Cheque",
+      submitter: "",
+      comments: "",
+    },
+  });
+
+  const { watch } = form;
+  const department = watch("department");
+
+  const submitterId = watch("submitter");
+  const selectedSubmitter = users.find((u) => u._id === submitterId);
+  const submitterSignatureUrl = selectedSubmitter?.signedImg;
+
+  // 🔹 Determine which user controls department restrictions - submitters with permissionRole: 'user'
+  const submitterForDeptLock = useMemo(() => {
+    // Priority 1: explicitly selected submitter with permissionRole 'user'
+    if (selectedSubmitter && selectedSubmitter.permissionRole === "user") {
+      return selectedSubmitter;
+    }
+
+    // Priority 2: if submitter is locked to the current user and they are a 'user'
+    if (isSubmitterLocked && user && user.permissionRole === "user") {
+      return user;
+    }
+
+    // Otherwise, no restriction (admin/powerUser submitter)
+    return null;
+  }, [selectedSubmitter, isSubmitterLocked, user]);
+
+  // 🔹 Collect department IDs from that submitter (if any)
+  const submitterDepartmentIds: string[] = useMemo(() => {
+    if (!submitterForDeptLock || !Array.isArray(submitterForDeptLock.departments)) {
+      return [];
+    }
+
+    return (submitterForDeptLock.departments as any[]).map((d) =>
+      typeof d === "string" ? d : d._id
+    );
+  }, [submitterForDeptLock]);
 
   // Meant for permissionRole: 'user'
   // 🔹 Filter the full department list down to only what user is allowed to see
   const availableDepartments = useMemo(() => {
     let base = departments;
 
-    if (isPermissionUser && userDepartmentIds.length > 0) {
-      const idSet = new Set(userDepartmentIds.map(String));
+    // If the effective submitter is a 'user', restrict departments
+    if (submitterForDeptLock && submitterDepartmentIds.length > 0) {
+      const idSet = new Set(submitterDepartmentIds.map(String));
       base = departments.filter((dept) => idSet.has(String(dept._id)));
     }
 
@@ -121,7 +165,13 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
     }
 
     return base;
-  }, [departments, isPermissionUser, userDepartmentIds, isEditing, purchaseOrder]);
+  }, [
+    departments,
+    submitterForDeptLock,
+    submitterDepartmentIds,
+    isEditing,
+    purchaseOrder,
+  ]);
 
   useEffect(() => {
     // Only fetch when modal is open AND we're editing AND we have an ID
@@ -160,31 +210,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
       cancelled = true;
     };
   }, [isOpen, isEditing, currentPO]);
-
-  const form = useForm<PurchaseOrderFormValues>({
-    resolver: zodResolver(purchaseOrderSchema),
-    defaultValues: {
-      department: "",
-      address: '',
-      // poNumber: "",
-      // date,
-      vendor: "",
-      contactName: "",
-      phone: "",
-      email: "",
-      payableTo: "",
-      paymentMethod: "Cheque",
-      submitter: "",
-      comments: "",
-    },
-  });
-
-  const { watch } = form;
-  const department = watch("department");
-
-  const submitterId = watch("submitter");
-  const selectedSubmitter = users.find((u) => u._id === submitterId);
-  const submitterSignatureUrl = selectedSubmitter?.signedImg;
 
   // CHANGE? EDITING MODAL EFFECTS PO NUMBER
   useEffect(() => {
@@ -692,7 +717,15 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
               name="department"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Department</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <span>Department</span>
+                    {submitterForDeptLock && (
+                      <span className="text-[11px] text-amber-700 ">
+                        Submitter has permission role of &quot;User&quot; – departments limited.
+                      </span>
+                    )}
+                  </FormLabel>
+
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -701,7 +734,6 @@ export function PurchaseOrderModal({ isOpen, onClose, mode }: PurchaseOrderModal
                     </FormControl>
                     <SelectContent>
                       {availableDepartments.map((dept) => (
-                      // {availableDepartments.map((dept) => (
                         <SelectItem key={dept._id} value={dept.name}>
                           {dept.name}
                         </SelectItem>

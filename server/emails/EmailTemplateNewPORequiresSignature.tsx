@@ -23,7 +23,7 @@ export function EmailTemplateNewPORequiresSignature({
       <p>
         You are receiving this email because you are assigned the signature role:{" "}
         <b>{signer.signatureRole === 'generalManager' ? 'General Manager' : signer.signatureRole === 'financeDepartment' ? 'Finance Department' 
-          : signer.signatureRole === 'overrideSigner' ? 'Override Signer' : signer.signatureRole}</b>.
+          : signer.signatureRole === 'overrideSigner' ? 'Override Signer' : signer.signatureRole === 'submitter' ? 'Submitter' : signer.signatureRole}</b>.
         {/* <b>{signer.signatureRole}</b>. */}
       </p>
 
