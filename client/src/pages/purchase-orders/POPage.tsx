@@ -4,15 +4,17 @@ import { PurchaseOrderList } from "../../components/purchase-orders/po-list";
 import { Button } from "../../components/ui/button"
 import { fetchVendors } from "../../../redux/features/vendors-slice";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "../../../redux/store";
+import { AppDispatch, useAppSelector } from "../../../redux/store";
 import { toast } from "../../../hooks/use-toast"
 import { fetchDepartments } from "../../../redux/features/departments-slice";
 import { fetchPurchaseOrders } from "../../../redux/features/po-slice";
 import { fetchUsers } from "../../../redux/features/users-slice";
 import ColorSchemeToggle from "@components/layout/ColorSchemeToggle";
+import { UserCredentialsBar } from "@components/layout/UserCredentialsBar";
 
 export default function POPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const user = useAppSelector(state => state.authReducer.user);
 
   useEffect(() => {
     dispatch(fetchUsers()).unwrap().catch((err) => {
@@ -54,7 +56,9 @@ export default function POPage() {
     <ColorSchemeToggle />
     <Drawer />
     <div className="mx-auto py-10 mt-5 max-w-[1200px] px-3">
-      <h1 className="text-3xl font-bold mb-6">Purchase Order Management</h1>
+      <UserCredentialsBar user={user} />
+      
+      <h1 className="text-3xl font-bold mb-6 mt-10">Purchase Order Management</h1>
         <PurchaseOrderList />
     </div>
     </>

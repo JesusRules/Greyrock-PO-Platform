@@ -321,25 +321,24 @@ export const togglePurchaseOrderStatus = async (req: Request, res: Response) => 
       return;
     }
 
-    let nextStatus: "Pending" | "Signed" | "Rejected";
+    let nextStatus: "Pending" | "Signed" | "Rejected" | "Approved";
 
-    if (order.status === "Pending" || order.status === "Signed") {
+    if (order.status === "Approved") {
+      // ✅ manager/admin wants to reject an already-approved PO
       nextStatus = "Rejected";
     } else if (order.status === "Rejected") {
-      nextStatus = order.signedImg ? "Signed" : "Pending";
+      // ✅ manager/admin restores it to Approved
+      nextStatus = "Approved";
     } else {
-      nextStatus = "Pending"; // fallback safety
+      // For Pending or legacy Signed, just keep it Pending
+      nextStatus = "Pending";
     }
 
     order.status = nextStatus;
     await order.save();
 
     const populatedOrder = await PurchaseOrder.findById(order._id)
-      .populate({ path: 'department', model: Department })
-      // .populate({ path: 'vendor', model: Vendor })
-      // .populate({ path: 'submitter', model: User })
-      // .populate({ path: 'signedBy', model: User });
-      // Signatures: populate the user in each role
+      .populate({ path: "department", model: Department })
       .populate({ path: "signatures.submitter.signedBy", model: User })
       .populate({ path: "signatures.manager.signedBy", model: User })
       .populate({ path: "signatures.generalManager.signedBy", model: User })
@@ -450,7 +449,12 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
       sig.signedAt = null;
 
       po.signatures[role] = sig;
-      po.status = "Pending";
+
+      // po.status = "Pending";
+      // ✅ if GM’s signature is reverted, go back to Pending
+      if (role === "generalManager") {
+        po.status = "Pending";
+      }
 
       await po.save();
 
@@ -521,9 +525,21 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
 
     // You currently set status to "Signed" on any signature;
     // keep this for now, or adjust to "Partially Signed" if you want.
-    po.status = "Signed";
+    // po.status = "Signed";
+    if (role === "generalManager") {
+      po.status = "Approved";
+    }
 
     await po.save();
+    
+    // re-populate on the same doc instance
+    await po.populate([
+      { path: "department", model: Department },
+      { path: "signatures.submitter.signedBy", model: User },
+      { path: "signatures.manager.signedBy", model: User },
+      { path: "signatures.generalManager.signedBy", model: User },
+      { path: "signatures.financeDepartment.signedBy", model: User },
+    ]);
 
     // 🔹 After save, check transitions & send emails:
 
@@ -760,6 +776,15 @@ export const getMyPendingSignaturePurchaseOrders = async (
       return;
     }
 
+    // 🔹 Extra: restrict by departments if permissionRole === "user"
+    const isUserPermissionUser = user.permissionRole === "user";
+    const userDeptIds: any[] =
+      isUserPermissionUser && Array.isArray(user.departments)
+        ? user.departments.map((d: any) =>
+            typeof d === "object" && d._id ? d._id : d
+          )
+        : [];
+
     let query: any = {};
 
     // 🔹 Submitter: show POs where they are the submitter and have not signed yet
@@ -767,7 +792,6 @@ export const getMyPendingSignaturePurchaseOrders = async (
       query = {
         "signatures.submitter.signedBy": user._id,
         "signatures.submitter.signedImg": null,
-        // optional: exclude rejected if you ever use that
         // status: { $ne: "Rejected" },
       };
     }
@@ -795,6 +819,11 @@ export const getMyPendingSignaturePurchaseOrders = async (
       };
     }
 
+    // ✅ If this person is a normal user, restrict to their departments
+    if (isUserPermissionUser && userDeptIds.length > 0) {
+      query.department = { $in: userDeptIds };
+    }
+
     const pos = await PurchaseOrder.find(query)
       .sort({ createdAt: -1 })
       .populate({ path: "department", model: Department })
@@ -819,6 +848,7 @@ export const getMyPendingSignaturePurchaseOrders = async (
       .json({ message: "Failed to fetch pending signature purchase orders." });
   }
 };
+
 // export const getMyPendingSignaturePurchaseOrders = async (
 //   req: Request,
 //   res: Response
@@ -844,40 +874,64 @@ export const getMyPendingSignaturePurchaseOrders = async (
 //       return;
 //     }
 
-//     const role = user.signatureRole; // submitter | manager | generalManager | financeDepartment | overrideSigner?
+//     const role = user.signatureRole as
+//       | "submitter"
+//       | "manager"
+//       | "generalManager"
+//       | "financeDepartment"
+//       | "overrideSigner"
+//       | undefined;
 
 //     const allowedRoles = [
 //       "submitter",
 //       "manager",
 //       "generalManager",
 //       "financeDepartment",
-//       // "overrideSigner", // Turn back on if you want overrideSigner
-//     ];
+//       "overrideSigner", // include if you want overrideSigner to see everything
+//     ] as const;
 
-//     if (!allowedRoles.includes(role)) {
+//     if (!role || !allowedRoles.includes(role)) {
 //       // User has no signing responsibility → no notifications
 //       res
 //         .set(createNoCacheHeaders())
 //         .status(200)
-//         .json({ purchaseOrders: [], count: 0 });
+//         .json({ purchaseOrders: [], count: 0, role: null });
 //       return;
 //     }
 
-//     let query: any = {
-//       status: { $in: ["Pending", "Approved"] }, // tweak if you only want Pending
-//     };
+//     let query: any = {};
 
-//     if (role === "overrideSigner") {
-//       // Override signer sees any PO where any role is still unsigned
-//       query.$or = [
-//         { "signatures.submitter.signedImg": null },
-//         { "signatures.manager.signedImg": null },
-//         { "signatures.generalManager.signedImg": null },
-//         { "signatures.financeDepartment.signedImg": null },
-//       ];
-//     } else {
-//       // Normal case: only POs where *this* role hasn't signed yet
-//       query[`signatures.${role}.signedImg`] = null;
+//     // 🔹 Submitter: show POs where they are the submitter and have not signed yet
+//     if (role === "submitter") {
+//       query = {
+//         "signatures.submitter.signedBy": user._id,
+//         "signatures.submitter.signedImg": null,
+//         // optional: exclude rejected if you ever use that
+//         // status: { $ne: "Rejected" },
+//       };
+//     }
+//     // 🔹 Override signer: any PO where *someone* still needs to sign,
+//     // as long as there is a submitter assigned.
+//     else if (role === "overrideSigner") {
+//       query = {
+//         "signatures.submitter.signedBy": { $ne: null },
+//         $or: [
+//           { "signatures.submitter.signedImg": null },
+//           { "signatures.manager.signedImg": null },
+//           { "signatures.generalManager.signedImg": null },
+//           { "signatures.financeDepartment.signedImg": null },
+//         ],
+//         // status: { $ne: "Rejected" },
+//       };
+//     }
+//     // 🔹 Manager / General Manager / Finance Department:
+//     // submitter exists, this role has not signed yet
+//     else {
+//       query = {
+//         "signatures.submitter.signedBy": { $ne: null },
+//         [`signatures.${role}.signedImg`]: null,
+//         // status: { $ne: "Rejected" },
+//       };
 //     }
 
 //     const pos = await PurchaseOrder.find(query)
@@ -894,7 +948,7 @@ export const getMyPendingSignaturePurchaseOrders = async (
 //       .json({
 //         purchaseOrders: pos,
 //         count: pos.length,
-//         role, // the role used to compute these
+//         role,
 //       });
 //   } catch (err) {
 //     console.error("getMyPendingSignaturePurchaseOrders error:", err);

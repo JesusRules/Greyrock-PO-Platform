@@ -1,7 +1,18 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { Search, Plus, FileDown, Eye, Pencil, CheckSquare, Trash2 } from "lucide-react"
+import {
+  Search,
+  Plus,
+  FileDown,
+  Eye,
+  Pencil,
+  CheckSquare,
+  Trash2,
+  CheckCircle2,
+  Clock3,
+  MinusCircle,
+} from "lucide-react";
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
@@ -21,6 +32,82 @@ import { PurchaseOrder } from "../../../../types/PurchaseOrder"
 import { Tooltip, Modal, Text, Group, Button as MantineButton } from "@mantine/core"
 import { fetchNotifications } from "../../../redux/features/notifications-slice"
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip"
+
+
+type SignatureRoleKey =
+  | "submitter"
+  | "manager"
+  | "generalManager"
+  | "financeDepartment";
+
+function getUserSignatureStatusForPO(
+  user: any,
+  po: PurchaseOrder
+): "Signed" | "Pending" | "N/A" {
+  if (!user || !user.signatureRole) return "N/A";
+
+  const role = user.signatureRole as
+    | SignatureRoleKey
+    | "overrideSigner"
+    | string;
+
+  // Helper to normalize signedBy to a string id
+  const getId = (val: any): string | null => {
+    if (!val) return null;
+    if (typeof val === "string") return val;
+    if (typeof val === "object" && val._id) return String(val._id);
+    return null;
+  };
+
+  // 🔹 Submitter logic
+  if (role === "submitter") {
+    const sig = (po.signatures as any)?.submitter;
+    if (!sig || !sig.signedBy) return "N/A";
+
+    const sbId = getId(sig.signedBy);
+    const userId = getId(user._id);
+
+    if (!userId || sbId !== userId) return "N/A";
+
+    return sig.signedImg ? "Signed" : "Pending";
+  }
+
+  // 🔹 Override signer logic: can step in for any missing signature
+  if (role === "overrideSigner") {
+    const sigs: any = po.signatures || {};
+
+    const hasAnySlot =
+      sigs.submitter ||
+      sigs.manager ||
+      sigs.generalManager ||
+      sigs.financeDepartment;
+
+    if (!hasAnySlot) return "N/A";
+
+    const anyUnsigned =
+      !sigs.submitter?.signedImg ||
+      !sigs.manager?.signedImg ||
+      !sigs.generalManager?.signedImg ||
+      !sigs.financeDepartment?.signedImg;
+
+    return anyUnsigned ? "Pending" : "Signed";
+  }
+
+  // 🔹 Manager / General Manager / Finance Department
+  const allowed: SignatureRoleKey[] = [
+    "manager",
+    "generalManager",
+    "financeDepartment",
+  ];
+
+  if (!allowed.includes(role as SignatureRoleKey)) return "N/A";
+
+  const sig = (po.signatures as any)?.[role as SignatureRoleKey];
+  if (!sig) return "N/A";
+
+  return sig.signedImg ? "Signed" : "Pending";
+}
+
 
 export function PurchaseOrderList() {
   const { setOpenSignModal, setOpenViewPO, setCurrentPO, currentPO } = useGlobalContext();
@@ -181,6 +268,15 @@ export function PurchaseOrderList() {
   };
 
   const handleToggleStatus = async (po: any) => {
+    if (user?.signatureRole !== "generalManager") {
+      toast({
+        title: "Error",
+        description: "Only the General Manager can reject/approve purchase orders.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const updatedPO = await dispatch(togglePurchaseOrderStatus(po._id)).unwrap();
       setCurrentPO(updatedPO); // Optional: useful if modal is open
@@ -311,6 +407,8 @@ export function PurchaseOrderList() {
               <TableHead>Department</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Items</TableHead>
+              {/* NEW COLUMN */}
+              <TableHead>Your Signature</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-center border-r-[1px]">Actions</TableHead>
             </TableRow>
@@ -323,7 +421,10 @@ export function PurchaseOrderList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredPOs.map((po) => (
+              filteredPOs.map((po) => {
+                const mySigStatus = getUserSignatureStatusForPO(user, po);
+
+                return (
                 <TableRow key={po._id}>
                   <TableCell>{po.poNumber}</TableCell>
                   <TableCell>{getFormattedDateTime(String(po.date))}</TableCell>
@@ -333,29 +434,65 @@ export function PurchaseOrderList() {
                   <TableCell className="text-center">
                     {(po.lineItems || []).length}
                   </TableCell>
+
+                  {/* NEW "Your Signature" column */}
                   <TableCell>
-                  <span
-                    onClick={() => { 
-                      (po.status === 'Pending' || po.status === 'Signed') && setOpenSignModal(true)
-                      setCurrentPO(po._id)}
-                    }
-                    className={`cursor-pointer px-2 py-1 rounded-full text-xs font-medium ${
-                      po.status === "Signed"
-                        ? "bg-green-100 dark:bg-green-700 dark:text-white text-green-800"
-                        : po.status === "Approved"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : po.status === "Pending" 
-                        ? "bg-amber-100 text-amber-800 dark:bg-amber-600 dark:text-white"
-                        : po.status === "Rejected" 
-                        ? "bg-red-200 dark:bg-red-600 dark:text-white" : "bg-white"
-                    }`}
-                  >
-                    {po.status}
-                  </span>
+                    {mySigStatus === "Signed" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-700 dark:text-white">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Signed
+                      </span>
+                    )}
+
+                    {mySigStatus === "Pending" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-600 dark:text-white">
+                        <Clock3 className="h-3 w-3" />
+                        Pending
+                      </span>
+                    )}
+
+                    {mySigStatus === "N/A" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                        <MinusCircle className="h-3 w-3" />
+                        N/A
+                      </span>
+                    )}
                   </TableCell>
+                  
+                  <TableCell>
+                  <Tooltip
+                    withArrow
+                    label={
+                      po.status === "Approved"
+                        ? "The General Manager has approved this purchase order."
+                        : po.status === "Pending"
+                        ? "Waiting approval from the General Manager."
+                        : po.status === "Rejected"
+                        ? "The General Manager has rejected this purchase order."
+                        : "" // default for Signed or any other
+                    }
+                  >
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        po.status === "Signed"
+                          ? "bg-green-100 dark:bg-green-700 dark:text-white text-green-800"
+                          : po.status === "Approved"
+                          ? "bg-green-100 text-green-800 dark:bg-green-700 dark:text-white"
+                          : po.status === "Pending"
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-600 dark:text-white"
+                          : po.status === "Rejected"
+                          ? "bg-red-200 dark:bg-red-600 dark:text-white"
+                          : "bg-white"
+                      }`}
+                    >
+                      {po.status}
+                    </span>
+                  </Tooltip>
+                  </TableCell>
+
                   <TableCell className="text-right">
 
-                    <Tooltip label="View Purchase Order" withArrow>
+                    <Tooltip label="View/Sign Purchase Order" withArrow>
                     <Button variant="ghost" size="icon" onClick={() => handleView(po)}>
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -373,7 +510,7 @@ export function PurchaseOrderList() {
                     </Button>
                     </Tooltip>
 
-                      {po.status === 'Signed' && (
+                      {po.status === 'Approved' && (
                         <Tooltip label="Reject Purchase Order" withArrow>
                         <Button
                           variant="ghost"
@@ -387,7 +524,7 @@ export function PurchaseOrderList() {
                         </Tooltip>
                       )}
                       {po.status === 'Rejected' && (
-                        <Tooltip label="Purchase Order Signed?" withArrow>
+                        <Tooltip label="Mark as Approved" withArrow>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -408,8 +545,8 @@ export function PurchaseOrderList() {
 
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+              )}
+            ))}
           </TableBody>
         </Table>
       </div>
