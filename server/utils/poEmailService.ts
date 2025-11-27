@@ -5,7 +5,7 @@
 // import { resend } from "../config/resend"; // wherever you import this
 // import EmailTemplateNewPORequiresSignature from "../emails/EmailTemplateNewPORequiresSignature";
 // import EmailTemplateRoleSignedNotification from "../emails/EmailTemplateRoleSignedNotification"; // you'll create this
-import { EmailTemplateRoleSignedNotification } from "server/emails/EmailTemplateRoleSignedNotification.js";
+import { EmailTemplateRoleSignedNotification } from "../emails/EmailTemplateRoleSignedNotification.js";
 import { EmailTemplateNewPORequiresSignature } from "../emails/EmailTemplateNewPORequiresSignature.js";
 import User from "../models/User.js";
 import { Resend } from "resend";
