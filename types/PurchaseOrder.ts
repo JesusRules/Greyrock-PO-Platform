@@ -51,6 +51,7 @@ export interface PurchaseOrder {
   // submitter: User | string;
   // 🔥 New signatures block
   signatures: PurchaseOrderSignatures;
+  cancelled?: boolean;
   // (Optional) keep these only if you still use them somewhere,
   // otherwise you can safely delete them from this interface.
   // signedBy?: User | string;

@@ -25,7 +25,7 @@ import { PurchaseOrderViewModal } from "./po-view-modal"
 import { PurchaseOrderModal } from "./po-modal-2"
 import { AppDispatch, useAppSelector } from "../../../redux/store"
 import { useDispatch } from "react-redux"
-import { deletePurchaseOrder, togglePurchaseOrderStatus } from "../../../redux/features/po-slice"
+import { cancelPurchaseOrder, deletePurchaseOrder, togglePurchaseOrderStatus } from "../../../redux/features/po-slice"
 import { useToast } from "../../../hooks/use-toast"
 // import SignatureModal from "@components/signature/SignatureModal"
 import { useGlobalContext } from "../../../context/global-context"
@@ -130,10 +130,11 @@ export function PurchaseOrderList() {
   //PDF
   const [PDFLoader, setPDFLoader] = useState(false);
   // Delete purchase order
-  const [poToDelete, setPoToDelete] = useState<PurchaseOrder | null>(null);
+  // const [poToDelete, setPoToDelete] = useState<PurchaseOrder | null>(null);
   // Fiscal year filter (2025-2026, 2026-2027, etc.)
   const [fiscalYearFilter, setFiscalYearFilter] = useState("all");
   // New Cancel button
+  const [openCancelPO, setOpenCancelPO] = useState(false);
   const [poToToggleCancel, setPoToToggleCancel] = useState<PurchaseOrder | null>(null);
 
   const isAdmin = user?.permissionRole === "admin";
@@ -231,6 +232,7 @@ export function PurchaseOrderList() {
       return;
     }
     setPoToToggleCancel(po);
+    setOpenCancelPO(true);
   };
 
   const cancelCancelConfirm = () => {
@@ -272,6 +274,8 @@ export function PurchaseOrderList() {
       });
     } finally {
       setPoToToggleCancel(null);
+      setOpenCancelPO(false);
+
     }
   };
 
@@ -591,7 +595,7 @@ export function PurchaseOrderList() {
                       )}
 
                     <Tooltip label="Cancel Purchase Order" withArrow>
-                    <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(po)}>
+                    <Button variant="ghost" size="icon" onClick={() => openCancelConfirm(po)}>
                       <Ban className="h-4 w-4 text-red-500" />
                     </Button>
                     </Tooltip>
@@ -667,8 +671,8 @@ export function PurchaseOrderList() {
       
       {/* Cancel PO */}
       <Modal
-        opened={poToDelete !== null}
-        onClose={cancelDelete}
+        opened={openCancelPO}
+        onClose={() => setOpenCancelPO(false)}
         title={
             <div
               style={{
@@ -689,22 +693,31 @@ export function PurchaseOrderList() {
         centered
       >
         <div className="space-y-0 text-center">
+          {/* <Text>
+            {poToToggleCancel?.cancelled
+            ? `Are you sure you want to mark purchase order #${poToToggleCancel?.poNumber} as active again?`
+            : `Are you sure you want to cancel purchase order #${poToToggleCancel?.poNumber}?`}
+          </Text> */}
+          <Text
+              dangerouslySetInnerHTML={{
+                __html:
+                  poToToggleCancel?.cancelled
+                    ? `Are you sure you want to mark purchase order <strong>#${poToToggleCancel?.poNumber}</strong> as active again?`
+                    : `Are you sure you want to cancel purchase order <strong>#${poToToggleCancel?.poNumber}</strong>?`,
+              }}
+            />
           <Text>
-            Are you sure you want to cancel purchase order
-          </Text>
-          <Text>
-            <strong>{poToDelete?.poNumber}</strong>?
           </Text>
           <Text mt={10}>
             This action is safe and can be reverted.
           </Text>
 
           <Group justify="center" mt="md">
-            <MantineButton variant="default" onClick={cancelDelete}>
+            <MantineButton variant="default" onClick={() => setOpenCancelPO(false)}>
               No thanks
             </MantineButton>
-            <MantineButton color="red" onClick={confirmDelete}>
-              Yes Cancel
+            <MantineButton color="red" onClick={confirmCancelToggle}>
+              {poToToggleCancel?.cancelled ? "Yes Un-cancel" : "Yes Cancel"}
             </MantineButton>
           </Group>
         </div>
