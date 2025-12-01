@@ -23,6 +23,21 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.cancelled-row {
+  position: relative;
+  background-color: blue;
+}
+
+.cancelled-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;                /* middle of the row */
+  border-top: 2px solid #ef4444; /* Tailwind red-500 */
+  pointer-events: none;    /* don't block clicks */
+}
+
 /* .mantine-Drawer-content {
   background-color: blue !important;
 } */

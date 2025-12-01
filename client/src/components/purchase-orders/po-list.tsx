@@ -121,6 +121,7 @@ export function PurchaseOrderList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [cancelledFilter, setCancelledFilter] = useState('false')
   const { toast } = useToast();
   //Redux
   const dispatch = useDispatch<AppDispatch>();
@@ -212,8 +213,22 @@ export function PurchaseOrderList() {
       const matchesFiscalYear =
         fiscalYearFilter === "all" || poFiscalYear === fiscalYearFilter;
 
-      return matchesSearch && matchesDepartment && matchesStatus && matchesFiscalYear;
-  });
+      // 🔹 Cancelled filter
+      const matchesCancelled =
+        cancelledFilter === "all"
+          ? true // show both cancelled + not cancelled
+          : cancelledFilter === "true"
+          ? po.cancelled === true
+          : po.cancelled !== true; // "false" → only not cancelled (treat undefined as not cancelled)
+
+      return (
+        matchesSearch &&
+        matchesDepartment &&
+        matchesStatus &&
+        matchesFiscalYear &&
+        matchesCancelled
+      );
+    });
 
   const handleView = (po: any) => {
     setCurrentPO(po._id);
@@ -233,10 +248,6 @@ export function PurchaseOrderList() {
     }
     setPoToToggleCancel(po);
     setOpenCancelPO(true);
-  };
-
-  const cancelCancelConfirm = () => {
-    setPoToToggleCancel(null);
   };
 
   // Open confirm modal
@@ -451,6 +462,20 @@ export function PurchaseOrderList() {
             </SelectContent>
           </Select>
         </div>
+        
+        {/* Cancelled */}
+        <div className="w-40">
+          <Select value={cancelledFilter} onValueChange={setCancelledFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Cancelled?" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Cancelled: Both</SelectItem>
+              <SelectItem value="true">Cancelled: True</SelectItem>
+              <SelectItem value="false">Cancelled: False</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       </div>
 
@@ -482,7 +507,14 @@ export function PurchaseOrderList() {
                 const mySigStatus = getUserSignatureStatusForPO(user, po);
 
                 return (
-                <TableRow key={po._id}>
+                <TableRow
+                    key={po._id}
+                    className={
+                      po.cancelled
+                        ? "relative text-slate-400 dark:text-slate-500 after:content-[''] after:absolute after:left-0 after:right-0 after:top-1/2 after:border-t-2 after:border-red-500 after:pointer-events-none"
+                        : ""
+                    }
+                  >
                   <TableCell>{po.poNumber}</TableCell>
                   <TableCell>{getFormattedDateTime(String(po.date))}</TableCell>
                   <TableCell>{po.vendor.companyName}</TableCell>
@@ -594,7 +626,7 @@ export function PurchaseOrderList() {
                         </Tooltip>
                       )}
 
-                    <Tooltip label="Cancel Purchase Order" withArrow>
+                    <Tooltip label={poToToggleCancel?.cancelled === true ? "Un-Cancel Purchase Order" : "Cancel Purchase Order"} withArrow>
                     <Button variant="ghost" size="icon" onClick={() => openCancelConfirm(po)}>
                       <Ban className="h-4 w-4 text-red-500" />
                     </Button>
