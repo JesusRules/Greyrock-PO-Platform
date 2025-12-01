@@ -9,6 +9,7 @@ import {
   Pencil,
   CheckSquare,
   Trash2,
+  Ban,
   CheckCircle2,
   Clock3,
   MinusCircle,
@@ -132,7 +133,10 @@ export function PurchaseOrderList() {
   const [poToDelete, setPoToDelete] = useState<PurchaseOrder | null>(null);
   // Fiscal year filter (2025-2026, 2026-2027, etc.)
   const [fiscalYearFilter, setFiscalYearFilter] = useState("all");
+  // New Cancel button
+  const [poToToggleCancel, setPoToToggleCancel] = useState<PurchaseOrder | null>(null);
 
+  const isAdmin = user?.permissionRole === "admin";
   const isUserRoleUser = user?.permissionRole === "user";
 
   // normalize to string ids
@@ -221,54 +225,103 @@ export function PurchaseOrderList() {
     setIsEditModalOpen(true);
   }
 
-  // Open confirm modal
-  const openDeleteConfirm = (po: PurchaseOrder) => {
+  const openCancelConfirm = (po: PurchaseOrder) => {
     if (!po?._id) {
-      alert("Invalid purchase order. Cannot delete.");
+      alert("Invalid purchase order. Cannot cancel.");
       return;
     }
-    setPoToDelete(po);
+    setPoToToggleCancel(po);
   };
 
-  const cancelDelete = () => {
-    setPoToDelete(null);
+  const cancelCancelConfirm = () => {
+    setPoToToggleCancel(null);
   };
 
-  const confirmDelete = async () => {
-    if (!poToDelete?._id) {
-      setPoToDelete(null);
+  // Open confirm modal
+  const confirmCancelToggle = async () => {
+    if (!poToToggleCancel?._id) {
+      setPoToToggleCancel(null);
       return;
     }
 
-    const confirmed = window.confirm(`Are you sure you want to delete purchase order #${poToDelete.poNumber}?`);
-    if (!confirmed) return;
+    const targetCancelled = !poToToggleCancel.cancelled; // 👈 toggle
 
     try {
-      await dispatch(deletePurchaseOrder(poToDelete._id)).unwrap();
-      toast({
-        title: "Deleted",
-        description: `PO #${poToDelete.poNumber} has been deleted.`,
-        variant: "success",
-        // variant: "destructive",
-      });
-      
-      // 🔁 refresh notifications after revert too
-      await dispatch(fetchNotifications()).unwrap();
+      const updated = await dispatch(
+        cancelPurchaseOrder({
+          _id: poToToggleCancel._id,
+          cancelled: targetCancelled,
+        })
+      ).unwrap();
 
+      toast({
+        title: targetCancelled ? "Cancelled" : "Reactivated",
+        description: `PO #${updated.poNumber} has been ${
+          targetCancelled ? "cancelled" : "uncancelled"
+        }.`,
+        variant: "success",
+      });
+
+      await dispatch(fetchNotifications()).unwrap();
     } catch (err) {
-      console.error("Failed to delete:", err);
+      console.error("Failed to toggle cancel:", err);
       toast({
         title: "Error",
-        description: "Failed to delete the purchase order.",
+        description: "Failed to update the purchase order cancelled status.",
         variant: "destructive",
       });
     } finally {
-      setPoToDelete(null);
+      setPoToToggleCancel(null);
     }
   };
 
+  // const openDeleteConfirm = (po: PurchaseOrder) => {
+  //   if (!po?._id) {
+  //     alert("Invalid purchase order. Cannot delete.");
+  //     return;
+  //   }
+  //   setPoToDelete(po);
+  // };
+
+  // const cancelDelete = () => {
+  //   setPoToDelete(null);
+  // };
+
+  // const confirmDelete = async () => {
+  //   if (!poToDelete?._id) {
+  //     setPoToDelete(null);
+  //     return;
+  //   }
+
+  //   const confirmed = window.confirm(`Are you sure you want to delete purchase order #${poToDelete.poNumber}?`);
+  //   if (!confirmed) return;
+
+  //   try {
+  //     await dispatch(deletePurchaseOrder(poToDelete._id)).unwrap();
+  //     toast({
+  //       title: "Deleted",
+  //       description: `PO #${poToDelete.poNumber} has been deleted.`,
+  //       variant: "success",
+  //       // variant: "destructive",
+  //     });
+      
+  //     // 🔁 refresh notifications after revert too
+  //     await dispatch(fetchNotifications()).unwrap();
+
+  //   } catch (err) {
+  //     console.error("Failed to delete:", err);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to delete the purchase order.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setPoToDelete(null);
+  //   }
+  // };
+
   const handleToggleStatus = async (po: any) => {
-    if (user?.signatureRole !== "generalManager") {
+    if (user?.signatureRole !== "generalManager" && !isAdmin) {
       toast({
         title: "Error",
         description: "Only the General Manager can reject/approve purchase orders.",
@@ -537,11 +590,16 @@ export function PurchaseOrderList() {
                         </Tooltip>
                       )}
 
-                    <Tooltip label="Delete Purchase Order" withArrow>
+                    <Tooltip label="Cancel Purchase Order" withArrow>
+                    <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(po)}>
+                      <Ban className="h-4 w-4 text-red-500" />
+                    </Button>
+                    </Tooltip>
+                    {/* <Tooltip label="Delete Purchase Order" withArrow>
                     <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(po)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
-                    </Tooltip>
+                    </Tooltip> */}
 
                   </TableCell>
                 </TableRow>
@@ -561,8 +619,9 @@ export function PurchaseOrderList() {
         // purchaseOrderId={currentPO}
       />
       <PurchaseOrderViewModal />
-    
-      <Modal
+      
+      {/* Delete PO */}
+      {/* <Modal
         opened={poToDelete !== null}
         onClose={cancelDelete}
         title={
@@ -585,10 +644,6 @@ export function PurchaseOrderList() {
         centered
       >
         <div className="space-y-0 text-center">
-          {/* <Text>
-            Are you sure you want to delete purchase order{' '}
-            <strong>#{poToDelete?.poNumber}</strong>? This action cannot be undone.
-          </Text> */}
           <Text>
             Are you sure you want to delete purchase order
           </Text>
@@ -605,6 +660,51 @@ export function PurchaseOrderList() {
             </MantineButton>
             <MantineButton color="red" onClick={confirmDelete}>
               Delete
+            </MantineButton>
+          </Group>
+        </div>
+      </Modal> */}
+      
+      {/* Cancel PO */}
+      <Modal
+        opened={poToDelete !== null}
+        onClose={cancelDelete}
+        title={
+            <div
+              style={{
+                fontSize: '17px',
+                position: 'absolute',
+                top: 10,
+                right: 0,
+                left: 0,
+                textAlign: 'center',
+                display: 'block',
+                margin: 0,
+                padding: '10px',
+              }}
+            >
+              Cancel Purchase Order
+            </div>
+        }
+        centered
+      >
+        <div className="space-y-0 text-center">
+          <Text>
+            Are you sure you want to cancel purchase order
+          </Text>
+          <Text>
+            <strong>{poToDelete?.poNumber}</strong>?
+          </Text>
+          <Text mt={10}>
+            This action is safe and can be reverted.
+          </Text>
+
+          <Group justify="center" mt="md">
+            <MantineButton variant="default" onClick={cancelDelete}>
+              No thanks
+            </MantineButton>
+            <MantineButton color="red" onClick={confirmDelete}>
+              Yes Cancel
             </MantineButton>
           </Group>
         </div>

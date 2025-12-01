@@ -58,22 +58,14 @@ const purchaseOrdersSlice = createSlice({
         const updated = action.payload;
         const idx = state.purchaseOrders.findIndex((po) => po._id === updated._id);
         if (idx !== -1) state.purchaseOrders[idx] = updated;
+      })
+       // ✅ NEW: update cancelled flag on the specific PO
+      .addCase(cancelPurchaseOrder.fulfilled, (state, action: PayloadAction<PurchaseOrder>) => {
+        const idx = state.purchaseOrders.findIndex((po) => po._id === action.payload._id);
+        if (idx !== -1) {
+          state.purchaseOrders[idx] = action.payload;
+        }
       });
-    // Old single submitter
-    // .addCase(signPurchaseOrder.fulfilled, (state, action) => {
-    //   const updatedPO = action.payload;
-    //   const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
-    //   if (index !== -1) {
-    //     state.purchaseOrders[index] = updatedPO;
-    //   }
-    // })
-    // .addCase(revertSignature.fulfilled, (state, action) => {
-    //   const updatedPO = action.payload;
-    //   const index = state.purchaseOrders.findIndex(po => po._id === updatedPO._id);
-    //   if (index !== -1) {
-    //     state.purchaseOrders[index] = updatedPO;
-    //   }
-    // })
   },
 });
 
@@ -126,6 +118,26 @@ export const deletePurchaseOrder = createAsyncThunk(
       return _id;
     } catch (err: any) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to delete");
+    }
+  }
+);
+
+export const cancelPurchaseOrder = createAsyncThunk<
+  PurchaseOrder,
+  { _id: string; cancelled: boolean },
+  { rejectValue: string }
+>(
+  "purchaseOrders/cancel",
+  async ({ _id, cancelled }, thunkAPI) => {
+    try {
+      const res = await api.patch(`/api/purchase-orders/${_id}/cancelled`, {
+        cancelled,
+      });
+      return res.data.purchaseOrder as PurchaseOrder;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to update cancelled status"
+      );
     }
   }
 );

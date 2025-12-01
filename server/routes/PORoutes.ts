@@ -1,11 +1,16 @@
 import express from "express";
-import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getMyPendingSignaturePurchaseOrders, getPurchaseOrderById, getPurchaseOrderPDF, sendPurchaseOrderSignatureEmails, signPurchaseOrderRoleController, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController.js";
+import { createPurchaseOrder, deletePurchaseOrder, getAllPurchaseOrders, getMyPendingSignaturePurchaseOrders, getPurchaseOrderById, getPurchaseOrderPDF, sendPurchaseOrderSignatureEmails, setPurchaseOrderCancelled, signPurchaseOrderRoleController, togglePurchaseOrderStatus, updatePurchaseOrder } from "../controllers/POController.js";
 import { protect } from "../middleware/auth.js";
 
 const PORouter = express.Router();
 
 PORouter.post("/", protect, createPurchaseOrder);
 PORouter.patch("/:id/sign-role", protect, signPurchaseOrderRoleController); // Has to be high here
+PORouter.patch(
+  "/:id/cancelled",
+  protect,              // if you have auth middleware
+  setPurchaseOrderCancelled
+);
 // 👇 NEW: notifications for current user
 PORouter.get(
   "/pending-signatures/me",

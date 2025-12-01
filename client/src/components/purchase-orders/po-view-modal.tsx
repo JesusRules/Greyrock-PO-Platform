@@ -48,8 +48,10 @@ function renderSignatureBox(
 
   const isDirectRole = user?.signatureRole === roleKey;
 
+  // const canSignThisRole =
+  //   !isAdmin && (isDirectRole || isOverrideSigner); // admins never sign
   const canSignThisRole =
-    !isAdmin && (isDirectRole || isOverrideSigner); // admins never sign
+    isOverrideSigner || (!isAdmin && isDirectRole); // overrideSigner can always sign
 
   const canCurrentUserSign = canSignThisRole && hasUserSignature && !isSigned;
 

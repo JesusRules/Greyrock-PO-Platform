@@ -60,9 +60,10 @@ const PurchaseOrderSchema = new mongoose.Schema({
   // },
   status: {
     type: String,
-    enum: ['Pending', 'Signed', 'Rejected', 'Approved'],
+    enum: ['Pending', 'Signed', 'Rejected', 'Approved', 'Cancelled'],
     default: 'Pending',
   },
+  cancelled: { type: Boolean, default: false },
   // signedImg: { type: String, default: null, required: false }, // Stores Base64
   // signedBy: {
   //   type: mongoose.Schema.Types.ObjectId,

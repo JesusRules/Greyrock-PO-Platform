@@ -583,148 +583,51 @@ export const signPurchaseOrderRoleController = async (req: Request, res: Respons
   }
 };
 
-// export const signPurchaseOrderRoleController = async (req: Request, res: Response) => {
-//   try {
-//     const { role, revert } = req.body;
-//     const poId = req.params.id;
-//     const userId = (req as any).user?._id; // from auth middleware
+export const setPurchaseOrderCancelled = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { cancelled } = req.body;
 
-//     const allowedRoles = ["submitter", "manager", "generalManager", "financeDepartment"];
+    // Basic validation
+    if (typeof cancelled !== "boolean") {
+      res
+        .status(400)
+        .set(createNoCacheHeaders())
+        .json({ message: "`cancelled` must be a boolean." });
+      return;
+    }
 
-//     if (!allowedRoles.includes(role)) {
-//       res
-//         .set(createNoCacheHeaders())
-//         .status(400)
-//         .json({ message: "Invalid signature role." });
-//       return;
-//     }
+    const updated = await PurchaseOrder.findByIdAndUpdate(
+      id,
+      { cancelled },
+      { new: true }
+    )
+      .populate({ path: "department", model: Department })
+      .populate({ path: "signatures.submitter.signedBy", model: User })
+      .populate({ path: "signatures.manager.signedBy", model: User })
+      .populate({ path: "signatures.generalManager.signedBy", model: User })
+      .populate({ path: "signatures.financeDepartment.signedBy", model: User });
 
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       res
-//         .set(createNoCacheHeaders())
-//         .status(400)
-//         .json({ message: "User not found." });
-//       return;
-//     }
+    if (!updated) {
+      res
+        .status(404)
+        .set(createNoCacheHeaders())
+        .json({ message: "Purchase order not found" });
+      return;
+    }
 
-//     // 🔁 REVERT FLOW
-//     if (revert) {
-//       const po = await PurchaseOrder.findById(poId)
-//         .populate({ path: "department", model: Department })
-//         .populate({ path: "signatures.submitter.signedBy", model: User })
-//         .populate({ path: "signatures.manager.signedBy", model: User })
-//         .populate({ path: "signatures.generalManager.signedBy", model: User })
-//         .populate({ path: "signatures.financeDepartment.signedBy", model: User });
-
-//       if (!po) {
-//         res
-//           .set(createNoCacheHeaders())
-//           .status(404)
-//           .json({ message: "Purchase Order not found." });
-//         return;
-//       }
-
-//       const sig: any = po.signatures?.[role];
-//       if (!sig?.signedImg) {
-//         res
-//           .set(createNoCacheHeaders())
-//           .status(400)
-//           .json({ message: "No signature to revert for this role." });
-//         return;
-//       }
-
-//       const signedBy = sig.signedBy;
-//       const signedById =
-//         typeof signedBy === "object" ? signedBy._id?.toString() : signedBy?.toString();
-
-//       const isAdmin = user.permissionRole === "admin";
-//       const isSignedByCurrentUser =
-//         !!signedById && signedById === user._id.toString();
-
-//       if (!isAdmin && !isSignedByCurrentUser) {
-//         res
-//           .set(createNoCacheHeaders())
-//           .status(403)
-//           .json({ message: "You are not authorized to revert this signature." });
-//         return;
-//       }
-
-//       // clear fields
-//       sig.signedImg = null;
-//       sig.signedBy = null;
-//       sig.signedAt = null;
-
-//       // business rule: revert -> status back to Pending
-//       po.status = "Pending";
-
-//       await po.save();
-
-//       res
-//         .set(createNoCacheHeaders())
-//         .status(200)
-//         .json({ purchaseOrder: po });
-//       return;
-//     }
-
-//     // ✍️ SIGN FLOW (existing logic)
-//     if (!user.signedImg) {
-//       res
-//         .set(createNoCacheHeaders())
-//         .status(400)
-//         .json({ message: "User has no saved signature on file." });
-//       return;
-//     }
-
-//     // ensure user.signatureRole matches the role
-//     if (user.signatureRole !== role) {
-//       res
-//         .set(createNoCacheHeaders())
-//         .status(403)
-//         .json({ message: "You are not authorized to sign for this role." });
-//       return;
-//     }
-
-//     const now = new Date();
-
-//     const po = await PurchaseOrder.findByIdAndUpdate(
-//       poId,
-//       {
-//         $set: {
-//           [`signatures.${role}.signedImg`]: user.signedImg,
-//           [`signatures.${role}.signedBy`]: user._id,
-//           [`signatures.${role}.signedAt`]: now,
-//           status: "Signed",
-//         },
-//       },
-//       { new: true }
-//     )
-//       .populate({ path: "department", model: Department })
-//       .populate({ path: "signatures.submitter.signedBy", model: User })
-//       .populate({ path: "signatures.manager.signedBy", model: User })
-//       .populate({ path: "signatures.generalManager.signedBy", model: User })
-//       .populate({ path: "signatures.financeDepartment.signedBy", model: User });
-
-//     if (!po) {
-//       res
-//         .set(createNoCacheHeaders())
-//         .status(404)
-//         .json({ message: "Purchase Order not found." });
-//       return;
-//     }
-
-//     res
-//       .set(createNoCacheHeaders())
-//       .status(200)
-//       .json({ purchaseOrder: po });
-//   } catch (err: any) {
-//     console.error("signPurchaseOrderRole error:", err);
-//     res
-//       .set(createNoCacheHeaders())
-//       .status(400)
-//       .json({ message: err.message || "Failed to sign purchase order." });
-//   }
-// };
+    res
+      .status(200)
+      .set(createNoCacheHeaders())
+      .json({ purchaseOrder: updated });
+  } catch (err) {
+    console.error("setPurchaseOrderCancelled error:", err);
+    res
+      .status(500)
+      .set(createNoCacheHeaders())
+      .json({ message: "Failed to update cancelled status", error: err });
+  }
+};
 
 export const getMyPendingSignaturePurchaseOrders = async (
   req: Request,
@@ -756,7 +659,7 @@ export const getMyPendingSignaturePurchaseOrders = async (
       | "manager"
       | "generalManager"
       | "financeDepartment"
-      | "overrideSigner"
+      // | "overrideSigner"
       | undefined;
 
     const allowedRoles = [
@@ -764,7 +667,7 @@ export const getMyPendingSignaturePurchaseOrders = async (
       "manager",
       "generalManager",
       "financeDepartment",
-      "overrideSigner", // include if you want overrideSigner to see everything
+      // "overrideSigner", // include if you want overrideSigner to see everything
     ] as const;
 
     if (!role || !allowedRoles.includes(role)) {
@@ -796,19 +699,18 @@ export const getMyPendingSignaturePurchaseOrders = async (
       };
     }
     // 🔹 Override signer: any PO where *someone* still needs to sign,
-    // as long as there is a submitter assigned.
-    else if (role === "overrideSigner") {
-      query = {
-        "signatures.submitter.signedBy": { $ne: null },
-        $or: [
-          { "signatures.submitter.signedImg": null },
-          { "signatures.manager.signedImg": null },
-          { "signatures.generalManager.signedImg": null },
-          { "signatures.financeDepartment.signedImg": null },
-        ],
-        // status: { $ne: "Rejected" },
-      };
-    }
+    // else if (role === "overrideSigner") {
+    //   query = {
+    //     "signatures.submitter.signedBy": { $ne: null },
+    //     $or: [
+    //       { "signatures.submitter.signedImg": null },
+    //       { "signatures.manager.signedImg": null },
+    //       { "signatures.generalManager.signedImg": null },
+    //       { "signatures.financeDepartment.signedImg": null },
+    //     ],
+    //     // status: { $ne: "Rejected" },
+    //   };
+    // }
     // 🔹 Manager / General Manager / Finance Department:
     // submitter exists, this role has not signed yet
     else {
