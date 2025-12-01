@@ -121,7 +121,7 @@ export function PurchaseOrderList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [cancelledFilter, setCancelledFilter] = useState('false')
+  const [cancelledFilter, setCancelledFilter] = useState('all')
   const { toast } = useToast();
   //Redux
   const dispatch = useDispatch<AppDispatch>();
@@ -385,6 +385,38 @@ export function PurchaseOrderList() {
     }
   }
 
+  const handleStatusIconClick = (po: PurchaseOrder) => {
+    const isApproved = po.status === "Approved";
+    const isRejected = po.status === "Rejected";
+    const isPending = po.status === "Pending";
+    const isGM = user?.signatureRole === "generalManager";
+
+    // Normal behavior for Approved / Rejected
+    if (isApproved || isRejected) {
+      handleToggleStatus(po);
+      return;
+    }
+
+    // Special behavior when Pending
+    if (isPending) {
+      if (!isGM) {
+        toast({
+          title: "Not available yet",
+          description:
+            "Can only be used after a General Manager has signed this purchase order.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sign required",
+          description:
+            "The General Manager must sign this purchase order before user.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <>
     <div className="space-y-4">
@@ -505,13 +537,36 @@ export function PurchaseOrderList() {
             ) : (
               filteredPOs.map((po) => {
                 const mySigStatus = getUserSignatureStatusForPO(user, po);
+                const isApproved = po.status === "Approved";
+                const isRejected = po.status === "Rejected";
+                const isPending = po.status === "Pending";
+
+                const toggleTooltipLabel =
+                  isApproved
+                    ? "Reject Purchase Order"
+                    : isRejected
+                    ? "Mark as Approved"
+                    : "Approve / Reject Purchase Order";
+
+                const canToggle = isApproved || isRejected;
+
+                const statusIconColor = isApproved
+                  ? "text-red-600"
+                  : isRejected
+                  ? "text-green-700 dark:text-green-600"
+                  : isPending
+                  ? "text-yellow-700"
+                  : "";
 
                 return (
                 <TableRow
                     key={po._id}
                     className={
                       po.cancelled
-                        ? "relative text-slate-400 dark:text-slate-500 after:content-[''] after:absolute after:left-0 after:right-0 after:top-1/2 after:border-t-2 after:border-red-500 after:pointer-events-none"
+                        ? `relative text-slate-400 dark:text-slate-500
+                          after:content-[''] after:absolute after:left-0 after:top-1/2
+                          after:right-[40px] after:border-t-2 after:border-red-500
+                          after:pointer-events-none after:z-0`
                         : ""
                     }
                   >
@@ -527,17 +582,25 @@ export function PurchaseOrderList() {
                   {/* NEW "Your Signature" column */}
                   <TableCell>
                     {mySigStatus === "Signed" && (
+                       <Tooltip
+                        withArrow
+                        label='You have successfully signed this purchase order.'>
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-700 dark:text-white">
                         <CheckCircle2 className="h-3 w-3" />
                         Signed
                       </span>
+                      </Tooltip>
                     )}
 
                     {mySigStatus === "Pending" && (
+                      <Tooltip
+                        withArrow
+                        label='Awaiting your signature.'>
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-600 dark:text-white">
                         <Clock3 className="h-3 w-3" />
                         Pending
                       </span>
+                      </Tooltip>
                     )}
 
                     {mySigStatus === "N/A" && (
@@ -599,7 +662,7 @@ export function PurchaseOrderList() {
                     </Button>
                     </Tooltip>
 
-                      {po.status === 'Approved' && (
+                      {/* {po.status === 'Approved' && (
                         <Tooltip label="Reject Purchase Order" withArrow>
                         <Button
                           variant="ghost"
@@ -624,19 +687,38 @@ export function PurchaseOrderList() {
                               className={`h-4 w-4 text-green-700 dark:text-green-600`} />
                         </Button>
                         </Tooltip>
-                      )}
+                      )} */}
+                      
+                    <Tooltip label={toggleTooltipLabel} withArrow>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleStatusIconClick(po)}
+                        title={toggleTooltipLabel}
+                        className={canToggle ? "" : "opacity-50 cursor-not-allowed"}
+                      >
+                        <CheckSquare className={`h-4 w-4 ${statusIconColor}`} />
+                      </Button>
+                    </Tooltip>
 
-                    <Tooltip label={poToToggleCancel?.cancelled === true ? "Un-Cancel Purchase Order" : "Cancel Purchase Order"} withArrow>
-                    <Button variant="ghost" size="icon" onClick={() => openCancelConfirm(po)}>
-                      <Ban className="h-4 w-4 text-red-500" />
-                    </Button>
+                    <Tooltip
+                      label={po.cancelled ? "Un-Cancel Purchase Order" : "Cancel Purchase Order"}
+                      withArrow
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openCancelConfirm(po)}
+                        className={po.cancelled ? "relative z-10 bg-white dark:bg-[#242424]" : "relative z-10 bg-white dark:bg-[#242424]"}
+                      >
+                        <Ban className="h-4 w-4 text-red-500" />
+                      </Button>
                     </Tooltip>
                     {/* <Tooltip label="Delete Purchase Order" withArrow>
                     <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(po)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                     </Tooltip> */}
-
                   </TableCell>
                 </TableRow>
               )}

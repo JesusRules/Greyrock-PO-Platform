@@ -509,15 +509,32 @@ export function PurchaseOrderViewModal() {
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
-            <span>Purchase Order #{purchaseOrder.poNumber}</span>
+            
+            {/* 🔥 CANCELLED STYLE HANDLING */}
+            {purchaseOrder.cancelled ? (
+              <span className="relative text-red-600 font-semibold text-left">
+                <span className="line-through decoration-red-600">
+                  Purchase Order #{purchaseOrder.poNumber}
+                </span>
+                <span className="ml-2 text-red-600 font-bold leading-6 sm:leading-5">
+                  (Cancelled)
+                </span>
+              </span>
+            ) : (
+              <span>
+                Purchase Order #{purchaseOrder.poNumber}
+              </span>
+            )}
+
             <div className="flex gap-2 mr-5">
-              {/* <Button className="border border-gray-500" variant="outline" size="sm" onClick={() => downloadPdf(purchaseOrder._id)}> */}
-              <Button className="border border-gray-500" variant="outline" size="sm" onClick={() => viewPO_PDF(purchaseOrder)}>
+              <Button
+                className="border border-gray-500"
+                variant="outline"
+                size="sm"
+                onClick={() => viewPO_PDF(purchaseOrder)}
+              >
                 <FileDown className="h-4 w-4 mr-1" /> Download PDF
               </Button>
-              {/* <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpenViewPO(false)}>
-                <X className="h-4 w-4" />
-              </Button> */}
             </div>
           </DialogTitle>
         </DialogHeader>

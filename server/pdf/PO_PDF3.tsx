@@ -17,6 +17,22 @@ interface PODocProps {
 
 export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, Text, View, Image, StyleSheet }) => {
   const styles = StyleSheet.create({
+     watermarkWrapper: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: "center",
+        alignItems: "center",
+      },
+      watermark: {
+        fontSize: 80,
+        color: "red",
+        opacity: 0.5, //0.18
+        transform: "rotate(-30deg)",
+        textTransform: "uppercase",
+    },
     page: {
       padding: 40,
       fontSize: 10,
@@ -264,7 +280,7 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
         textAlign: 'center',
         fontSize: 9,
     },
-        generatedText: {
+      generatedText: {
         position: 'absolute',
         bottom: 13,
         left: 18,
@@ -272,6 +288,13 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
         fontSize: 9,
     },
   })
+
+  const watermarkText =
+    purchaseOrder.cancelled
+      ? "CANCELLED"
+      : purchaseOrder.status === "Rejected"
+      ? "REJECTED"
+      : null;
 
   // ---- totals / tax calculations ----
 
@@ -566,6 +589,11 @@ export const PO_PDF3: React.FC<PODocProps> = ({ purchaseOrder, Document, Page, T
           })}
         </Text>
 
+        {watermarkText && (
+        <View style={styles.watermarkWrapper}>
+          <Text style={styles.watermark}>{watermarkText}</Text>
+        </View>
+      )}
       </Page>
     </Document>
   )

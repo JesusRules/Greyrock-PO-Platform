@@ -721,6 +721,9 @@ export const getMyPendingSignaturePurchaseOrders = async (
       };
     }
 
+    query.cancelled = { $ne: true };
+    query.status = { $ne: "Rejected" };
+
     // ✅ If this person is a normal user, restrict to their departments
     if (isUserPermissionUser && userDeptIds.length > 0) {
       query.department = { $in: userDeptIds };
